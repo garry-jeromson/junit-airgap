@@ -68,16 +68,28 @@ internal class SecurityManagerNetworkBlocker(
 
     /**
      * Check if SecurityManager strategy is available.
-     * Always returns true on JVM (SecurityManager is part of core JDK).
+     * Returns false on Java 21+ where setSecurityManager throws UnsupportedOperationException.
      */
     override fun isAvailable(): Boolean =
         try {
-            // Check if we can get/set SecurityManager
-            // This will be true on Java 17-23, false on Java 24+ (when removed)
+            // On Java 21+, System.setSecurityManager() throws UnsupportedOperationException
+            // even though the SecurityManager class still exists.
+            // We need to test if we can actually SET a SecurityManager, not just GET it.
             @Suppress("DEPRECATION")
-            System.getSecurityManager()
+            val current = System.getSecurityManager()
+
+            // Try to set (even to the same value) to check if it's allowed
+            @Suppress("DEPRECATION")
+            System.setSecurityManager(current)
             true
+        } catch (e: UnsupportedOperationException) {
+            // Java 21+ with SecurityManager disabled
+            false
+        } catch (e: SecurityException) {
+            // SecurityManager exists but we don't have permission to change it
+            false
         } catch (e: Exception) {
+            // Any other error means it's not available
             false
         }
 

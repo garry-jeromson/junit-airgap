@@ -31,16 +31,17 @@ class CommonTestBytecodeVerificationTest {
         val testClass = CommonTestJUnit4NetworkTest::class.java
 
         // Verify the noNetworkRule field exists
-        val ruleField = try {
-            testClass.getDeclaredField("noNetworkRule")
-        } catch (e: NoSuchFieldException) {
-            throw AssertionError(
-                "Field 'noNetworkRule' not found in CommonTestJUnit4NetworkTest. " +
-                    "Bytecode enhancement may have failed for commonTest classes. " +
-                    "Available fields: ${testClass.declaredFields.joinToString { it.name }}",
-                e
-            )
-        }
+        val ruleField =
+            try {
+                testClass.getDeclaredField("noNetworkRule")
+            } catch (e: NoSuchFieldException) {
+                throw AssertionError(
+                    "Field 'noNetworkRule' not found in CommonTestJUnit4NetworkTest. " +
+                        "Bytecode enhancement may have failed for commonTest classes. " +
+                        "Available fields: ${testClass.declaredFields.joinToString { it.name }}",
+                    e,
+                )
+            }
 
         assertNotNull(ruleField, "noNetworkRule field should exist")
 
@@ -49,20 +50,23 @@ class CommonTestBytecodeVerificationTest {
         assertNotNull(
             ruleAnnotation,
             "@Rule annotation not found on noNetworkRule field. " +
-                "Annotations present: ${ruleField.annotations.joinToString { it.annotationClass.simpleName ?: "Unknown" }}"
+                "Annotations present: ${ruleField.annotations.joinToString {
+                    it.annotationClass.simpleName ?: "Unknown"
+                }}",
         )
 
         // Verify the field type is NoNetworkRule
         assertEquals(
             NoNetworkRule::class.java,
             ruleField.type,
-            "Field type should be NoNetworkRule but was ${ruleField.type}"
+            "Field type should be NoNetworkRule but was ${ruleField.type}",
         )
 
         // Verify the field is public (required for JUnit @Rule)
         assertTrue(
-            java.lang.reflect.Modifier.isPublic(ruleField.modifiers),
-            "Field should be public for JUnit @Rule to work"
+            java.lang.reflect.Modifier
+                .isPublic(ruleField.modifiers),
+            "Field should be public for JUnit @Rule to work",
         )
     }
 
@@ -99,7 +103,7 @@ class CommonTestBytecodeVerificationTest {
         // Verify it's a NoNetworkRule instance
         assertTrue(
             ruleInstance is NoNetworkRule,
-            "Injected rule should be an instance of NoNetworkRule"
+            "Injected rule should be an instance of NoNetworkRule",
         )
 
         // Verify the rule is properly initialized (not null)

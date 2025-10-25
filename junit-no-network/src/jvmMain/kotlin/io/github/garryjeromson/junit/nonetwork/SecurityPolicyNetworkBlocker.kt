@@ -111,12 +111,25 @@ internal class SecurityPolicyNetworkBlocker(
     override fun isAvailable(): Boolean =
         try {
             // Check if we can get/set Policy and SecurityManager
-            // This will be true on Java 17-23, false on Java 24+ (when removed)
+            // This will be true on Java 17-20, false on Java 21+ (UnsupportedOperationException)
             Policy.getPolicy()
+
+            // On Java 21+, System.setSecurityManager() throws UnsupportedOperationException
             @Suppress("DEPRECATION")
-            System.getSecurityManager()
+            val current = System.getSecurityManager()
+
+            // Try to set (even to the same value) to check if it's allowed
+            @Suppress("DEPRECATION")
+            System.setSecurityManager(current)
             true
+        } catch (e: UnsupportedOperationException) {
+            // Java 21+ with SecurityManager disabled
+            false
+        } catch (e: SecurityException) {
+            // SecurityManager exists but we don't have permission
+            false
         } catch (e: Exception) {
+            // Any other error means it's not available
             false
         }
 

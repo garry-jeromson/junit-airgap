@@ -29,7 +29,6 @@ import kotlin.test.assertNotNull
  * - Error messages are consistent across frameworks
  */
 class JUnitFrameworkComparisonTest {
-
     /**
      * JUnit 4 tests using NoNetworkRule.
      */
@@ -58,9 +57,10 @@ class JUnitFrameworkComparisonTest {
         @Test
         @NoNetworkTest
         fun `JUnit 4 - should block network and throw NetworkRequestAttemptedException`() {
-            val exception = assertFailsWith<NetworkRequestAttemptedException> {
-                Socket("example.com", 80)
-            }
+            val exception =
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    Socket("example.com", 80)
+                }
             assertNotNull(exception.message, "Exception should have a message")
             assert(exception.message!!.contains("example.com")) {
                 "Exception message should contain blocked host"
@@ -114,9 +114,10 @@ class JUnitFrameworkComparisonTest {
         @org.junit.jupiter.api.Test
         @NoNetworkTest
         fun `JUnit 5 - should block network and throw NetworkRequestAttemptedException`() {
-            val exception = assertFailsWith<NetworkRequestAttemptedException> {
-                Socket("example.com", 80)
-            }
+            val exception =
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    Socket("example.com", 80)
+                }
             assertNotNull(exception.message, "Exception should have a message")
             assert(exception.message!!.contains("example.com")) {
                 "Exception message should contain blocked host"
@@ -154,9 +155,10 @@ class JUnitFrameworkComparisonTest {
         @Test
         @NoNetworkTest
         fun `both frameworks throw same exception type`() {
-            val exception = assertFailsWith<NetworkRequestAttemptedException> {
-                Socket("blocked.com", 443)
-            }
+            val exception =
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    Socket("blocked.com", 443)
+                }
 
             // Verify exception properties
             assertNotNull(exception.requestDetails, "Exception should include request details")
@@ -167,9 +169,10 @@ class JUnitFrameworkComparisonTest {
         @Test
         @NoNetworkTest
         fun `exception message format is consistent`() {
-            val exception = assertFailsWith<NetworkRequestAttemptedException> {
-                Socket("test.example.com", 8080)
-            }
+            val exception =
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    Socket("test.example.com", 8080)
+                }
 
             // Verify message contains expected information
             val message = exception.message!!

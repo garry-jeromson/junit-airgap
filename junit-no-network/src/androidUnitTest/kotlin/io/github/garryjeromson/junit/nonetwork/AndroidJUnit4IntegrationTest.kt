@@ -22,7 +22,6 @@ import java.net.URL
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [26]) // Test on API 26 (Android 8.0)
 class AndroidJUnit4IntegrationTest {
-
     @get:Rule
     val noNetworkRule = NoNetworkRule()
 
