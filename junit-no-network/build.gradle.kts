@@ -164,6 +164,10 @@ kotlin.jvm().compilations.create("integrationTest") {
 // Configure JVM test task
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
+
+    // Pass junit.nonetwork system properties to test JVM
+    systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
+    systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
 }
 
 // Configure Android test tasks
@@ -176,6 +180,10 @@ tasks.withType<Test>().configureEach {
             events("passed", "skipped", "failed")
             showStandardStreams = false
         }
+
+        // Pass junit.nonetwork system properties to test JVM
+        systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
+        systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
     }
 }
 
@@ -194,6 +202,10 @@ tasks.register<Test>("integrationTest") {
 
     // Exclude Kotlin companion objects from test discovery
     exclude("**/*\$Companion.class")
+
+    // Pass junit.nonetwork system properties to test JVM
+    systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
+    systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
 
     testLogging {
         events("passed", "skipped", "failed")

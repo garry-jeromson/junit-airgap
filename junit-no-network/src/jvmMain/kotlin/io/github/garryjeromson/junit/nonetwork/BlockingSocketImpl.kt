@@ -13,7 +13,7 @@ import java.net.SocketImpl
  * This implementation intercepts socket connection attempts and validates them
  * against the configured network policy before delegating to the platform default.
  *
- * ⚠️ PROOF OF CONCEPT - Attempting to replace SecurityManager for Java 24+ compatibility.
+ * ⚠️ EXPERIMENTAL - Partial support due to Java Module System (JPMS) restrictions.
  *
  * ## How It Works
  * 1. Socket.setSocketImplFactory() installs our custom factory
@@ -22,10 +22,38 @@ import java.net.SocketImpl
  * 4. Blocked connections throw NetworkRequestAttemptedException
  * 5. Allowed connections delegate to platform default SocketImpl
  *
+ * ## Critical Issue: Platform Delegate Unavailable
+ * **JPMS Restriction**: Cannot obtain `sun.nio.ch.NioSocketImpl` via reflection:
+ * ```
+ * InaccessibleObjectException: module java.base does not "exports sun.nio.ch"
+ * ```
+ *
+ * **Impact**:
+ * - `platformDelegate` will be `null` in most cases
+ * - `create()` fails silently when delegate is null
+ * - `connect()` is never called on broken sockets
+ * - Result: Connections neither blocked nor allowed - they just fail
+ *
+ * ## What Actually Works
+ * - ✅ **HttpURLConnection**: Somehow tolerates missing delegate
+ * - ✅ **Simple Socket operations**: Basic connect/disconnect
+ * - ❌ **Modern HTTP clients**: Fail due to incomplete Socket initialization
+ * - ❌ **NIO-based clients**: Bypass Socket entirely
+ *
+ * ## Why Tests Pass Without Delegate
+ * Some Socket operations have fallback behavior when `create()` fails:
+ * - HttpURLConnection uses internal error handling
+ * - Simple Socket usage may have retry logic
+ * - But most modern clients expect fully-functional Sockets
+ *
  * ## Limitations
- * - Cannot intercept already-connected sockets
- * - Platform SocketImpl access is JVM-specific
- * - May not work with all socket types (DatagramSocket, etc.)
+ * - **Cannot obtain platform delegate**: JPMS prevents reflection
+ * - **Cannot intercept already-connected sockets**: Too late
+ * - **Cannot intercept NIO channels**: Different API path
+ * - **May not work with all socket types**: DatagramSocket, ServerSocket need separate factories
+ *
+ * ## See Also
+ * - `SocketImplFactoryNetworkBlocker` for factory installation and full limitations
  */
 internal class BlockingSocketImpl(
     private val configuration: NetworkConfiguration,
@@ -42,18 +70,14 @@ internal class BlockingSocketImpl(
         host: String,
         port: Int,
     ) {
-        // Always allow localhost connections (localhost, 127.0.0.1, ::1)
-        // This matches the behavior of SecurityManager-based implementations
-        val normalizedHost = host.lowercase()
-        if (normalizedHost == "localhost" ||
-            normalizedHost == "127.0.0.1" ||
-            normalizedHost.startsWith("127.") ||
-            normalizedHost == "::1" ||
-            normalizedHost == "0:0:0:0:0:0:0:1"
-        ) {
-            return // Allow localhost
+        // Debug logging
+        if (System.getProperty("junit.nonetwork.debug") == "true") {
+            println("BlockingSocketImpl.checkConnection: host=$host, port=$port")
+            println("  Configuration: allowedHosts=${configuration.allowedHosts}, blockedHosts=${configuration.blockedHosts}")
+            println("  isAllowed($host) = ${configuration.isAllowed(host)}")
         }
 
+        // Check configuration - blocked hosts take precedence over allowed hosts
         if (!configuration.isAllowed(host)) {
             val details =
                 NetworkRequestDetails(
@@ -101,6 +125,11 @@ internal class BlockingSocketImpl(
         }
 
     override fun create(stream: Boolean) {
+        // Debug logging
+        if (System.getProperty("junit.nonetwork.debug") == "true") {
+            println("BlockingSocketImpl.create(stream=$stream) - platformDelegate=$platformDelegate")
+        }
+
         // Delegate to platform impl if available
         invokeProtected<Unit>("create", stream)
     }
@@ -109,6 +138,11 @@ internal class BlockingSocketImpl(
         host: String,
         port: Int,
     ) {
+        // Debug logging
+        if (System.getProperty("junit.nonetwork.debug") == "true") {
+            println("BlockingSocketImpl.connect(host=$host, port=$port) called")
+        }
+
         // Check if connection is allowed
         checkConnection(host, port)
 
@@ -121,6 +155,11 @@ internal class BlockingSocketImpl(
         address: InetAddress,
         port: Int,
     ) {
+        // Debug logging
+        if (System.getProperty("junit.nonetwork.debug") == "true") {
+            println("BlockingSocketImpl.connect(address=${address.hostAddress}, port=$port) called")
+        }
+
         // Check if connection is allowed
         checkConnection(address.hostAddress ?: address.hostName, port)
 
@@ -133,6 +172,11 @@ internal class BlockingSocketImpl(
         address: SocketAddress,
         timeout: Int,
     ) {
+        // Debug logging
+        if (System.getProperty("junit.nonetwork.debug") == "true") {
+            println("BlockingSocketImpl.connect(address=$address, timeout=$timeout) called")
+        }
+
         // Extract host and port from SocketAddress if it's an InetSocketAddress
         if (address is java.net.InetSocketAddress) {
             val host = address.hostString ?: address.address?.hostAddress ?: address.hostName

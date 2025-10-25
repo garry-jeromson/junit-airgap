@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-jvm test-android test-integration test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify
+.PHONY: help build clean test test-jvm test-android test-integration test-socketimpl test-jvm-socketimpl test-integration-socketimpl test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify
 
 # Default Java version for the project (uses Java 17 toolchain internally)
 JAVA_VERSION ?= 21
@@ -28,12 +28,17 @@ help:
 	@echo "  assemble           Assemble all outputs without running tests"
 	@echo ""
 	@echo "Test Commands:"
-	@echo "  test                    Run all tests (JVM + Android + Integration)"
-	@echo "  test-jvm                Run JVM unit tests only"
-	@echo "  test-android            Run Android unit tests (Robolectric)"
-	@echo "  test-integration        Run JVM integration tests (junit-no-network module)"
-	@echo "  test-plugin-integration Run all plugin integration tests (KMP/Android/JVM × JUnit4/5)"
-	@echo "  verify                  Run all tests and checks (test + lint + plugin tests)"
+	@echo "  test                       Run all tests (JVM + Android + Integration)"
+	@echo "  test-jvm                   Run JVM unit tests only"
+	@echo "  test-android               Run Android unit tests (Robolectric)"
+	@echo "  test-integration           Run JVM integration tests (junit-no-network module)"
+	@echo "  test-plugin-integration    Run all plugin integration tests (KMP/Android/JVM × JUnit4/5)"
+	@echo "  verify                     Run all tests and checks (test + lint + plugin tests)"
+	@echo ""
+	@echo "Test Commands (SocketImplFactory Implementation):"
+	@echo "  test-socketimpl            Run all tests using SocketImplFactory (Java 24+ compatible)"
+	@echo "  test-jvm-socketimpl        Run JVM tests using SocketImplFactory"
+	@echo "  test-integration-socketimpl Run integration tests using SocketImplFactory"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark          Run all performance benchmarks (JVM + Android)"
@@ -91,6 +96,29 @@ test-integration:
 	@echo "Running integration tests..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) integrationTest
 
+## test-socketimpl: Run all tests using SocketImplFactory implementation (Java 24+ compatible)
+test-socketimpl:
+	@echo "Running all tests with SocketImplFactory implementation..."
+	@echo "(Debug output enabled to verify implementation selection)"
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) test integrationTest \
+		-Djunit.nonetwork.implementation=socketimplfactory \
+		-Djunit.nonetwork.debug=true
+
+## test-jvm-socketimpl: Run JVM tests using SocketImplFactory implementation
+test-jvm-socketimpl:
+	@echo "Running JVM tests with SocketImplFactory implementation..."
+	@echo "(Debug output enabled to verify implementation selection)"
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) jvmTest \
+		-Djunit.nonetwork.implementation=socketimplfactory \
+		-Djunit.nonetwork.debug=true
+
+## test-integration-socketimpl: Run integration tests using SocketImplFactory implementation
+test-integration-socketimpl:
+	@echo "Running integration tests with SocketImplFactory implementation..."
+	@echo "(Debug output enabled to verify implementation selection)"
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) integrationTest \
+		-Djunit.nonetwork.implementation=socketimplfactory \
+		-Djunit.nonetwork.debug=true
 
 ## test-plugin-integration: Run all plugin integration tests across different configurations
 test-plugin-integration:
