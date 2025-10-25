@@ -39,7 +39,7 @@ help:
 	@echo "  setup-native            Install native build dependencies (CMake)"
 	@echo "  build-native            Build JVMTI native agent (.dylib/.so/.dll)"
 	@echo "  test-native             Run native agent tests (AgentLoadTest, SocketInterceptTest)"
-	@echo "  test-integration-jvmti  Run integration tests using ONLY JVMTI (no SecurityManager)"
+	@echo "  test-integration-jvmti  Run integration tests with JVMTI agent"
 	@echo "  clean-native            Clean native build artifacts"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
@@ -250,9 +250,9 @@ test-native: build-native
 	@echo ""
 	@echo "✅ All native tests passed!"
 
-## test-integration-jvmti: Run integration tests using ONLY JVMTI (disables SecurityManager)
+## test-integration-jvmti: Run integration tests with JVMTI agent
 test-integration-jvmti: build-native
-	@echo "Running integration tests with JVMTI agent (SecurityManager disabled)..."
+	@echo "Running integration tests with JVMTI agent..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-no-network:integrationTestJvmti
 
 ## clean-native: Clean native build artifacts

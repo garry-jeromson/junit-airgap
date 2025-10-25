@@ -6,24 +6,16 @@ This document provides a comprehensive overview of which Java versions, JUnit ve
 
 | Java Version | Status | Notes |
 |--------------|--------|-------|
-| 17 | ✅ Fully Supported | Uses Java 17 toolchain |
-| 18 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 19 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 20 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 21 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 22 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 23 | ✅ Fully Supported | SecurityManager deprecated but functional |
-| 24+ | ❌ **Not Supported** | **SecurityManager permanently removed** ([JEP 486](https://openjdk.org/jeps/486)) |
+| 21+ | ✅ Fully Supported | Uses JVMTI agent for network blocking |
+| 17-20 | ❌ Not Supported | Requires Java 21+ for JVMTI agent support |
+| 24+ | ✅ Fully Supported | JVMTI agent works independently of SecurityManager |
 
-### Java 21+ Configuration
+### Why Java 21+?
 
-When using Java 21 or later, you need to explicitly allow SecurityManager usage:
-
-```kotlin
-tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow")
-}
-```
+This library uses JVMTI (JVM Tool Interface) for network blocking:
+- JVMTI provides native-level socket and DNS interception
+- Works on all Java 21+ versions including Java 24+ (no SecurityManager dependency)
+- Platform-agnostic: same implementation for JVM and Android
 
 ## JUnit Version Compatibility
 
@@ -38,17 +30,17 @@ tasks.withType<Test> {
 
 | Platform | Status | Implementation | Notes |
 |----------|--------|----------------|-------|
-| **JVM** | ✅ Fully Supported | SecurityManager / SecurityPolicy | All features work |
-| **Android** (API 26+) | ✅ Fully Supported | SecurityManager | Requires Robolectric for unit tests |
+| **JVM** | ✅ Fully Supported | JVMTI Agent | All features work |
+| **Android** (API 26+) | ✅ Fully Supported | JVMTI Agent | Requires Robolectric for unit tests |
 | **iOS** | ⚠️ API Structure Only | No-op | Provides API for KMP but doesn't block requests |
 
 ### Platform Details
 
 #### JVM
-- **Minimum**: Java 17
-- **Recommended**: Java 21 or 23 (latest LTS)
+- **Minimum**: Java 21
+- **Recommended**: Java 21+ (latest LTS or stable)
 - **Test Framework**: JUnit 4 or JUnit 5
-- **Network Blocking**: Fully functional via SecurityManager
+- **Network Blocking**: Fully functional via JVMTI agent
 - **All HTTP Clients**: Supported
 
 #### Android
@@ -56,25 +48,27 @@ tasks.withType<Test> {
 - **Compile SDK**: API 35
 - **Test Framework**: JUnit 4 with Robolectric (recommended)
 - **JUnit 5 Support**: Requires additional configuration (junit-vintage-engine)
-- **Network Blocking**: Fully functional via SecurityManager
+- **Network Blocking**: Fully functional via JVMTI agent
 - **All HTTP Clients**: Supported
 
 #### iOS
 - **Target**: Kotlin/Native iOS
 - **Status**: API structure only for multiplatform compatibility
 - **Network Blocking**: Not implemented
-- **Limitation**: iOS has no SecurityManager equivalent
-- **Alternative**: Use mocking frameworks or custom URLProtocol
+- **Limitation**: iOS uses Kotlin/Native which doesn't support JVMTI
+- **Alternative**: Use mocking frameworks or custom network interception
 
-## Network Blocker Implementation Compatibility
+## Network Blocker Implementation
 
 | Implementation | Status | Notes |
 |----------------|--------|-------|
-| SECURITY_MANAGER | ✅ Fully Working | Default, recommended, battle-tested |
-| SECURITY_POLICY | ✅ Fully Working | Alternative declarative approach |
-| BYTE_BUDDY | ❌ Non-Functional | Stub only, cannot intercept native Socket calls |
+| JVMTI Agent | ✅ Fully Working | Native-level socket and DNS interception, works on Java 21+ |
 
-**Important**: Only `SECURITY_MANAGER` and `SECURITY_POLICY` actually block network requests. `BYTE_BUDDY` is a non-functional stub kept for API compatibility.
+**How it works**:
+- C++ JVMTI agent intercepts socket connections and DNS resolution at the native level
+- Agent packaged with library and automatically extracted at runtime
+- Works identically on JVM and Android (Robolectric)
+- No SecurityManager dependency (works on Java 24+)
 
 ## HTTP Client Compatibility
 
@@ -159,21 +153,19 @@ The library includes integration tests for the following project configurations:
 ## Quick Reference: What Works?
 
 ### ✅ What Works
-- Java 17-23 on JVM
+- Java 21+ on JVM (including Java 24+)
 - JUnit 4 and JUnit 5
 - Android API 26+ with Robolectric
 - All major HTTP clients (OkHttp, Retrofit, Ktor, Apache HttpClient, etc.)
 - Kotlin Multiplatform projects (JVM + Android targets)
-- SecurityManager and SecurityPolicy implementations
+- JVMTI agent implementation (native-level interception)
 
 ### ❌ What Doesn't Work
-- Java 24+ (SecurityManager removed)
+- Java 17-20 (requires Java 21+ for JVMTI support)
 - iOS network blocking (API structure only)
-- ByteBuddy implementation (non-functional stub)
 - Android instrumentation tests (Robolectric unit tests only)
 
 ### ⚠️ What Needs Configuration
-- Java 21+: Requires `-Djava.security.manager=allow`
 - OkHttp-based clients: Exception wrapping (check message)
 - Android JUnit 5: Requires junit-vintage-engine
 
@@ -184,4 +176,3 @@ The library includes integration tests for the following project configurations:
 - [Setup Guide: Android + JUnit 4](setup-guides/android-junit4.md)
 - [Setup Guide: KMP + JUnit 4](setup-guides/kmp-junit4.md)
 - [Setup Guide: KMP + JUnit 5](setup-guides/kmp-junit5.md)
-- [Migration Guide: Java 24+](migration-java24.md)

@@ -14,7 +14,7 @@ JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/
 
 This is required because:
 - The project targets Java 21
-- SecurityManager requires `-Djava.security.manager=allow` on Java 21+
+- JVMTI agent requires Java 21+ for native agent support
 - Android and KMP configurations require specific JVM features
 
 ### Test-First Development
@@ -149,24 +149,37 @@ make lint
 
 ## Network Blocking Implementation
 
-The library uses different strategies for blocking network access:
+The library uses JVMTI (JVM Tool Interface) for network blocking on all JVM platforms.
 
-### JVM Implementation
+### JVMTI Implementation (JVM and Android)
 
-Three implementations (tried in order):
-1. **SECURITY_POLICY** (Java 21+) - Custom SecurityManager + Policy
-2. **SECURITY_MANAGER** (Java 17-20) - Custom SecurityManager only
-3. **SOCKET_WRAPPER** (fallback) - Socket factory replacement
-
-**Java 21+ Requirement**: SecurityManager needs JVM arg `-Djava.security.manager=allow`
-
-### Android Implementation
-
-Uses JVMTI agent for network blocking:
-- C++ JVMTI agent intercepts socket and DNS operations
+**Single unified implementation** using C++ JVMTI agent:
+- Intercepts socket and DNS operations at the native level
+- Works on Java 21+ (no SecurityManager dependency)
 - Agent automatically packaged with library and extracted at runtime
 - Supports both hostname and IP address blocking
 - Includes DNS interception for more reliable blocking
+- Platform-agnostic: same implementation for JVM and Android (Robolectric)
+
+**How it works**:
+1. JVMTI agent (`libjunit-no-network-agent.dylib` / `.so` / `.dll`) packaged in JAR
+2. At test time, agent extracted to temporary directory
+3. Agent loaded via JVM attach API or agent command-line option
+4. Agent hooks native socket connection and DNS resolution functions
+5. Connections checked against allowed/blocked host lists
+6. Unauthorized connections throw `NetworkRequestAttemptedException`
+
+**Native code location**: `native/src/`
+- `agent.cpp` - JVMTI agent initialization and JNI interface
+- `socket_interceptor.cpp` - Socket interception logic
+- `dns_interceptor.cpp` - DNS resolution interception
+
+### iOS Implementation
+
+**Status**: API structure only, no active blocking
+- iOS uses Kotlin/Native which doesn't support JVMTI
+- Provides API compatibility for KMP projects
+- No actual network blocking occurs on iOS
 
 ## Test Contracts Module
 
@@ -265,6 +278,14 @@ echo $JAVA_HOME
 
 Should output: `/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home`
 
+### Issue: JVMTI agent not loading or native library errors
+
+**Solution**: The JVMTI agent should be automatically extracted and loaded. If you see errors:
+1. Check that Java 21+ is being used
+2. Verify the native library is being extracted to the temp directory
+3. Check file permissions on the extracted agent library
+4. On macOS, ensure the dylib is not being blocked by Gatekeeper
+
 ## Project Configuration Files
 
 - `gradle.properties` - Gradle JVM settings, Kotlin version
@@ -293,10 +314,11 @@ Apply ktlint formatting to benchmark module
 
 ## Key Architecture Decisions
 
-1. **ByteBuddy for JUnit 4**: Enables zero-configuration by injecting `@Rule` fields at compile time
-2. **Execution-time classpath resolution**: Injection task resolves Test task classpath when it runs, not during Gradle configuration
-3. **SecurityManager vs Socket Wrapper**: Multiple strategies ensure compatibility across Java versions
-4. **Gradle Plugin separate from library**: Allows users to use the library directly without the plugin
+1. **JVMTI for network blocking**: Native agent intercepts socket/DNS at the lowest level, works on Java 21+
+2. **ByteBuddy for JUnit 4**: Enables zero-configuration by injecting `@Rule` fields at compile time
+3. **Execution-time classpath resolution**: Injection task resolves Test task classpath when it runs, not during Gradle configuration
+4. **Single implementation for JVM/Android**: JVMTI agent works identically on both platforms
+5. **Gradle Plugin separate from library**: Allows users to use the library directly without the plugin
 
 ## Testing Philosophy
 

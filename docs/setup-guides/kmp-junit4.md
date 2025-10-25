@@ -4,7 +4,7 @@ This guide shows how to set up the JUnit No-Network Extension for a Kotlin Multi
 
 ## Requirements
 
-- Java 17-23 (Java 24+ not supported due to SecurityManager removal)
+- Java 21+ (uses JVMTI agent for network blocking)
 - Gradle 7.x or later (tested with 8.11.1)
 - Kotlin 1.9+ (tested with 2.1.0)
 - JUnit 4.12+ (tested with 4.13.2)
@@ -13,7 +13,7 @@ This guide shows how to set up the JUnit No-Network Extension for a Kotlin Multi
 
 | Platform | Network Blocking | Notes |
 |----------|-----------------|-------|
-| JVM | ✅ Fully Supported | SecurityManager-based blocking |
+| JVM | ✅ Fully Supported | JVMTI agent-based blocking |
 | Android | ✅ Fully Supported | Requires Robolectric for unit tests |
 | iOS | ⚠️ API Only | Provides API structure but doesn't block |
 
@@ -82,7 +82,6 @@ android {
 
 // Configure test tasks
 tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow") // Required for Java 21+
 }
 ```
 

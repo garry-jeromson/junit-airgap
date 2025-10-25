@@ -228,7 +228,6 @@ junitNoNetwork {
 
 tasks.withType<Test> {
     useJUnitPlatform() // For JUnit 5
-    jvmArgs("-Djava.security.manager=allow") // Java 21+
 }
 ```
 
@@ -381,17 +380,6 @@ When `injectJUnit4Rule = true`, the plugin:
 3. For JUnit 5: Is `junit-platform.properties` present?
 4. Check with system property: `-Djunit.nonetwork.debug=true`
 
-### Issue: Java 21+ SecurityManager error
-
-**Error**: `UnsupportedOperationException: The Security Manager is deprecated`
-
-**Solution**: Add JVM arg to test tasks:
-
-```kotlin
-tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow")
-}
-```
 
 ## Plugin Architecture
 

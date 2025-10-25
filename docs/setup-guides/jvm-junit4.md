@@ -4,7 +4,7 @@ This guide shows how to set up the JUnit No-Network Extension for a pure JVM pro
 
 ## Requirements
 
-- Java 17-23 (Java 24+ not supported due to SecurityManager removal)
+- Java 21+ (uses JVMTI agent for network blocking)
 - Gradle 7.x or later (tested with 8.11.1)
 - JUnit 4.12+ (tested with 4.13.2)
 - Kotlin 1.9+ (tested with 2.1.0)
@@ -22,7 +22,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(21) // Or 17-23
+    jvmToolchain(21)
 }
 
 // Configure the plugin
@@ -36,8 +36,6 @@ junitNoNetwork {
 tasks.withType<Test> {
     // NOTE: Do NOT use useJUnitPlatform() for pure JUnit 4 projects
 
-    // Required for Java 21+
-    jvmArgs("-Djava.security.manager=allow")
 }
 ```
 
@@ -78,7 +76,6 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow") // Required for Java 21+
 }
 ```
 
@@ -382,7 +379,6 @@ fun testAllowsSubdomains() {
 
 ```kotlin
 tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow")
 }
 ```
 
@@ -401,10 +397,6 @@ tasks.withType<Test> {
 2. Is `@Rule val noNetworkRule = NoNetworkRule()` declared?
 3. Is the Gradle plugin applied correctly?
 4. Check with debug mode: `-Djunit.nonetwork.debug=true`
-
-### Issue: Network blocking not working on Java 24+
-
-**This is expected**. Java 24+ permanently removes SecurityManager. See the [Migration Guide](../migration-java24.md) for alternatives.
 
 ### Issue: OkHttp exception message is unclear
 
@@ -456,6 +448,5 @@ See the `plugin-integration-tests/jvm-junit4` module for a complete working exam
 
 - [Compatibility Matrix](../compatibility-matrix.md) - Full compatibility information
 - [HTTP Client Guides](../clients/) - Detailed guides for each HTTP client
-- [Migration Guide: Java 24+](../migration-java24.md) - Migrating away from SecurityManager
 - [Advanced Configuration](../advanced-configuration.md) - All configuration options
 - [JVM + JUnit 5 Setup Guide](jvm-junit5.md) - Migrating to JUnit 5

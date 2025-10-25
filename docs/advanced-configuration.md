@@ -220,50 +220,24 @@ junitNoNetwork {
 }
 ```
 
-## Implementation Selection
+## Implementation
 
-⚠️ **IMPORTANT**: Only `SECURITY_MANAGER` and `SECURITY_POLICY` actually work. `BYTE_BUDDY` is a non-functional stub.
+This library uses **JVMTI (JVM Tool Interface)** for network blocking on all JVM platforms.
 
-### Available Implementations
+### How It Works
 
-| Implementation | Status | Notes |
-|----------------|--------|-------|
-| SECURITY_MANAGER | ✅ Works | Default, recommended |
-| SECURITY_POLICY | ✅ Works | Alternative declarative approach |
-| BYTE_BUDDY | ❌ Non-functional | Stub only, cannot intercept native Socket calls |
-| AUTO | ✅ Works | Selects best available (currently always SECURITY_MANAGER) |
+- C++ JVMTI agent intercepts socket and DNS operations at the native level
+- Agent automatically packaged with library and extracted at runtime
+- Works on Java 21+ (no SecurityManager dependency)
+- Single unified implementation for both JVM and Android (Robolectric)
 
-### Select via System Property
+### Platform Support
 
-```bash
-# Use SecurityManager (default, recommended)
-./gradlew test -Djunit.nonetwork.implementation=securitymanager
-
-# Use SecurityPolicy (alternative)
-./gradlew test -Djunit.nonetwork.implementation=securitypolicy
-
-# Use ByteBuddy (does NOT work)
-./gradlew test -Djunit.nonetwork.implementation=bytebuddy
-
-# Auto-detect (currently always selects SecurityManager)
-./gradlew test -Djunit.nonetwork.implementation=auto
-```
-
-### Select via Environment Variable
-
-```bash
-export JUNIT_NONETWORK_IMPLEMENTATION=securitymanager
-./gradlew test
-```
-
-### Valid Values
-
-- `securitymanager`, `security-manager`, `SECURITY_MANAGER`
-- `securitypolicy`, `security-policy`, `SECURITY_POLICY`
-- `bytebuddy`, `byte-buddy`, `BYTE_BUDDY`
-- `auto`, `AUTO`
-
-(Case-insensitive, accepts hyphenated and underscore forms)
+| Platform | Status | Implementation |
+|----------|--------|----------------|
+| JVM | ✅ Fully Supported | JVMTI Agent |
+| Android (Robolectric) | ✅ Fully Supported | JVMTI Agent |
+| iOS | ⚠️ API Structure Only | No-op (Kotlin/Native doesn't support JVMTI) |
 
 ## Debug Mode
 

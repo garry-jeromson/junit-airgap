@@ -4,7 +4,7 @@ This guide shows how to set up the JUnit No-Network Extension for an Android pro
 
 ## Requirements
 
-- Java 17-23 (Java 24+ not supported due to SecurityManager removal)
+- Java 21+ (uses JVMTI agent for network blocking)
 - Android Gradle Plugin 7.x or later (tested with 8.7.3)
 - Android SDK: Min API 26 (Android 8.0), Compile SDK 34+
 - JUnit 4.12+ (tested with 4.13.2)
@@ -444,7 +444,6 @@ class UserRepositoryTest {
 
 ```kotlin
 tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow")
 }
 ```
 
@@ -515,7 +514,7 @@ JUnit 5 on Android requires:
 **Not Supported**: This library only works with Robolectric unit tests, not Android instrumentation tests.
 
 **Why?** Instrumentation tests run on a real device/emulator where:
-- SecurityManager may not be available
+- JVMTI agent cannot be loaded on Android devices
 - Different security restrictions apply
 - Network mocking requires different approaches
 
@@ -538,5 +537,4 @@ See the `plugin-integration-tests/android-robolectric` module for a complete wor
 - [Compatibility Matrix](../compatibility-matrix.md) - Full compatibility information
 - [HTTP Client Guides](../clients/) - Detailed guides for each HTTP client
 - [KMP + JUnit 4 Setup Guide](kmp-junit4.md) - Multiplatform projects
-- [Migration Guide: Java 24+](../migration-java24.md) - Migrating away from SecurityManager
 - [Advanced Configuration](../advanced-configuration.md) - All configuration options

@@ -2,7 +2,7 @@
 
 A JUnit extension that automatically fails tests attempting to make outgoing network requests. This helps ensure your unit tests are truly isolated and don't accidentally depend on external services.
 
-[![Java 17-23](https://img.shields.io/badge/Java-17--23-blue.svg)](docs/compatibility-matrix.md)
+[![Java 21+](https://img.shields.io/badge/Java-21+-blue.svg)](docs/compatibility-matrix.md)
 [![JUnit 4 & 5](https://img.shields.io/badge/JUnit-4%20%26%205-green.svg)](docs/compatibility-matrix.md)
 [![KMP Support](https://img.shields.io/badge/KMP-JVM%20%7C%20Android-orange.svg)](docs/setup-guides/kmp-junit5.md)
 
@@ -81,10 +81,8 @@ That's it! 🎉
 
 | Version | Status | Notes |
 |---------|--------|-------|
-| 17-23 | ✅ Supported | Fully functional |
-| 24+ | ❌ Not Supported | SecurityManager removed ([JEP 486](https://openjdk.org/jeps/486)) |
-
-**⚠️ Important**: See the [Migration Guide](docs/migration-java24.md) to prepare for Java 24+.
+| 21+ | ✅ Supported | Uses JVMTI agent for network blocking |
+| 17-20 | ❌ Not Supported | Requires Java 21+ for JVMTI agent support |
 
 ### JUnit Versions
 
@@ -144,34 +142,6 @@ Choose your project type:
 
 - **[Compatibility Matrix](docs/compatibility-matrix.md)** - Complete compatibility information
 - **[Advanced Configuration](docs/advanced-configuration.md)** - All configuration options
-- **[Migration Guide: Java 24+](docs/migration-java24.md)** - Prepare for SecurityManager removal
-
----
-
-## ⚠️ Java 24+ Warning
-
-**This library will stop working on Java 24+** when SecurityManager is permanently removed ([JEP 486](https://openjdk.org/jeps/486)).
-
-### Timeline
-
-- **Java 17-23**: ✅ Fully supported
-- **Java 24+**: ❌ Will not work (SecurityManager removed)
-
-### What to Do
-
-**Start planning now**, even if you're on Java 17-21:
-
-1. **Read the [Migration Guide](docs/migration-java24.md)**
-2. **Choose a strategy**: Mocking, Dependency Injection, Repository Pattern, Testcontainers
-3. **Refactor gradually**: Start with new code, migrate existing code over time
-
-**Migration strategies**:
-- **Mocking** - Use MockK, Mockito, or WireMock
-- **Dependency Injection** - Inject HTTP clients for easy testing
-- **Repository Pattern** - Abstract network calls behind interfaces
-- **Testcontainers** - Integration tests with real services
-
-See the [Migration Guide](docs/migration-java24.md) for complete details and examples.
 
 ---
 
@@ -241,27 +211,27 @@ fun testSharedClient() = runTest {
 
 ## 🛠️ How It Works
 
-### JVM Implementation
+### JVM and Android Implementation
 
-Uses Java's `SecurityManager` to intercept socket connections:
-1. Before test runs, installs custom `SecurityManager`
-2. Socket connections checked against configuration
-3. Unauthorized connections throw `NetworkRequestAttemptedException`
-4. After test, original `SecurityManager` restored
+Uses JVMTI (JVM Tool Interface) agent for network blocking:
+1. C++ JVMTI agent intercepts socket and DNS operations at the native level
+2. Agent automatically packaged with library and extracted at runtime
+3. Socket connections checked against configuration (allowed/blocked hosts)
+4. Unauthorized connections throw `NetworkRequestAttemptedException`
+5. Works seamlessly with all JVM-based platforms including Robolectric for Android
 
-### Android Implementation
-
-Uses JVMTI agent for network blocking:
-- C++ JVMTI agent intercepts socket and DNS operations at native level
-- Agent automatically packaged with library and extracted at runtime
-- Works with Robolectric for unit testing
-- Supports both hostname and IP address blocking with DNS interception
+**Key Benefits**:
+- Works on Java 21+ (no SecurityManager dependency)
+- Intercepts network calls at the lowest possible level
+- Supports both hostname and IP address blocking
+- Includes DNS interception for reliable blocking
+- Platform-agnostic: same implementation for JVM and Android
 
 ### iOS Implementation
 
-**Status**: API structure only, no active blocking. iOS has no SecurityManager equivalent.
+**Status**: API structure only, no active blocking. iOS uses Kotlin/Native which doesn't support JVMTI.
 
-**For iOS testing**: Use mocking frameworks or URLProtocol interception.
+**For iOS testing**: Use mocking frameworks or custom network interception.
 
 ---
 
@@ -325,16 +295,6 @@ junitNoNetwork {
     blockedHosts = listOf("evil.com") // Blocked hosts
     debug = false // Debug logging
     injectJUnit4Rule = false // Auto-inject @Rule for JUnit 4 (experimental)
-}
-```
-
-### Java 21+ Requirement
-
-Java 21+ requires explicit SecurityManager permission:
-
-```kotlin
-tasks.withType<Test> {
-    jvmArgs("-Djava.security.manager=allow")
 }
 ```
 
@@ -440,7 +400,6 @@ Developed using TDD with comprehensive test coverage to ensure reliability and m
 - [Setup Guides](docs/setup-guides/) - Step-by-step setup
 - [HTTP Client Guides](docs/clients/) - Client-specific examples
 - [Advanced Configuration](docs/advanced-configuration.md) - All options
-- [Migration Guide](docs/migration-java24.md) - Prepare for Java 24+
 
 ### Example Projects
 
