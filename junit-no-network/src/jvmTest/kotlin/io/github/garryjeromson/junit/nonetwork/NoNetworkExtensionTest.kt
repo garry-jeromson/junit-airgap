@@ -52,10 +52,10 @@ class NoNetworkExtensionTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
-    @BlockRequestsToHosts(hosts = ["evil.com"])
+    @BlockRequestsToHosts(hosts = ["google.com"])
     fun `blocks specific hosts even when wildcard is allowed`() {
         assertFailsWith<NetworkRequestAttemptedException> {
-            Socket("evil.com", 80)
+            Socket("google.com", 80)
         }
     }
 
@@ -83,10 +83,9 @@ class NoNetworkExtensionTest {
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*.example.com"])
     fun `supports wildcard patterns in allowed hosts`() {
-        // api.example.com should be blocked because we're only allowing *.example.com subdomain pattern
-        // and the tests would need DNS resolution
+        // google.com should be blocked because we're only allowing *.example.com subdomain pattern
         assertFailsWith<NetworkRequestAttemptedException> {
-            Socket("notexample.com", 80)
+            Socket("google.com", 80)
         }
     }
 }

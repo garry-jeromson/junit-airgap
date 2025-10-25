@@ -76,14 +76,14 @@ class NetworkBlockerTest {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("*"),
-                blockedHosts = setOf("blocked.com"),
+                blockedHosts = setOf("google.com"),
             )
         val blocker = NetworkBlocker(config)
 
         blocker.install()
         try {
             assertFailsWith<NetworkRequestAttemptedException> {
-                Socket("blocked.com", 80)
+                Socket("google.com", 80)
             }
         } finally {
             blocker.uninstall()
@@ -122,7 +122,7 @@ class NetworkBlockerTest {
         try {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
-                    val url = URL("http://blockedhost.example.com:443/path")
+                    val url = URL("http://github.com:443/path")
                     url.openConnection().connect()
                 }
 
