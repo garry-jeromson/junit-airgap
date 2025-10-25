@@ -19,6 +19,12 @@ dependencyResolutionManagement {
 
 include(":junit-no-network")
 include(":gradle-plugin")
-include(":integration-test-app")
-include(":plugin-integration-test")
 include(":benchmark")
+
+// Plugin integration tests
+include(":plugin-integration-tests:kmp-junit5")
+include(":plugin-integration-tests:kmp-junit4")
+include(":plugin-integration-tests:android-junit5")
+include(":plugin-integration-tests:android-junit4")
+include(":plugin-integration-tests:jvm-junit5")
+include(":plugin-integration-tests:jvm-junit4")

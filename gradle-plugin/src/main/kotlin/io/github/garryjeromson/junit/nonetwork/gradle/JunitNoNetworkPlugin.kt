@@ -317,10 +317,18 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // Register injection task for Android unit tests
         val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
             configure {
-                testClassesDir.set(project.layout.buildDirectory.dir("intermediates/javac/debugUnitTest/classes"))
+                // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
+                testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
                 debug.set(extension.debug)
                 testClasspath.set(project.provider {
-                    project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                    try {
+                        project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                    } catch (e: Exception) {
+                        // Fallback for self-referencing projects or resolution errors
+                        project.logger.warn("Could not resolve debugUnitTestRuntimeClasspath: ${e.message}. Using minimal classpath.")
+                        // Provide minimal classpath: just the classes directory
+                        project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest").get().asFile.absolutePath
+                    }
                 })
             }
         }
@@ -367,10 +375,18 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // Android target
         val androidInjectionTask = project.tasks.register("injectAndroidJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
             configure {
-                testClassesDir.set(project.layout.buildDirectory.dir("intermediates/javac/debugUnitTest/classes"))
+                // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
+                testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
                 debug.set(extension.debug)
                 testClasspath.set(project.provider {
-                    project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                    try {
+                        project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                    } catch (e: Exception) {
+                        // Fallback for self-referencing projects or resolution errors
+                        project.logger.warn("Could not resolve debugUnitTestRuntimeClasspath: ${e.message}. Using minimal classpath.")
+                        // Provide minimal classpath: just the classes directory
+                        project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest").get().asFile.absolutePath
+                    }
                 })
             }
         }

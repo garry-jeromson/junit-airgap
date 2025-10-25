@@ -84,9 +84,16 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
 
         // Create classloader with test classpath
         val classpathUrls = testClasspath.get().split(File.pathSeparator)
+            .filter { it.isNotEmpty() }
             .map { File(it).toURI().toURL() }
             .toTypedArray()
-        val classLoader = URLClassLoader(classpathUrls, javaClass.classLoader)
+
+        // Use parent classloader as fallback (includes Gradle's classpath with JUnit, etc.)
+        val classLoader = if (classpathUrls.isEmpty()) {
+            javaClass.classLoader
+        } else {
+            URLClassLoader(classpathUrls, javaClass.classLoader)
+        }
 
         classFiles.forEach { classFile ->
             val className = getClassName(classesDir, classFile)

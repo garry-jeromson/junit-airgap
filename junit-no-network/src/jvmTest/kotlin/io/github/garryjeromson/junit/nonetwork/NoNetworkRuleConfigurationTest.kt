@@ -2,12 +2,15 @@ package io.github.garryjeromson.junit.nonetwork
 
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.runners.Enclosed
+import org.junit.runner.RunWith
 import java.net.Socket
 
 /**
  * Tests for JUnit 4 NoNetworkRule with configuration options.
  * Tests constructor parameter and system property support.
  */
+@RunWith(Enclosed::class)
 class NoNetworkRuleConfigurationTest {
     /**
      * Test 1: Constructor parameter applyToAllTests = true
