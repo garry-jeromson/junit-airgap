@@ -2,74 +2,42 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
 /**
  * Tests that verify Ktor HTTP client network blocking works correctly
- * with both @BlockNetworkRequests and @AllowNetworkRequests annotations in KMP context (kotlin.test).
+ * with both @BlockNetworkRequests and @AllowNetworkRequests annotations in KMP context.
  *
+ * Uses kotlin.test annotations (not JUnit).
  * Uses expect/actual pattern for platform-specific HTTP client implementations:
  * - JVM: CIO engine
- * - Android: OkHttp engine
+ * - Android: OkHttp engine (compatible with Robolectric)
  */
 class KtorClientTest {
     @Test
     @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTest() {
-        val exception =
-            assertFailsWith<Throwable> {
-                makeKtorRequest()
-            }
-        // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
-        // Check by class name since direct instance check doesn't work in common code
-        val exceptionClass = exception::class.simpleName
-        val causeClass = exception.cause?.let { it::class.simpleName }
-        val isNetworkException =
-            exceptionClass == "NetworkRequestAttemptedException" ||
-                causeClass == "NetworkRequestAttemptedException" ||
-                exception.message?.contains("NetworkRequestAttemptedException") == true
-        assertTrue(
-            isNetworkException,
-            "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${exception.message}",
-        )
+        assertRequestBlocked {
+            makeKtorRequest()
+        }
     }
 
     @Test
     @AllowNetworkRequests
     fun ktorClientIsAllowedWithAllowNetwork() {
-        try {
+        assertRequestAllowed {
             makeKtorRequest()
-        } catch (e: NetworkRequestAttemptedException) {
-            fail("Network is allowed with @AllowNetworkRequests, but was blocked: ${e.message}")
-        } catch (e: Exception) {
-            // Other exceptions (like actual network errors) are fine - we just want to ensure
-            // NetworkRequestAttemptedException is not thrown
         }
     }
 
     @Test
     @BlockNetworkRequests
-    fun `ktor client with spaces in test name is blocked in kotlin test`() {
-        val exception =
-            assertFailsWith<Throwable> {
-                makeKtorRequest()
-            }
-        // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
-        // Check by class name since direct instance check doesn't work in common code
-        val exceptionClass = exception::class.simpleName
-        val causeClass = exception.cause?.let { it::class.simpleName }
-        val isNetworkException =
-            exceptionClass == "NetworkRequestAttemptedException" ||
-                causeClass == "NetworkRequestAttemptedException" ||
-                exception.message?.contains("NetworkRequestAttemptedException") == true
-        assertTrue(
-            isNetworkException,
-            "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${exception.message}",
-        )
+    fun `ktor client with spaces in test name is blocked in KMP`() {
+        assertRequestBlocked {
+            makeKtorRequest()
+        }
     }
 }
 
