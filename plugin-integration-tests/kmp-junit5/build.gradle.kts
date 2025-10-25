@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    alias(libs.plugins.junit.no.network)
 }
 
 group = "io.github.garryjeromson.test"

@@ -4,6 +4,9 @@ kotlin = "2.1.0"
 android-gradle-plugin = "8.7.2"
 ktlint-gradle = "12.1.1"
 
+# JUnit No-Network Plugin
+junit-no-network = "0.1.0-SNAPSHOT"
+
 # Bytecode Instrumentation
 byte-buddy = "1.15.11"
 
@@ -75,3 +78,4 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+junit-no-network = { id = "io.github.garryjeromson.junit-no-network", version.ref = "junit-no-network" }
