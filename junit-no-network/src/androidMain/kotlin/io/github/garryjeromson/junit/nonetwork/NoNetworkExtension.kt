@@ -123,12 +123,21 @@ class NoNetworkExtension(
             return applyToAllTests
         }
 
-        // Priority 2: System property
+        // Priority 2: JUnit configuration parameter (from junit-platform.properties)
+        val configParam =
+            context
+                .getConfigurationParameter(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                .orElse(null)
+        if (configParam != null && configParam.toBoolean()) {
+            return true
+        }
+
+        // Priority 3: System property
         if (ExtensionConfiguration.isApplyToAllTestsEnabled()) {
             return true
         }
 
-        // Priority 3: @NoNetworkByDefault annotation
+        // Priority 4: @NoNetworkByDefault annotation
         val hasNoNetworkByDefault =
             context.testClass
                 .map { clazz ->

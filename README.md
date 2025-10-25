@@ -343,6 +343,150 @@ When you use the root artifact (`junit-no-network`), Gradle automatically select
 - Platform-specific artifacts (`-jvm`, `-android`, `-ios`) still work for single-platform projects
 - You can mix root and platform-specific artifacts in the same project if needed
 
+## Zero-Configuration Setup (JUnit 5 Only)
+
+For the ultimate convenience, you can enable network blocking for **all tests globally** without modifying any test source code. This approach uses JUnit 5's automatic extension registration via ServiceLoader.
+
+### How It Works
+
+1. **Add the dependency** (as shown in [Installation](#installation))
+2. **Enable automatic extension detection** via configuration file or system property
+3. **Enable network blocking** for all tests by default
+
+That's it! No `@ExtendWith`, no `@Rule`, no code changes needed in your tests.
+
+### Setup Steps
+
+#### Step 1: Add Dependency
+
+Add the library dependency as described in the [Installation](#installation) section above. The extension will be automatically discovered via Java's ServiceLoader mechanism.
+
+#### Step 2: Create Configuration File
+
+Create `src/test/resources/junit-platform.properties` with the following content:
+
+```properties
+# Enable JUnit 5's automatic extension discovery
+junit.jupiter.extensions.autodetection.enabled=true
+
+# Enable network blocking for all tests by default
+junit.nonetwork.applyToAllTests=true
+```
+
+**For KMP projects**, create this file in your platform-specific test resources:
+- JVM: `src/jvmTest/resources/junit-platform.properties`
+- Android: `src/androidUnitTest/resources/junit-platform.properties`
+
+#### Step 3: Run Your Tests
+
+All tests now automatically block network requests without any code changes:
+
+```kotlin
+class MyTest {
+    // No @ExtendWith needed!
+    // No @Rule needed!
+
+    @Test
+    fun `this test blocks network automatically`() {
+        // Network requests will be blocked
+        val socket = Socket("example.com", 80)  // ❌ Throws NetworkRequestAttemptedException
+    }
+
+    @Test
+    @AllowNetwork
+    fun `but you can opt-out specific tests`() {
+        // Use @AllowNetwork to allow network for specific tests
+        val socket = Socket("example.com", 80)  // ✅ Allowed
+    }
+}
+```
+
+### Alternative: Configure via Build Tool
+
+Instead of creating `junit-platform.properties`, you can configure via Gradle or Maven:
+
+**Gradle:**
+```kotlin
+tasks.test {
+    systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
+    systemProperty("junit.nonetwork.applyToAllTests", "true")
+}
+```
+
+**Maven:**
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <systemPropertyVariables>
+                    <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+                    <junit.nonetwork.applyToAllTests>true</junit.nonetwork.applyToAllTests>
+                </systemPropertyVariables>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Opt-Out Mechanisms
+
+When using zero-configuration setup, you can opt-out in several ways:
+
+#### Option 1: Per-Test Opt-Out with @AllowNetwork
+```kotlin
+@Test
+@AllowNetwork
+fun `this test can make network requests`() {
+    // Network requests are allowed for this specific test
+}
+```
+
+#### Option 2: Per-Class Opt-Out
+```kotlin
+@AllowNetwork  // All tests in this class can make network requests
+class IntegrationTest {
+    @Test
+    fun testWithNetwork() {
+        // Network allowed
+    }
+}
+```
+
+#### Option 3: Disable Globally
+Remove or set to `false` in `junit-platform.properties`:
+```properties
+junit.nonetwork.applyToAllTests=false
+```
+
+### Important Notes
+
+✅ **JUnit 5 only** - This zero-configuration approach only works with JUnit 5 (Jupiter). JUnit 4 users must use the `@Rule` approach.
+
+✅ **Opt-in by design** - The extension is registered automatically, but only activates when you explicitly enable `junit.nonetwork.applyToAllTests=true`. This prevents surprising behavior.
+
+✅ **Flexible** - You can still use `@AllowNetwork` for exceptions, and all other features (host filtering, etc.) work normally.
+
+⚠️ **Global scope** - When enabled, applies to **all tests** in your test module. Use `@AllowNetwork` to opt-out specific tests.
+
+⚠️ **Configuration required** - Users must still create the properties file or configure build tool. A future Gradle plugin could eliminate even this step.
+
+### When to Use This Approach
+
+**Use zero-configuration when:**
+- 90%+ of your tests should be network-isolated
+- You want the cleanest possible test code (no annotations)
+- You're starting a new project and can establish this as a convention
+- You're using JUnit 5
+
+**Use traditional `@ExtendWith` / `@Rule` when:**
+- Only some tests need network blocking
+- You're using JUnit 4
+- You prefer explicit annotations in test code
+- You're adding the library to an existing codebase incrementally
+
 ## Usage
 
 ### JUnit 5
