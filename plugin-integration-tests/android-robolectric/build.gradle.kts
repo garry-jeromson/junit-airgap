@@ -47,6 +47,9 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     // Note: junit-no-network and junit-no-network-jvm are added automatically by the plugin
 
+    // Test contracts for shared test behaviors
+    testImplementation(project(":plugin-integration-tests:test-contracts"))
+
     // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)
     testImplementation(libs.ktor.client.okhttp)

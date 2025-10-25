@@ -2,7 +2,8 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -11,7 +12,6 @@ import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
 import reactor.netty.http.client.HttpClient
 import java.time.Duration
-import kotlin.test.fail
 
 /**
  * Tests that verify Reactor Netty HTTP client network blocking works correctly
@@ -60,7 +60,7 @@ class ReactorNettyClientTest {
         val response =
             client
                 .post()
-                .uri("https://api.example.org/data")
+                .uri("https://example.com/data")
                 .send(ByteBufFlux.fromString(Mono.just("test data")))
                 .responseContent()
                 .aggregate()
@@ -72,94 +72,24 @@ class ReactorNettyClientTest {
     @Test
     @BlockNetworkRequests
     fun reactorNettyIsBlockedWithNoNetworkTest() {
-        try {
+        assertRequestBlocked {
             makeReactorNettyRequest()
-            fail("Expected network to be blocked, but request succeeded")
-        } catch (e: NetworkRequestAttemptedException) {
-            // Expected - network was blocked directly
-        } catch (e: Exception) {
-            // Check if network-related exception is in the cause chain
-            var cause: Throwable? = e
-            var foundNetworkException = false
-
-            while (cause != null) {
-                val causeName = cause.javaClass.name
-                when {
-                    cause is NetworkRequestAttemptedException -> {
-                        foundNetworkException = true
-                        break
-                    }
-                    // DNS resolution failures indicate DNS socket was blocked
-                    causeName.contains("DnsResolve") ||
-                        causeName.contains("DnsNameResolver") -> {
-                        foundNetworkException = true
-                        break
-                    }
-                    // Channel exceptions indicate socket was blocked
-                    causeName.contains("ClosedChannelException") ||
-                        causeName.contains("ChannelException") -> {
-                        foundNetworkException = true
-                        break
-                    }
-                }
-                cause = cause.cause
-            }
-
-            if (!foundNetworkException) {
-                fail("Expected network to be blocked, but got ${e.javaClass.simpleName}: ${e.message}")
-            }
         }
     }
 
     @Test
     @AllowNetworkRequests
     fun reactorNettyIsAllowedWithAllowNetwork() {
-        try {
+        assertRequestAllowed {
             makeReactorNettyRequest()
-        } catch (e: NetworkRequestAttemptedException) {
-            fail("Network is allowed with @AllowNetworkRequests, but was blocked: ${e.message}")
-        } catch (e: Exception) {
-            // Other exceptions (DNS failures, connection refused, timeout, etc.) are fine
         }
     }
 
     @Test
     @BlockNetworkRequests
     fun `reactor netty with spaces in test name is blocked`() {
-        try {
+        assertRequestBlocked {
             makeReactorNettyPostRequest()
-            fail("Expected network to be blocked, but request succeeded")
-        } catch (e: NetworkRequestAttemptedException) {
-            // Expected - network was blocked directly
-        } catch (e: Exception) {
-            // Check if network-related exception is in the cause chain
-            var cause: Throwable? = e
-            var foundNetworkException = false
-
-            while (cause != null) {
-                val causeName = cause.javaClass.name
-                when {
-                    cause is NetworkRequestAttemptedException -> {
-                        foundNetworkException = true
-                        break
-                    }
-                    causeName.contains("DnsResolve") ||
-                        causeName.contains("DnsNameResolver") -> {
-                        foundNetworkException = true
-                        break
-                    }
-                    causeName.contains("ClosedChannelException") ||
-                        causeName.contains("ChannelException") -> {
-                        foundNetworkException = true
-                        break
-                    }
-                }
-                cause = cause.cause
-            }
-
-            if (!foundNetworkException) {
-                fail("Expected network to be blocked, but got ${e.javaClass.simpleName}: ${e.message}")
-            }
         }
     }
 }

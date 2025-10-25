@@ -3,13 +3,13 @@ package io.github.garryjeromson.junit.nonetwork.test
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.net.Socket
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 /**
@@ -25,8 +25,7 @@ class NetworkBlockingTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertNotNull(context, "Android context is available via Robolectric")
 
-        // Network is blocked - expect exception
-        assertFailsWith<NetworkRequestAttemptedException>("Network is blocked") {
+        assertRequestBlocked {
             Socket("example.com", 80).use { }
         }
     }
@@ -38,13 +37,8 @@ class NetworkBlockingTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertNotNull(context, "Android context is available via Robolectric")
 
-        // Network is allowed - may throw IOException but not NetworkRequestAttemptedException
-        try {
-            Socket("example.com", 80).close()
-        } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network is NOT blocked with @AllowNetworkRequests", e)
-        } catch (e: Exception) {
-            // Other exceptions (no internet, DNS failure, etc.) are OK
+        assertRequestAllowed {
+            Socket("example.com", 80).use { }
         }
     }
 }
