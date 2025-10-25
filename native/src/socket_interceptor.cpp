@@ -56,20 +56,22 @@ jint JNICALL wrapped_Net_connect0(
     DEBUG_LOG("wrapped_Net_connect0() called - intercepting connection attempt");
 
     // Extract hostname from InetAddress
+    // IMPORTANT: Use getHostName() not getHostAddress() to get the original hostname,
+    // not the resolved IP address. This is critical for blockedHosts matching.
     jstring hostString = nullptr;
     const char* hostCStr = nullptr;
 
     if (remote != nullptr) {
         jclass inetAddressClass = env->FindClass("java/net/InetAddress");
         if (inetAddressClass != nullptr) {
-            jmethodID getHostAddressMethod = env->GetMethodID(
+            jmethodID getHostNameMethod = env->GetMethodID(
                 inetAddressClass,
-                "getHostAddress",
+                "getHostName",
                 "()Ljava/lang/String;"
             );
 
-            if (getHostAddressMethod != nullptr) {
-                hostString = (jstring)env->CallObjectMethod(remote, getHostAddressMethod);
+            if (getHostNameMethod != nullptr) {
+                hostString = (jstring)env->CallObjectMethod(remote, getHostNameMethod);
                 if (hostString != nullptr) {
                     hostCStr = env->GetStringUTFChars(hostString, nullptr);
                     DEBUG_LOGF("Connection attempt to %s:%d", hostCStr, remotePort);
