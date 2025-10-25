@@ -110,27 +110,145 @@ class MyTest {
 
 ## Installation
 
+**Quick Reference:**
+
+| Project Type | Dependency Configuration | Configuration Function |
+|--------------|-------------------------|------------------------|
+| **KMP** - Test source sets | `implementation()` inside test source set blocks | Scope defined by source set name (`commonTest`, `jvmTest`, etc.) |
+| **Traditional** - JVM/Android | `testImplementation()` in top-level `dependencies` block | Scope defined by `testImplementation` function |
+
+**Important:** Adding the dependency alone is not enough! After installation, you must:
+1. Add `@ExtendWith(NoNetworkExtension::class)` to your test class (JUnit 5), or
+2. Add `@get:Rule val noNetworkRule = NoNetworkRule()` to your test class (JUnit 4)
+3. Annotate test methods with `@NoNetworkTest`
+
+See the [Usage](#usage) section for detailed setup instructions.
+
+---
+
+### Kotlin Multiplatform Projects
+
+For Kotlin Multiplatform (KMP) projects, you can use a **single artifact ID** without platform suffixes. Gradle's variant-aware dependency resolution automatically selects the correct platform variant (`-jvm`, `-android`, `-ios`) based on your target.
+
+#### Approach A: Single Dependency in commonTest (Recommended for Shared Tests)
+
+Declare the dependency once in `commonTest` and Gradle will resolve the correct variant for each platform:
+
+```kotlin
+kotlin {
+    sourceSets {
+        val commonTest by getting {
+            dependencies {
+                // Use implementation() within test source sets, not testImplementation()
+                // The source set itself (commonTest) defines this as a test dependency
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+            }
+        }
+    }
+}
+```
+
+**When to use:**
+- Your test code is shared across platforms in `commonTest`
+- You want the simplest dependency declaration
+
+**Note:** In KMP projects, use `implementation()` within test source set blocks (`commonTest`, `jvmTest`, etc.), not `testImplementation()`. The source set name already indicates it's a test dependency.
+
+**Next steps:** After adding the dependency, see the [Usage](#usage) section to learn how to activate network blocking with `@ExtendWith(NoNetworkExtension::class)` and `@NoNetworkTest`.
+
+#### Approach B: Platform-Specific Test Source Sets (More Control)
+
+Declare the **same artifact ID** in each platform test source set:
+
+```kotlin
+kotlin {
+    sourceSets {
+        val jvmTest by getting {
+            dependencies {
+                // Use implementation() within test source sets
+                // Gradle automatically resolves to -jvm variant
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+            }
+        }
+
+        val androidUnitTest by getting {
+            dependencies {
+                // Use implementation() within test source sets
+                // Gradle automatically resolves to -android variant
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+            }
+        }
+
+        val iosSimulatorArm64Test by getting {
+            dependencies {
+                // Use implementation() within test source sets
+                // Gradle automatically resolves to -iosSimulatorArm64 variant
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+            }
+        }
+    }
+}
+```
+
+**When to use:**
+- Test code differs between platforms
+- You need platform-specific test dependencies
+- You want more explicit control over which platforms use the library
+
+**Next steps:** After adding the dependency, see the [Usage](#usage) section to learn how to activate network blocking with `@ExtendWith(NoNetworkExtension::class)` and `@NoNetworkTest`.
+
+**Key Benefits for KMP:**
+- ✅ **One artifact ID to remember**: `junit-no-network` (no platform suffixes!)
+- ✅ **Automatic variant resolution**: Gradle selects the correct platform artifact
+- ✅ **Less error-prone**: No manual platform suffix matching
+- ✅ **Cleaner build files**: Reduced duplication
+
 ### JVM Projects
+
+For JVM-only projects (not using Kotlin Multiplatform), you have two options:
 
 #### Gradle (Kotlin DSL)
 
 ```kotlin
 dependencies {
+    // Option 1: Root artifact (recommended) - Gradle auto-resolves to -jvm
+    // Use testImplementation() in the top-level dependencies block
+    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+
+    // Option 2: Platform-specific artifact (also works)
     testImplementation("io.github.garryjeromson:junit-no-network-jvm:0.1.0-SNAPSHOT")
 }
 ```
+
+**Next steps:** After adding the dependency, see the [Usage](#usage) section to learn how to activate network blocking with `@ExtendWith(NoNetworkExtension::class)` and `@NoNetworkTest`.
 
 #### Gradle (Groovy DSL)
 
 ```groovy
 dependencies {
+    // Option 1: Root artifact (recommended)
+    // Use testImplementation in the top-level dependencies block
+    testImplementation 'io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT'
+
+    // Option 2: Platform-specific artifact (also works)
     testImplementation 'io.github.garryjeromson:junit-no-network-jvm:0.1.0-SNAPSHOT'
 }
 ```
 
+**Next steps:** See the [Usage](#usage) section for setup instructions.
+
 #### Maven
 
 ```xml
+<!-- Option 1: Root artifact (recommended) -->
+<dependency>
+    <groupId>io.github.garryjeromson</groupId>
+    <artifactId>junit-no-network</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Option 2: Platform-specific artifact (also works) -->
 <dependency>
     <groupId>io.github.garryjeromson</groupId>
     <artifactId>junit-no-network-jvm</artifactId>
@@ -139,29 +257,91 @@ dependencies {
 </dependency>
 ```
 
+**Note:** Use `<scope>test</scope>` to ensure the library is only available during tests, not in production code.
+
+**Next steps:** See the [Usage](#usage) section for setup instructions.
+
 ### Android Projects
+
+For Android-only projects (not using Kotlin Multiplatform), you have two options:
 
 #### Gradle (Kotlin DSL)
 
 ```kotlin
 dependencies {
+    // Option 1: Root artifact (recommended) - Gradle auto-resolves to -android
+    // Use testImplementation() for unit tests (Robolectric)
+    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+
+    // Option 2: Platform-specific artifact (also works)
     testImplementation("io.github.garryjeromson:junit-no-network-android:0.1.0-SNAPSHOT")
 }
 ```
+
+**Next steps:** After adding the dependency, see the [Usage](#usage) section to learn how to use `@Rule` with `NoNetworkRule` (JUnit 4) or `@ExtendWith` with `NoNetworkExtension` (JUnit 5).
 
 #### Gradle (Groovy DSL)
 
 ```groovy
 dependencies {
+    // Option 1: Root artifact (recommended)
+    // Use testImplementation for unit tests
+    testImplementation 'io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT'
+
+    // Option 2: Platform-specific artifact (also works)
     testImplementation 'io.github.garryjeromson:junit-no-network-android:0.1.0-SNAPSHOT'
 }
 ```
 
-**Note**: For Android projects, you can use Robolectric for fast unit tests that don't require an emulator.
+**Next steps:** See the [Usage](#usage) section for setup instructions.
+
+**Note**: For Android projects, you can use Robolectric for fast unit tests that don't require an emulator. For **Kotlin Multiplatform** Android projects, see the [Kotlin Multiplatform Projects](#kotlin-multiplatform-projects) section above.
 
 ### iOS Projects
 
 **Note**: iOS support is currently limited. The library provides API structure for iOS targets but does not actively block network requests. See Limitations section for details.
+
+### How Gradle Variant Resolution Works
+
+When you use the root artifact (`junit-no-network`), Gradle automatically selects the correct platform-specific artifact using **Gradle Module Metadata** (`.module` files).
+
+**What happens behind the scenes:**
+
+1. **Publishing**: When the library is published, Gradle creates:
+   - `junit-no-network` - Root metadata artifact with `.module` file
+   - `junit-no-network-jvm` - JVM platform artifact
+   - `junit-no-network-android` - Android platform artifact
+   - `junit-no-network-iosSimulatorArm64` - iOS platform artifact
+
+2. **Resolution**: When you declare `junit-no-network` as a dependency:
+   - Gradle reads the `.module` metadata file from the root artifact
+   - The metadata describes which platform-specific artifacts are available
+   - Gradle matches your project's target platform (JVM, Android, iOS) with the available variants
+   - The correct platform artifact is automatically selected and downloaded
+
+3. **Result**: You write one dependency declaration, and each platform gets the right artifact:
+   ```kotlin
+   // You write this once:
+   implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+
+   // JVM projects get:    junit-no-network-jvm
+   // Android projects get: junit-no-network-android
+   // iOS projects get:     junit-no-network-iosSimulatorArm64
+   ```
+
+**Benefits:**
+- ✅ **Automatic**: No manual configuration needed
+- ✅ **Type-safe**: Compile-time errors if the wrong variant is used
+- ✅ **Standard**: Uses Gradle's built-in variant resolution mechanism
+- ✅ **Works everywhere**: Maven, Gradle, and all build tools that support Gradle Module Metadata
+
+**Compatibility:**
+- Gradle 6.0+ (full support for Gradle Module Metadata)
+- Maven 3.6.1+ (via POM transformation)
+
+**Backward Compatibility:**
+- Platform-specific artifacts (`-jvm`, `-android`, `-ios`) still work for single-platform projects
+- You can mix root and platform-specific artifacts in the same project if needed
 
 ## Usage
 

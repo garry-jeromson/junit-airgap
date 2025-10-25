@@ -42,7 +42,8 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 // Depend on the published junit-no-network library from Maven Local
-                implementation("io.github.garryjeromson:junit-no-network-jvm:0.1.0-SNAPSHOT")
+                // Using root artifact - Gradle automatically resolves to -jvm variant
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
 
                 // JUnit 5
                 implementation(libs.junit.jupiter.engine)
@@ -75,7 +76,8 @@ kotlin {
         val androidUnitTest by getting {
             dependencies {
                 // Depend on the published junit-no-network library from Maven Local
-                implementation("io.github.garryjeromson:junit-no-network-android:0.1.0-SNAPSHOT")
+                // Using root artifact - Gradle automatically resolves to -android variant
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
 
                 // JUnit 5
                 implementation(libs.junit.jupiter.engine)
