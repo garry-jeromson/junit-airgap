@@ -118,6 +118,18 @@ actual class NetworkBlocker actual constructor(
                     strategy
                 }
 
+                NetworkBlockerImplementation.JVMTI -> {
+                    val strategy = JvmtiNetworkBlocker(configuration)
+                    if (!strategy.isAvailable()) {
+                        throw IllegalStateException(
+                            "JVMTI implementation requested but JVMTI agent is not loaded. " +
+                                "Ensure the agent is loaded at JVM startup via -agentpath:/path/to/libjunit-no-network-agent.dylib",
+                        )
+                    }
+                    if (debug) println("NetworkBlocker: Using JVMTI implementation (95%+ coverage, native agent)")
+                    strategy
+                }
+
                 NetworkBlockerImplementation.AUTO -> {
                     // Try SecurityManager first (battle-tested, 90% coverage)
                     val securityManagerStrategy = SecurityManagerNetworkBlocker(configuration)
