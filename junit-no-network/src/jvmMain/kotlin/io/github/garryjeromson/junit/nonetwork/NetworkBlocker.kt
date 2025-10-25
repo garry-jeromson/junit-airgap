@@ -3,19 +3,20 @@ package io.github.garryjeromson.junit.nonetwork
 /**
  * JVM implementation of NetworkBlocker that supports multiple blocking strategies.
  *
- * ⚠️ IMPORTANT: SECURITY_MANAGER and SECURITY_POLICY work. BYTE_BUDDY is a non-functional stub.
+ * ⚠️ IMPORTANT: SECURITY_MANAGER and SECURITY_POLICY work. SOCKET_IMPL_FACTORY is experimental. BYTE_BUDDY is a non-functional stub.
  *
  * Supported implementations:
  * - SECURITY_MANAGER: ✅ Works reliably (DEFAULT, deprecated in Java 17+, removed in Java 24+)
  * - SECURITY_POLICY: ✅ Works reliably (declarative approach, deprecated in Java 17+, removed in Java 24+)
+ * - SOCKET_IMPL_FACTORY: ⚠️ Experimental (Java 24+ compatible proof-of-concept)
  * - BYTE_BUDDY: ❌ Does not work (stub kept for API compatibility only)
- * - AUTO: Selects SECURITY_MANAGER or SECURITY_POLICY (both working implementations)
+ * - AUTO: Selects SECURITY_MANAGER, SECURITY_POLICY, or SOCKET_IMPL_FACTORY
  *
  * Implementation can be selected via:
  * - System property: junit.nonetwork.implementation
  * - Environment variable: JUNIT_NONETWORK_IMPLEMENTATION
  *
- * Valid values: bytebuddy, securitymanager, securitypolicy, auto
+ * Valid values: bytebuddy, securitymanager, securitypolicy, socketimplfactory, auto
  */
 actual class NetworkBlocker actual constructor(
     private val configuration: NetworkConfiguration,
@@ -51,12 +52,13 @@ actual class NetworkBlocker actual constructor(
          * Priority:
          * 1. System property: junit.nonetwork.implementation
          * 2. Environment variable: JUNIT_NONETWORK_IMPLEMENTATION
-         * 3. Default: SECURITY_MANAGER (only working implementation)
+         * 3. Default: SECURITY_MANAGER (most reliable implementation)
          *
          * In AUTO mode:
          * - Prefers SECURITY_MANAGER (battle-tested, reliable)
-         * - Falls back to SECURITY_POLICY if preferred
-         * - Falls back to BYTE_BUDDY only if SecurityManager unavailable (Java 24+)
+         * - Falls back to SECURITY_POLICY (declarative approach)
+         * - Falls back to SOCKET_IMPL_FACTORY (Java 24+ compatible, experimental)
+         * - Falls back to BYTE_BUDDY only if all others unavailable
          * - BYTE_BUDDY is a stub and will not block requests
          */
         private fun selectStrategy(configuration: NetworkConfiguration): NetworkBlockerStrategy {
@@ -110,6 +112,18 @@ actual class NetworkBlocker actual constructor(
                     strategy
                 }
 
+                NetworkBlockerImplementation.SOCKET_IMPL_FACTORY -> {
+                    val strategy = SocketImplFactoryNetworkBlocker(configuration)
+                    if (!strategy.isAvailable()) {
+                        throw IllegalStateException(
+                            "SOCKET_IMPL_FACTORY implementation requested but SocketImplFactory is not available. " +
+                                "This may occur if another library has already installed a SocketImplFactory.",
+                        )
+                    }
+                    if (debug) println("NetworkBlocker: Using SOCKET_IMPL_FACTORY implementation (experimental)")
+                    strategy
+                }
+
                 NetworkBlockerImplementation.AUTO -> {
                     // Try SecurityManager first (battle-tested, reliable)
                     val securityManagerStrategy = SecurityManagerNetworkBlocker(configuration)
@@ -125,12 +139,23 @@ actual class NetworkBlocker actual constructor(
                         return securityPolicyStrategy
                     }
 
+                    // Try SocketImplFactory third (Java 24+ compatible)
+                    val socketImplFactoryStrategy = SocketImplFactoryNetworkBlocker(configuration)
+                    if (socketImplFactoryStrategy.isAvailable()) {
+                        if (debug) {
+                            println(
+                                "NetworkBlocker: AUTO mode selected SOCKET_IMPL_FACTORY implementation (experimental)",
+                            )
+                        }
+                        return socketImplFactoryStrategy
+                    }
+
                     // Fall back to Byte Buddy
                     val byteBuddyStrategy = ByteBuddyNetworkBlocker(configuration)
                     if (byteBuddyStrategy.isAvailable()) {
                         if (debug) {
                             println(
-                                "NetworkBlocker: AUTO mode selected BYTE_BUDDY implementation (fallback, experimental)",
+                                "NetworkBlocker: AUTO mode selected BYTE_BUDDY implementation (fallback, non-functional)",
                             )
                         }
                         return byteBuddyStrategy
@@ -139,7 +164,7 @@ actual class NetworkBlocker actual constructor(
                     // No implementation is available
                     throw IllegalStateException(
                         "No network blocking implementation is available. " +
-                            "Either ensure SecurityManager is available or add Byte Buddy dependencies.",
+                            "Either ensure SecurityManager is available, or add Byte Buddy dependencies, or check if SocketImplFactory is already installed.",
                     )
                 }
             }

@@ -76,9 +76,60 @@ enum class NetworkBlockerImplementation {
     SECURITY_POLICY,
 
     /**
+     * SocketImplFactory implementation - Java 24+ compatibility layer (EXPERIMENTAL).
+     *
+     * ⚠️ DEPRECATED API: Uses deprecated `Socket.setSocketImplFactory()` (Java 17+)
+     * ⚠️ EXPERIMENTAL: This implementation is a proof-of-concept for Java 24+ compatibility.
+     *
+     * ## Why This Exists
+     * SecurityManager is removed in Java 24+ (JEP 486), but `Socket.setSocketImplFactory()`
+     * is only deprecated (not removed). This provides a potential path forward for Java 24+
+     * even though it uses a deprecated API.
+     *
+     * ## Important Context: SocketFactory vs SocketImplFactory
+     * - **SocketFactory** (javax.net.SocketFactory): NOT deprecated, but requires application
+     *   code to explicitly use it. Cannot globally intercept socket creation.
+     * - **SocketImplFactory** (via Socket.setSocketImplFactory): Deprecated but functional.
+     *   Globally intercepts ALL socket creation without code changes.
+     *
+     * For a testing library that must work **without modifying application code**, only
+     * SocketImplFactory provides global interception. SocketFactory would require users
+     * to change their production code to use it, defeating the purpose.
+     *
+     * ## How It Works
+     * Uses `Socket.setSocketImplFactory()` to install a custom socket implementation
+     * that checks network configuration before allowing connections.
+     *
+     * ## Known Limitations
+     * - **Deprecated API**: Socket.setSocketImplFactory() is deprecated (shows warnings)
+     * - **One factory per JVM**: Can only be called once per JVM (subsequent calls fail)
+     * - **Platform SocketImpl**: Accessing default SocketImpl is JVM-implementation-specific
+     * - **May not intercept all clients**: HttpURLConnection uses internal sun.net.www classes
+     * - **Not fully validated**: Needs testing against all HTTP clients
+     * - **No guarantee**: Deprecated APIs may be removed in future Java versions
+     *
+     * ## Pros
+     * - Works on Java 24+ (no SecurityManager dependency)
+     * - Pure Java implementation (no native code)
+     * - Global socket interception (no code changes needed)
+     *
+     * ## Cons
+     * - Uses deprecated API (though still functional)
+     * - One factory per JVM (our implementation is configurable to work around this)
+     * - Platform SocketImpl access is JVM-specific
+     * - May not intercept all socket types
+     * - Proof of concept, needs validation
+     *
+     * ## Recommendation
+     * Use SECURITY_MANAGER on Java 17-23. Use SOCKET_IMPL_FACTORY on Java 24+ as a
+     * temporary bridge while migrating to other testing strategies (mocking, DI, etc.).
+     */
+    SOCKET_IMPL_FACTORY,
+
+    /**
      * Automatically detect the best implementation.
      *
-     * Priority: SECURITY_MANAGER → SECURITY_POLICY → BYTE_BUDDY
+     * Priority: SECURITY_MANAGER → SECURITY_POLICY → SOCKET_IMPL_FACTORY → BYTE_BUDDY
      */
     AUTO,
     ;
@@ -91,6 +142,7 @@ enum class NetworkBlockerImplementation {
          * - "bytebuddy", "byte-buddy" -> BYTE_BUDDY
          * - "securitymanager", "security-manager" -> SECURITY_MANAGER
          * - "securitypolicy", "security-policy" -> SECURITY_POLICY
+         * - "socketimplfactory", "socket-impl-factory" -> SOCKET_IMPL_FACTORY
          * - "auto" -> AUTO
          * - null -> default()
          *
@@ -103,12 +155,13 @@ enum class NetworkBlockerImplementation {
                 "bytebuddy" -> BYTE_BUDDY
                 "securitymanager" -> SECURITY_MANAGER
                 "securitypolicy" -> SECURITY_POLICY
+                "socketimplfactory" -> SOCKET_IMPL_FACTORY
                 "auto" -> AUTO
                 null -> default()
                 else ->
                     throw IllegalArgumentException(
                         "Unknown implementation: $value. " +
-                            "Valid values: bytebuddy, securitymanager, securitypolicy, auto",
+                            "Valid values: bytebuddy, securitymanager, securitypolicy, socketimplfactory, auto",
                     )
             }
 
