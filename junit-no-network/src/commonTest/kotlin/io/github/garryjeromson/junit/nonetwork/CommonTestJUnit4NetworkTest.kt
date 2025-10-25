@@ -11,7 +11,7 @@ import kotlin.test.Test
  *
  * Key validation points:
  * 1. Test is defined in commonTest (not platform-specific)
- * 2. Test uses @NoNetworkTest annotation
+ * 2. Test uses @BlockNetworkRequests annotation
  * 3. NO @Rule field is manually defined
  * 4. Bytecode enhancement should inject the rule during compilation
  * 5. Network blocking should work when executed on JVM/Android
@@ -24,7 +24,7 @@ class CommonTestJUnit4NetworkTest {
     // Should be injected by JUnit4RuleInjectionTask during compilation
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `commonTest should block network via bytecode-injected rule`() {
         // This test will be implemented with actual platform-specific code
         // in jvmTest and androidUnitTest source sets using expect/actual pattern
@@ -33,7 +33,7 @@ class CommonTestJUnit4NetworkTest {
 
     @Test
     fun `commonTest without NoNetworkTest should not block network`() {
-        // Without @NoNetworkTest annotation, network should NOT be blocked
+        // Without @BlockNetworkRequests annotation, network should NOT be blocked
         // This verifies the rule is correctly scoped
         performNonBlockingNetworkTest()
     }

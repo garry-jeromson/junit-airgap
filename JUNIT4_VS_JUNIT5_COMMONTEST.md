@@ -187,8 +187,8 @@ If you have both JUnit 4 and JUnit 5 tests:
 ### Functional Tests
 
 Both test types successfully:
-- ✅ Block network requests with `@NoNetworkTest`
-- ✅ Allow network with `@AllowNetwork`
+- ✅ Block network requests with `@BlockNetworkRequests`
+- ✅ Allow network with `@AllowNetworkRequests`
 - ✅ Execute on both JVM and Android platforms
 
 **Mechanism:** JUnit 5 extension (`NoNetworkExtension`), not JUnit 4 `@Rule`

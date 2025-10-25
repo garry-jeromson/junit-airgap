@@ -1,9 +1,9 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
-import io.github.garryjeromson.junit.nonetwork.BlockedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
+import io.github.garryjeromson.junit.nonetwork.BlockRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkBlocked
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
@@ -17,8 +17,8 @@ import java.net.Socket
  * Integration tests for complex configuration scenarios.
  */
 @ExtendWith(NoNetworkExtension::class)
-@NoNetworkTest
-@AllowedHosts(hosts = ["localhost", "127.0.0.1"]) // Class-level configuration - need both since DNS resolves
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"]) // Class-level configuration - need both since DNS resolves
 class ConfigurationIntegrationTest {
     companion object {
         private lateinit var mockServer: MockHttpServer
@@ -52,7 +52,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["192.168.1.1"]) // Method specifies additional host
+    @AllowRequestsToHosts(hosts = ["192.168.1.1"]) // Method specifies additional host
     fun `should merge method-level configuration with class-level`() {
         // NOTE: Current implementation MERGES annotations from class and method
         // So this test has both class-level (localhost, 127.0.0.1) AND method-level (192.168.1.1)
@@ -69,8 +69,8 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["*"])
-    @BlockedHosts(hosts = ["evil.com", "malicious.example.com"])
+    @AllowRequestsToHosts(hosts = ["*"])
+    @BlockRequestsToHosts(hosts = ["evil.com", "malicious.example.com"])
     fun `should block specific hosts even with wildcard allowed`() {
         // Wildcard allows most hosts
         assertNetworkNotBlocked("Wildcard should allow most hosts") {
@@ -88,7 +88,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["*.example.com"])
+    @AllowRequestsToHosts(hosts = ["*.example.com"])
     fun `should support wildcard subdomain patterns`() {
         // *.example.com should match subdomains
         assertNetworkBlocked("Root domain should not match subdomain pattern") {
@@ -102,7 +102,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1", "::1"])
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "::1"])
     fun `should support multiple allowed hosts`() {
         // All localhost variants should work
         assertNetworkNotBlocked("localhost should be allowed") {
@@ -115,7 +115,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @BlockedHosts(hosts = ["localhost"]) // Block localhost even though class allows it
+    @BlockRequestsToHosts(hosts = ["localhost"]) // Block localhost even though class allows it
     fun `should respect method-level blocked hosts over class-level allowed`() {
         // Blocked should take precedence
         assertNetworkBlocked("Method-level blocked should override class-level allowed") {
@@ -124,7 +124,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["192.168.*.*", "10.*.*.*"])
+    @AllowRequestsToHosts(hosts = ["192.168.*.*", "10.*.*.*"])
     fun `should support IP address wildcard patterns`() {
         // These would match if we actually resolved to those IPs
         // We're testing the pattern matching logic works

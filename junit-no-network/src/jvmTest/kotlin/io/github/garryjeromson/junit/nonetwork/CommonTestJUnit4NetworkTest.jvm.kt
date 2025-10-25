@@ -20,12 +20,12 @@ actual fun performNetworkBlockingTest() {
 }
 
 actual fun performNonBlockingNetworkTest() {
-    // Without @NoNetworkTest, network should not be blocked
+    // Without @BlockNetworkRequests, network should not be blocked
     // Connection may fail for other reasons (no internet, etc) but should not throw our exception
     try {
         Socket("example.com", 80).close()
     } catch (e: NetworkRequestAttemptedException) {
-        throw AssertionError("Network should NOT be blocked without @NoNetworkTest annotation", e)
+        throw AssertionError("Network should NOT be blocked without @BlockNetworkRequests annotation", e)
     } catch (e: Exception) {
         // Other exceptions (UnknownHostException, SocketException, etc.) are OK
         // We're only verifying that our NetworkRequestAttemptedException is NOT thrown

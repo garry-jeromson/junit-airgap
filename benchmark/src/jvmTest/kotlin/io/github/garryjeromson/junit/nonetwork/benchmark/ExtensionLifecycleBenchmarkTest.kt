@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertTrue
@@ -13,21 +13,21 @@ import kotlin.test.assertTrue
 @ExtendWith(NoNetworkExtension::class)
 class ExtensionLifecycleBenchmarkTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark annotation processing overhead`() {
-        // This test measures the overhead of having @NoNetworkTest annotation
+        // This test measures the overhead of having @BlockNetworkRequests annotation
         // and SecurityManager installation/removal
         BenchmarkRunner.runBenchmarkAndAssert(
-            name = "Lifecycle (@NoNetworkTest Overhead)",
+            name = "Lifecycle (@BlockNetworkRequests Overhead)",
             control = {
-                // Control: Simple operation without @NoNetworkTest
+                // Control: Simple operation without @BlockNetworkRequests
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     val x = 1 + 1
                     assertTrue(x == 2)
                 }
             },
             treatment = {
-                // Treatment: Same operation but under @NoNetworkTest
+                // Treatment: Same operation but under @BlockNetworkRequests
                 // (this test method already has it, so SecurityManager is active)
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     val x = 1 + 1
@@ -38,7 +38,7 @@ class ExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark extension with minimal work`() {
         // Measure overhead when test does almost nothing
         BenchmarkRunner.runBenchmarkAndAssert(
@@ -61,7 +61,7 @@ class ExtensionLifecycleBenchmarkTest {
 
     @Test
     fun `benchmark extension enabled vs disabled`() {
-        // This test doesn't have @NoNetworkTest, so we can measure
+        // This test doesn't have @BlockNetworkRequests, so we can measure
         // the difference between extension being present vs not present
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Lifecycle (Extension Enabled vs Disabled)",
@@ -81,7 +81,7 @@ class ExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark multiple test method calls`() {
         // Simulates a test that calls multiple methods
         BenchmarkRunner.runBenchmarkAndAssert(
@@ -104,7 +104,7 @@ class ExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark exception creation overhead`() {
         // Measure if exception creation for potential blocking has overhead
         BenchmarkRunner.runBenchmarkAndAssert(

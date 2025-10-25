@@ -2,8 +2,8 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -35,7 +35,7 @@ class KtorClientRobolectricTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTestOnAndroid() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -57,7 +57,7 @@ class KtorClientRobolectricTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun ktorClientIsAllowedWithAllowNetworkOnAndroid() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -67,14 +67,14 @@ class KtorClientRobolectricTest {
         try {
             makeKtorRequest()
         } catch (e: NetworkRequestAttemptedException) {
-            fail("Network is allowed with @AllowNetwork, but was blocked: ${e.message}")
+            fail("Network is allowed with @AllowNetworkRequests, but was blocked: ${e.message}")
         } catch (e: Exception) {
             // Other exceptions (like actual network errors) are fine
         }
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `ktor client with Robolectric and spaces in test name works on Android`() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()

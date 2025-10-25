@@ -17,8 +17,8 @@ import java.net.Socket
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [26])
-@NoNetworkTest
-@AllowedHosts(hosts = ["localhost", "127.0.0.1"]) // Class-level configuration
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"]) // Class-level configuration
 class AndroidConfigurationIntegrationTest {
     @get:Rule
     val noNetworkRule = NoNetworkRule()
@@ -55,7 +55,7 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["192.168.1.1"]) // Method specifies additional host
+    @AllowRequestsToHosts(hosts = ["192.168.1.1"]) // Method specifies additional host
     fun `should merge method-level configuration with class-level`() {
         // localhost from class-level should still work
         assertNetworkNotBlocked("Class-level config should be merged") {
@@ -69,8 +69,8 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["*"])
-    @BlockedHosts(hosts = ["evil.com", "malicious.example.com"])
+    @AllowRequestsToHosts(hosts = ["*"])
+    @BlockRequestsToHosts(hosts = ["evil.com", "malicious.example.com"])
     fun `should block specific hosts even with wildcard allowed`() {
         // Wildcard allows most hosts
         assertNetworkNotBlocked("Wildcard should allow most hosts") {
@@ -88,7 +88,7 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["*.example.com"])
+    @AllowRequestsToHosts(hosts = ["*.example.com"])
     fun `should support wildcard subdomain patterns`() {
         // *.example.com should match subdomains
         assertNetworkBlocked("Root domain should not match subdomain pattern") {
@@ -102,7 +102,7 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1", "::1"])
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "::1"])
     fun `should support multiple allowed hosts`() {
         // All localhost variants should work
         assertNetworkNotBlocked("localhost should be allowed") {
@@ -115,7 +115,7 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @BlockedHosts(hosts = ["localhost"]) // Block localhost even though class allows it
+    @BlockRequestsToHosts(hosts = ["localhost"]) // Block localhost even though class allows it
     fun `should respect method-level blocked hosts over class-level allowed`() {
         // Blocked should take precedence
         assertNetworkBlocked("Method-level blocked should override class-level allowed") {
@@ -124,7 +124,7 @@ class AndroidConfigurationIntegrationTest {
     }
 
     @Test
-    @AllowedHosts(hosts = ["192.168.*.*", "10.*.*.*"])
+    @AllowRequestsToHosts(hosts = ["192.168.*.*", "10.*.*.*"])
     fun `should support IP address wildcard patterns`() {
         // Non-matching IP should be blocked
         assertNetworkBlocked("Non-matching IP should be blocked") {

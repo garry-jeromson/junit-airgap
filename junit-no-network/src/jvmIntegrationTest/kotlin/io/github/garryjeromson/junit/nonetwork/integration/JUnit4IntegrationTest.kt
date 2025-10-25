@@ -1,9 +1,9 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
-import io.github.garryjeromson.junit.nonetwork.BlockedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
+import io.github.garryjeromson.junit.nonetwork.BlockRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkBlocked
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
@@ -37,7 +37,7 @@ class JUnit4IntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldBlockNetworkRequestsWithRule() {
         assertNetworkBlocked("JUnit 4 Rule should block network") {
             Socket("example.com", 80)
@@ -45,8 +45,8 @@ class JUnit4IntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost"])
     fun shouldAllowConfiguredHostsWithRule() {
         assertNetworkNotBlocked("JUnit 4 Rule should allow configured hosts") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
@@ -54,9 +54,9 @@ class JUnit4IntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*"])
-    @BlockedHosts(hosts = ["evil.com"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*"])
+    @BlockRequestsToHosts(hosts = ["evil.com"])
     fun shouldRespectBlockedHostsWithRule() {
         assertNetworkBlocked("JUnit 4 Rule should respect blocked hosts") {
             Socket("evil.com", 80)
@@ -65,7 +65,7 @@ class JUnit4IntegrationTest {
 
     @Test
     fun shouldNotBlockWithoutAnnotation() {
-        // Without @NoNetworkTest, network should not be blocked
+        // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("JUnit 4 should not block without annotation") {
             try {
                 URL("http://example.com").openConnection()
@@ -76,7 +76,7 @@ class JUnit4IntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldWorkAcrossMultipleTestsInSameClass() {
         // Verify that the rule properly installs/uninstalls between tests
         assertNetworkBlocked("Multiple tests should work") {

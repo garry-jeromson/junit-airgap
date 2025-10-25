@@ -1,8 +1,8 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkBlocked
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class RealWorldScenariosTest {
     lateinit var tempDir: File
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block API calls in unit tests`() {
         // Simulate a test that accidentally calls a real API
         assertNetworkBlocked("Real API calls should be blocked in unit tests") {
@@ -31,7 +31,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block database connections to remote hosts`() {
         // Simulate attempt to connect to remote database
         assertNetworkBlocked("Remote database connections should be blocked") {
@@ -40,8 +40,8 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"]) // Need both since DNS resolves
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"]) // Need both since DNS resolves
     fun `should allow local database connections`() {
         // Simulate connection to local database (would need actual DB running)
         assertNetworkNotBlocked("Local database should be allowed") {
@@ -54,7 +54,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should NOT block file I-O operations`() {
         // Verify that file operations still work
         val testFile = File(tempDir, "test.txt")
@@ -65,7 +65,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block HTTP requests to CDNs`() {
         assertNetworkBlocked("CDN requests should be blocked") {
             URL("https://cdn.jsdelivr.net/npm/package@1.0.0/file.js").openConnection().connect()
@@ -73,7 +73,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block analytics and tracking`() {
         assertNetworkBlocked("Analytics should be blocked") {
             Socket("analytics.google.com", 443)
@@ -85,8 +85,8 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1", "testcontainers.local"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "testcontainers.local"])
     fun `should allow TestContainers-like scenarios`() {
         // Simulate testcontainers usage where we allow localhost
         assertNetworkNotBlocked("Local test containers should work") {
@@ -99,7 +99,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should provide clear error messages for blocked requests`() {
         try {
             // Use URL.openConnection() which calls connect with actual port
@@ -123,22 +123,22 @@ class RealWorldScenariosTest {
 
     @Test
     fun `should NOT block requests when annotation is absent`() {
-        // Without @NoNetworkTest, network should not be blocked
+        // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("Network should not be blocked without annotation") {
             try {
                 Socket("example.com", 80)
             } catch (e: Exception) {
                 // Other exceptions are fine, just not NetworkRequestAttemptedException
                 assert(e !is io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException) {
-                    "Should not throw NetworkRequestAttemptedException without @NoNetworkTest"
+                    "Should not throw NetworkRequestAttemptedException without @BlockNetworkRequests"
                 }
             }
         }
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*.internal", "*.local"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*.internal", "*.local"])
     fun `should support internal network patterns`() {
         // Test that internal network patterns work
         assertNetworkBlocked("External networks should be blocked") {

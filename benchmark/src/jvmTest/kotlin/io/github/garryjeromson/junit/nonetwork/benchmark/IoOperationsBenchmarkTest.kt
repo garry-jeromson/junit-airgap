@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.ByteArrayInputStream
@@ -16,7 +16,7 @@ import kotlin.io.path.createTempDirectory
 @ExtendWith(NoNetworkExtension::class)
 class IoOperationsBenchmarkTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark file write and read operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {
@@ -45,7 +45,7 @@ class IoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark byte stream operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "I/O (Byte Streams)",
@@ -73,7 +73,7 @@ class IoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark buffered file operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {
@@ -110,7 +110,7 @@ class IoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark directory operations`() {
         val tempRoot = createTempDirectory("benchmark").toFile()
         try {
@@ -145,7 +145,7 @@ class IoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark file metadata operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {

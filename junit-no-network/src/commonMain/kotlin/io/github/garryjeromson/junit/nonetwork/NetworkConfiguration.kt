@@ -85,13 +85,13 @@ data class NetworkConfiguration(
         fun fromAnnotations(annotations: Collection<Annotation>): NetworkConfiguration {
             val allowedHosts =
                 annotations
-                    .filterIsInstance<AllowedHosts>()
+                    .filterIsInstance<AllowRequestsToHosts>()
                     .flatMap { it.hosts.toList() }
                     .toSet()
 
             val blockedHosts =
                 annotations
-                    .filterIsInstance<BlockedHosts>()
+                    .filterIsInstance<BlockRequestsToHosts>()
                     .flatMap { it.hosts.toList() }
                     .toSet()
 

@@ -1,8 +1,8 @@
 package io.github.garryjeromson.junit.nonetwork.test
 
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
  */
 class NetworkBlockingTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun networkIsBlockedWithNoNetworkTest() {
         // Network is blocked - expect exception
         assertFailsWith<NetworkRequestAttemptedException>("Network is blocked") {
@@ -23,20 +23,20 @@ class NetworkBlockingTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun networkIsAllowedWithAllowNetwork() {
         // Network is allowed - may throw IOException but not NetworkRequestAttemptedException
         try {
             Socket("example.com", 80).close()
         } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network is NOT blocked with @AllowNetwork", e)
+            throw AssertionError("Network is NOT blocked with @AllowNetworkRequests", e)
         } catch (e: Exception) {
             // Other exceptions (no internet, DNS failure, etc.) are OK
         }
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `test method names with spaces work correctly in JUnit 4`() {
         // Verify that Kotlin backtick syntax (spaces in method names) works with ByteBuddy injection
         assertTrue(true, "Test with spaces in name executed successfully")

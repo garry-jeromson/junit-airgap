@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.test
 
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 
 /**
@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Test
  */
 class NetworkBlockingTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `network should be blocked with NoNetworkTest`() {
         // Platform-specific implementation will attempt network and verify blocking
         testNetworkBlocking()
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun `network should be allowed with AllowNetwork`() {
         // Platform-specific implementation will attempt network and verify it's allowed
         testNetworkAllowed()

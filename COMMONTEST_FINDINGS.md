@@ -29,7 +29,7 @@ testClassesDir.set(project.layout.buildDirectory.dir("intermediates/javac/debugU
 ### Created Tests
 1. **`CommonTestJUnit4NetworkTest.kt`** (in commonTest)
    - Deliberately has NO manual `@Rule` field
-   - Uses `@NoNetworkTest` annotation
+   - Uses `@BlockNetworkRequests` annotation
    - Attempts network connection
 
 2. **`CommonTestBytecodeVerificationTest.kt`** (in androidUnitTest)
@@ -131,8 +131,8 @@ Success rate: 100%
 
 **Key Findings:**
 1. ✅ Bytecode enhancement successfully injects `@Rule` field into commonTest classes
-2. ✅ Network blocking works for `@NoNetworkTest` annotated tests
-3. ✅ `@AllowNetwork` opt-out mechanism works correctly
+2. ✅ Network blocking works for `@BlockNetworkRequests` annotated tests
+3. ✅ `@AllowNetworkRequests` opt-out mechanism works correctly
 4. ✅ Tests defined in commonTest execute successfully on Android platform
 
 ## Fix Options Considered
@@ -224,7 +224,7 @@ testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUn
 - ✅ All Kotlin Android tests
 - ✅ Automatic `@Rule` injection via bytecode enhancement
 - ✅ Zero-configuration setup (no manual annotations needed)
-- ✅ `@AllowNetwork` opt-out mechanism
+- ✅ `@AllowNetworkRequests` opt-out mechanism
 
 **Test evidence:**
 - 6/6 tests passing (100% success rate)
@@ -238,7 +238,7 @@ testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUn
 2. ✅ **Re-ran commonTest tests** - all pass with 100% success
 3. ✅ **Verified bytecode enhancement** works via reflection tests
 4. ✅ **Validated network blocking** works for commonTest on Android
-5. ✅ **Confirmed `@AllowNetwork` opt-out** works correctly
+5. ✅ **Confirmed `@AllowNetworkRequests` opt-out** works correctly
 
 ## Future Considerations
 
@@ -258,7 +258,7 @@ Comprehensive test suite in `plugin-integration-test` module serving as regressi
 
 1. ✅ **`plugin-integration-test/src/commonTest/kotlin/.../PluginCommonTestJUnit4Test.kt`**
    - Validates commonTest tests work with bytecode enhancement
-   - Tests both network blocking and `@AllowNetwork` opt-out
+   - Tests both network blocking and `@AllowNetworkRequests` opt-out
 
 2. ✅ **`plugin-integration-test/src/androidUnitTest/kotlin/.../PluginCommonTestJUnit4Test.android.kt`**
    - Platform-specific Android implementation using `Socket`

@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertTrue
@@ -22,7 +22,7 @@ class BaselineBenchmarkTest {
                 }
             },
             treatment = {
-                // Treatment: Run test with extension but without @NoNetworkTest
+                // Treatment: Run test with extension but without @BlockNetworkRequests
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     // Completely empty - just test overhead
                 }
@@ -81,10 +81,10 @@ class BaselineBenchmarkTest {
     @Test
     @ExtendWith(NoNetworkExtension::class)
     fun `benchmark with extension enabled but no network test annotation`() {
-        // This test has the extension enabled but doesn't use @NoNetworkTest
+        // This test has the extension enabled but doesn't use @BlockNetworkRequests
         // so no SecurityManager should be installed
         BenchmarkRunner.runBenchmarkAndAssert(
-            name = "Extension Enabled (No @NoNetworkTest)",
+            name = "Extension Enabled (No @BlockNetworkRequests)",
             control = {
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     val result = calculateSum(1, 2, 3, 4, 5)
@@ -103,12 +103,12 @@ class BaselineBenchmarkTest {
 
     @Test
     @ExtendWith(NoNetworkExtension::class)
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark with network test annotation but no network calls`() {
-        // This test has @NoNetworkTest enabled but makes no network calls
+        // This test has @BlockNetworkRequests enabled but makes no network calls
         // SecurityManager is installed but never triggered
         BenchmarkRunner.runBenchmarkAndAssert(
-            name = "@NoNetworkTest (No Network Calls)",
+            name = "@BlockNetworkRequests (No Network Calls)",
             control = {
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     val result = calculateProduct(2, 3, 4)
@@ -116,7 +116,7 @@ class BaselineBenchmarkTest {
                 }
             },
             treatment = {
-                // Same operation but running under @NoNetworkTest
+                // Same operation but running under @BlockNetworkRequests
                 repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                     val result = calculateProduct(2, 3, 4)
                     assertTrue(result == 24)

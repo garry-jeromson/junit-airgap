@@ -7,21 +7,21 @@ import kotlin.test.assertTrue
 
 class AnnotationsTest {
     @Test
-    fun `NoNetworkTest annotation should be present and applicable to functions`() {
+    fun `BlockNetworkRequests annotation should be present and applicable to functions`() {
         val annotation =
-            NoNetworkTestClass::class.java
+            BlockNetworkRequestsClass::class.java
                 .getMethod("testMethod")
-                .getAnnotation(NoNetworkTest::class.java)
+                .getAnnotation(BlockNetworkRequests::class.java)
 
-        assertNotNull(annotation, "NoNetworkTest annotation should be present on test method")
+        assertNotNull(annotation, "BlockNetworkRequests annotation should be present on test method")
     }
 
     @Test
-    fun `AllowedHosts annotation should store host values`() {
+    fun `AllowRequestsToHosts annotation should store host values`() {
         val annotation =
-            AllowedHostsTestClass::class.java
+            AllowRequestsToHostsTestClass::class.java
                 .getMethod("testMethod")
-                .getAnnotation(AllowedHosts::class.java)
+                .getAnnotation(AllowRequestsToHosts::class.java)
 
         assertNotNull(annotation)
         assertEquals(2, annotation.hosts.size)
@@ -30,11 +30,11 @@ class AnnotationsTest {
     }
 
     @Test
-    fun `BlockedHosts annotation should store host values`() {
+    fun `BlockRequestsToHosts annotation should store host values`() {
         val annotation =
-            BlockedHostsTestClass::class.java
+            BlockRequestsToHostsTestClass::class.java
                 .getMethod("testMethod")
-                .getAnnotation(BlockedHosts::class.java)
+                .getAnnotation(BlockRequestsToHosts::class.java)
 
         assertNotNull(annotation)
         assertEquals(2, annotation.hosts.size)
@@ -43,34 +43,34 @@ class AnnotationsTest {
     }
 
     @Test
-    fun `AllowedHosts annotation should accept empty array`() {
+    fun `AllowRequestsToHosts annotation should accept empty array`() {
         val annotation =
-            EmptyAllowedHostsTestClass::class.java
+            EmptyAllowRequestsToHostsTestClass::class.java
                 .getMethod("testMethod")
-                .getAnnotation(AllowedHosts::class.java)
+                .getAnnotation(AllowRequestsToHosts::class.java)
 
         assertNotNull(annotation)
         assertEquals(0, annotation.hosts.size)
     }
 
     // Test classes for annotation verification
-    private class NoNetworkTestClass {
-        @NoNetworkTest
+    private class BlockNetworkRequestsClass {
+        @BlockNetworkRequests
         fun testMethod() {}
     }
 
-    private class AllowedHostsTestClass {
-        @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    private class AllowRequestsToHostsTestClass {
+        @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
         fun testMethod() {}
     }
 
-    private class BlockedHostsTestClass {
-        @BlockedHosts(hosts = ["evil.com", "bad.example.com"])
+    private class BlockRequestsToHostsTestClass {
+        @BlockRequestsToHosts(hosts = ["evil.com", "bad.example.com"])
         fun testMethod() {}
     }
 
-    private class EmptyAllowedHostsTestClass {
-        @AllowedHosts(hosts = [])
+    private class EmptyAllowRequestsToHostsTestClass {
+        @AllowRequestsToHosts(hosts = [])
         fun testMethod() {}
     }
 }

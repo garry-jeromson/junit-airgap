@@ -272,7 +272,7 @@ internal class SecurityPolicyNetworkBlocker(
                     )
 
                 throw NetworkRequestAttemptedException(
-                    "Network request blocked by @NoNetworkTest: Attempted to connect to $host:$port",
+                    "Network request blocked by @BlockNetworkRequests: Attempted to connect to $host:$port",
                     requestDetails = details,
                 )
             }

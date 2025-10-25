@@ -3,8 +3,8 @@ package io.github.garryjeromson.junit.nonetwork.test
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -18,7 +18,7 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 class RobolectricKmpTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `KMP Android target can use Robolectric with network blocking`() {
         // Verify Robolectric provides Android framework in KMP context
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -27,7 +27,7 @@ class RobolectricKmpTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun kmpAndroidTargetCanUseSharedPreferencesWithNetworkBlocking() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val prefs: SharedPreferences = context.getSharedPreferences("kmp_test_prefs", Context.MODE_PRIVATE)
@@ -41,11 +41,11 @@ class RobolectricKmpTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun kmpAndroidTargetCanUseAndroidApisWithAllowNetwork() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        // Test various Android APIs work with @AllowNetwork in KMP
+        // Test various Android APIs work with @AllowNetworkRequests in KMP
         assertNotNull(context.resources, "Resources should be available in KMP Android target")
         assertNotNull(context.contentResolver, "ContentResolver should be available in KMP Android target")
         assertNotNull(context.applicationInfo, "ApplicationInfo should be available in KMP Android target")

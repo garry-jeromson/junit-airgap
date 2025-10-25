@@ -1,8 +1,8 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkBlocked
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
@@ -43,7 +43,7 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block HttpURLConnection to external host`() {
         assertNetworkBlocked("HttpURLConnection should be blocked") {
             val url = URL("http://example.com/api")
@@ -54,8 +54,8 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow HttpURLConnection to localhost`() {
         assertNetworkNotBlocked("HttpURLConnection to localhost should work") {
             val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
@@ -69,7 +69,7 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block OkHttp to external host`() {
         assertNetworkBlocked("OkHttp should be blocked") {
             val client =
@@ -89,8 +89,8 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"]) // Need both since DNS resolves
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"]) // Need both since DNS resolves
     fun `should allow OkHttp to localhost`() {
         assertNetworkNotBlocked("OkHttp to localhost should work") {
             val client =
@@ -111,7 +111,7 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Apache HttpClient to external host`() {
         assertNetworkBlocked("Apache HttpClient should be blocked") {
             val httpClient = HttpClients.createDefault()
@@ -122,8 +122,8 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["127.0.0.1"])
     fun `should allow Apache HttpClient to 127_0_0_1`() {
         assertNetworkNotBlocked("Apache HttpClient to 127.0.0.1 should work") {
             val httpClient = HttpClients.createDefault()
@@ -135,7 +135,7 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block HTTPS connections`() {
         assertNetworkBlocked("HTTPS should be blocked") {
             val url = URL("https://www.google.com")
@@ -146,8 +146,8 @@ class HttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*"])
     fun `should allow all HTTP clients when wildcard is configured`() {
         assertNetworkNotBlocked("All clients should work with wildcard") {
             // Test with localhost since we have wildcard

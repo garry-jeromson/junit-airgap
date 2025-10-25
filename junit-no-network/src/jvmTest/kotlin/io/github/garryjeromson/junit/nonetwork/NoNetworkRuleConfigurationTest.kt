@@ -33,20 +33,20 @@ class NoNetworkRuleConfigurationTest {
         }
 
         @Test
-        @AllowNetwork
+        @AllowNetworkRequests
         fun shouldAllowNetworkWithAllowNetworkAnnotation() {
             try {
                 Socket("example.com", 80)
                 // May fail with connection error, but should not be blocked
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should prevent blocking", e)
+                throw AssertionError("@AllowNetworkRequests should prevent blocking", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }
         }
 
         @Test
-        @AllowedHosts(hosts = ["localhost"])
+        @AllowRequestsToHosts(hosts = ["localhost"])
         fun shouldRespectAllowedHostsConfiguration() {
             // Configuration should still work
             try {
@@ -59,9 +59,9 @@ class NoNetworkRuleConfigurationTest {
     }
 
     /**
-     * Test 2: @NoNetworkByDefault annotation with JUnit 4
+     * Test 2: @BlockNetworkRequests annotation with JUnit 4
      */
-    @NoNetworkByDefault
+    @BlockNetworkRequests
     class NoNetworkByDefaultAnnotationTest {
         @get:Rule
         val noNetworkRule = NoNetworkRule()
@@ -77,12 +77,12 @@ class NoNetworkRuleConfigurationTest {
         }
 
         @Test
-        @AllowNetwork
+        @AllowNetworkRequests
         fun shouldAllowNetworkWithAllowNetworkOptOut() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should override @NoNetworkByDefault", e)
+                throw AssertionError("@AllowNetworkRequests should override @BlockNetworkRequests", e)
             } catch (e: Exception) {
                 // Other errors are fine
             }
@@ -98,7 +98,7 @@ class NoNetworkRuleConfigurationTest {
 
         @Test
         fun shouldNotBlockWithoutAnnotationByDefault() {
-            // Existing behavior - no blocking without @NoNetworkTest
+            // Existing behavior - no blocking without @BlockNetworkRequests
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
@@ -109,7 +109,7 @@ class NoNetworkRuleConfigurationTest {
         }
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun shouldBlockWithNoNetworkTestAnnotation() {
             // Existing behavior should still work
             try {
@@ -122,10 +122,10 @@ class NoNetworkRuleConfigurationTest {
     }
 
     /**
-     * Test 4: Class-level @AllowNetwork
+     * Test 4: Class-level @AllowNetworkRequests
      */
-    @AllowNetwork
-    @NoNetworkByDefault
+    @AllowNetworkRequests
+    @BlockNetworkRequests
     class ClassLevelAllowNetworkTest {
         @get:Rule
         val noNetworkRule = NoNetworkRule()
@@ -135,7 +135,7 @@ class NoNetworkRuleConfigurationTest {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("Class-level @AllowNetwork should prevent blocking", e)
+                throw AssertionError("Class-level @AllowNetworkRequests should prevent blocking", e)
             } catch (e: Exception) {
                 // Other errors are fine
             }

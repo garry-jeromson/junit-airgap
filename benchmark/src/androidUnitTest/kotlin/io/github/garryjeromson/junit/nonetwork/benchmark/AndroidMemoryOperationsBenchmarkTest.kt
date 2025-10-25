@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,7 +17,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark object allocation`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -38,7 +38,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark list operations`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -69,7 +69,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark map operations`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -98,7 +98,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark set operations`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -125,7 +125,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark array copying`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -148,7 +148,7 @@ class AndroidMemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark data class operations`() {
         val result =
             BenchmarkRunner.runBenchmark(

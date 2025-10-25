@@ -3,8 +3,8 @@ package io.github.garryjeromson.junit.nonetwork.test
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -18,7 +18,7 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 class RobolectricNetworkTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun canUseAndroidContextWithNetworkBlocking() {
         // Verify Robolectric provides Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -28,7 +28,7 @@ class RobolectricNetworkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun canUseSharedPreferencesWithNetworkBlocking() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val prefs: SharedPreferences = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
@@ -42,18 +42,18 @@ class RobolectricNetworkTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun canUseAndroidApisWithAllowNetworkAnnotation() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        // Test various Android APIs work with @AllowNetwork
+        // Test various Android APIs work with @AllowNetworkRequests
         assertNotNull(context.resources, "Resources are available")
         assertNotNull(context.contentResolver, "ContentResolver is available")
         assertNotNull(context.applicationInfo, "ApplicationInfo is available")
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `test names with spaces work with bytecode injection`() {
         // Verify that Kotlin backtick syntax (spaces in method names) works with ByteBuddy injection
         val context = ApplicationProvider.getApplicationContext<Context>()

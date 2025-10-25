@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.test
 
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import kotlin.test.Test
 
 /**
@@ -10,14 +10,14 @@ import kotlin.test.Test
  */
 class NetworkBlockingTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun networkShouldBeBlockedWithNoNetworkTest() {
         // Platform-specific implementation will attempt network and verify blocking
         testNetworkBlocking()
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun networkShouldBeAllowedWithAllowNetwork() {
         // Platform-specific implementation will attempt network and verify it's allowed
         testNetworkAllowed()

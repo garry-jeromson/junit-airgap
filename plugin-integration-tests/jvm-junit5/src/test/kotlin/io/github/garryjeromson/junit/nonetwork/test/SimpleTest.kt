@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.test
 
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
@@ -10,13 +10,13 @@ import kotlin.test.assertTrue
  */
 class SimpleTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `test with NoNetworkTest annotation`() {
         assertTrue(true, "JVM JUnit 5 test executed")
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun `test with AllowNetwork`() {
         assertTrue(true, "AllowNetwork test executed")
     }

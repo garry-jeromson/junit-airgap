@@ -1,9 +1,9 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -48,7 +48,7 @@ class KtorClientIntegrationTest {
     // ==================== CIO Engine Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor CIO client to external host`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -62,8 +62,8 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow Ktor CIO client to localhost`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -81,7 +81,7 @@ class KtorClientIntegrationTest {
     // ==================== OkHttp Engine Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor OkHttp client to external host`() =
         runBlocking {
             val client = HttpClient(OkHttp)
@@ -95,8 +95,8 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow Ktor OkHttp client to localhost`() =
         runBlocking {
             val client = HttpClient(OkHttp)
@@ -114,7 +114,7 @@ class KtorClientIntegrationTest {
     // ==================== Java Engine Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor Java client to external host`() =
         runBlocking {
             val client = HttpClient(Java)
@@ -128,8 +128,8 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["127.0.0.1", "localhost"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["127.0.0.1", "localhost"])
     fun `should allow Ktor Java client to 127_0_0_1`() =
         runBlocking {
             val client = HttpClient(Java)
@@ -147,7 +147,7 @@ class KtorClientIntegrationTest {
     // ==================== Request Type Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor GET requests`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -161,7 +161,7 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor POST requests`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -182,7 +182,7 @@ class KtorClientIntegrationTest {
     // ==================== Async/Coroutine Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block async Ktor requests in runBlocking`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -196,7 +196,7 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block suspended Ktor calls`() =
         runTest {
             assertFailsWith<NetworkRequestAttemptedException> {
@@ -216,8 +216,8 @@ class KtorClientIntegrationTest {
     // ==================== Configuration Tests ====================
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*"])
     fun `should allow Ktor client with wildcard configuration`() =
         runBlocking {
             val client = HttpClient(CIO)
@@ -233,7 +233,7 @@ class KtorClientIntegrationTest {
         }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block Ktor client even when using different engines`() =
         runBlocking {
             // Test that all engines are blocked

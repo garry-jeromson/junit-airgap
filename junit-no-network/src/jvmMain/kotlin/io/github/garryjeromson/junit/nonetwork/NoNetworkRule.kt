@@ -5,7 +5,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * JUnit 4 Rule that blocks network requests during tests annotated with @NoNetworkTest.
+ * JUnit 4 Rule that blocks network requests during tests annotated with @BlockNetworkRequests.
  *
  * Usage:
  * ```
@@ -14,7 +14,7 @@ import org.junit.runners.model.Statement
  *     val noNetworkRule = NoNetworkRule()
  *
  *     @Test
- *     @NoNetworkTest
+ *     @BlockNetworkRequests
  *     fun testSomething() {
  *         // Network requests will be blocked here
  *     }
@@ -35,16 +35,16 @@ import org.junit.runners.model.Statement
  *     }
  *
  *     @Test
- *     @AllowNetwork
+ *     @AllowNetworkRequests
  *     fun testWithNetwork() {
  *         // Network is allowed (opt-out)
  *     }
  * }
  * ```
  *
- * **Option 2: @NoNetworkByDefault annotation**
+ * **Option 2: @BlockNetworkRequests annotation**
  * ```
- * @NoNetworkByDefault
+ * @BlockNetworkRequests
  * class MyTest {
  *     @get:Rule
  *     val noNetworkRule = NoNetworkRule()
@@ -58,10 +58,10 @@ import org.junit.runners.model.Statement
  * -Djunit.nonetwork.applyToAllTests=true
  * ```
  *
- * The rule respects @AllowedHosts and @BlockedHosts annotations for fine-grained control.
+ * The rule respects @AllowRequestsToHosts and @BlockRequestsToHosts annotations for fine-grained control.
  *
  * @param applyToAllTests If true, network blocking is applied to all tests by default.
- *                       When null, the value is determined by system property or @NoNetworkByDefault annotation.
+ *                       When null, the value is determined by system property or @BlockNetworkRequests annotation.
  */
 class NoNetworkRule(
     private val applyToAllTests: Boolean? = null,
@@ -73,20 +73,20 @@ class NoNetworkRule(
         return object : Statement() {
             override fun evaluate() {
                 // Priority order for determining whether to block network:
-                // 1. @AllowNetwork (opt-out - highest priority)
+                // 1. @AllowNetworkRequests (opt-out - highest priority)
                 // 2. Constructor parameter (applyToAllTests)
                 // 3. System property
-                // 4. @NoNetworkByDefault annotation
-                // 5. @NoNetworkTest annotation
+                // 4. @BlockNetworkRequests annotation
+                // 5. @BlockNetworkRequests annotation
                 // 6. Default (no blocking)
 
-                // Check for @AllowNetwork (opt-out with highest priority)
-                val hasAllowNetwork =
-                    description.getAnnotation(AllowNetwork::class.java) != null ||
-                        description.testClass?.getAnnotation(AllowNetwork::class.java) != null
+                // Check for @AllowNetworkRequests (opt-out with highest priority)
+                val hasAllowNetworkRequests =
+                    description.getAnnotation(AllowNetworkRequests::class.java) != null ||
+                        description.testClass?.getAnnotation(AllowNetworkRequests::class.java) != null
 
-                if (hasAllowNetwork) {
-                    // @AllowNetwork takes precedence - don't block
+                if (hasAllowNetworkRequests) {
+                    // @AllowNetworkRequests takes precedence - don't block
                     base.evaluate()
                     return
                 }
@@ -132,19 +132,19 @@ class NoNetworkRule(
             return true
         }
 
-        // Priority 3: @NoNetworkByDefault annotation
-        val hasNoNetworkByDefault = description.testClass?.getAnnotation(NoNetworkByDefault::class.java) != null
+        // Priority 3: @BlockNetworkRequests annotation
+        val hasBlockNetworkRequestsOnClass = description.testClass?.getAnnotation(BlockNetworkRequests::class.java) != null
 
-        if (hasNoNetworkByDefault) {
+        if (hasBlockNetworkRequestsOnClass) {
             return true
         }
 
-        // Priority 4: @NoNetworkTest annotation (existing behavior)
-        val hasNoNetworkTest =
-            description.getAnnotation(NoNetworkTest::class.java) != null ||
-                description.testClass?.getAnnotation(NoNetworkTest::class.java) != null
+        // Priority 4: @BlockNetworkRequests annotation (existing behavior)
+        val hasBlockNetworkRequests =
+            description.getAnnotation(BlockNetworkRequests::class.java) != null ||
+                description.testClass?.getAnnotation(BlockNetworkRequests::class.java) != null
 
-        return hasNoNetworkTest
+        return hasBlockNetworkRequests
     }
 
     private fun buildConfiguration(description: Description): NetworkConfiguration {

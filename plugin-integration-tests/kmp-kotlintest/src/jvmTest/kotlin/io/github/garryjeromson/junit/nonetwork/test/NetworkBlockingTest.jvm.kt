@@ -16,7 +16,7 @@ actual fun testNetworkAllowed() {
     try {
         Socket("example.com", 80).close()
     } catch (e: NetworkRequestAttemptedException) {
-        throw AssertionError("Network should NOT be blocked with @AllowNetwork", e)
+        throw AssertionError("Network should NOT be blocked with @AllowNetworkRequests", e)
     } catch (e: Exception) {
         // Other exceptions (no internet, DNS failure, etc.) are OK
     }

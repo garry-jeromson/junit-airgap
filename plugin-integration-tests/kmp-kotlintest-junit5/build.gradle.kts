@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 // Configure the plugin
 junitNoNetwork {
     enabled = true
-    applyToAllTests = false // Test explicit @NoNetworkTest annotation
+    applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
     // NO injectJUnit4Rule - this project uses JUnit 5 runtime with kotlin.test
     // Network blocking is provided by JUnit 5 extension (no bytecode injection)

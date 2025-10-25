@@ -1,10 +1,10 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
 import org.junit.*
 import org.junit.jupiter.api.AfterAll
@@ -22,8 +22,8 @@ import kotlin.test.assertNotNull
  * provide identical functionality and behavior across both testing frameworks.
  *
  * Key points validated:
- * - Both frameworks support @NoNetworkTest annotation
- * - Both frameworks support @AllowedHosts and @BlockedHosts
+ * - Both frameworks support @BlockNetworkRequests annotation
+ * - Both frameworks support @AllowRequestsToHosts and @BlockRequestsToHosts
  * - Both frameworks throw identical NetworkRequestAttemptedException
  * - Both frameworks have same configuration priority order
  * - Error messages are consistent across frameworks
@@ -55,7 +55,7 @@ class JUnitFrameworkComparisonTest {
         }
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `JUnit 4 - should block network and throw NetworkRequestAttemptedException`() {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
@@ -68,8 +68,8 @@ class JUnitFrameworkComparisonTest {
         }
 
         @Test
-        @NoNetworkTest
-        @AllowedHosts(hosts = ["localhost"])
+        @BlockNetworkRequests
+        @AllowRequestsToHosts(hosts = ["localhost"])
         fun `JUnit 4 - should allow configured hosts`() {
             // Should not throw
             Socket("localhost", MockHttpServer.DEFAULT_PORT).close()
@@ -81,7 +81,7 @@ class JUnitFrameworkComparisonTest {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("Should not block without @NoNetworkTest", e)
+                throw AssertionError("Should not block without @BlockNetworkRequests", e)
             } catch (e: Exception) {
                 // Other network errors are expected
             }
@@ -112,7 +112,7 @@ class JUnitFrameworkComparisonTest {
         }
 
         @org.junit.jupiter.api.Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `JUnit 5 - should block network and throw NetworkRequestAttemptedException`() {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
@@ -125,8 +125,8 @@ class JUnitFrameworkComparisonTest {
         }
 
         @org.junit.jupiter.api.Test
-        @NoNetworkTest
-        @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+        @BlockNetworkRequests
+        @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
         fun `JUnit 5 - should allow configured hosts`() {
             // Should not throw
             Socket("localhost", MockHttpServer.DEFAULT_PORT).close()
@@ -138,7 +138,7 @@ class JUnitFrameworkComparisonTest {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("Should not block without @NoNetworkTest", e)
+                throw AssertionError("Should not block without @BlockNetworkRequests", e)
             } catch (e: Exception) {
                 // Other network errors are expected
             }
@@ -153,7 +153,7 @@ class JUnitFrameworkComparisonTest {
         val noNetworkRule = NoNetworkRule()
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `both frameworks throw same exception type`() {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
@@ -167,7 +167,7 @@ class JUnitFrameworkComparisonTest {
         }
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `exception message format is consistent`() {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
@@ -193,8 +193,8 @@ class JUnitFrameworkComparisonTest {
         val junit4Rule = NoNetworkRule()
 
         @Test
-        @NoNetworkTest
-        @AllowedHosts(hosts = ["*.example.com"])
+        @BlockNetworkRequests
+        @AllowRequestsToHosts(hosts = ["*.example.com"])
         fun `JUnit 4 - wildcard patterns work`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("other.com", 80)
@@ -208,8 +208,8 @@ class JUnitFrameworkComparisonTest {
     @ExtendWith(NoNetworkExtension::class)
     class JUnit5ConfigurationTests {
         @org.junit.jupiter.api.Test
-        @NoNetworkTest
-        @AllowedHosts(hosts = ["*.example.com"])
+        @BlockNetworkRequests
+        @AllowRequestsToHosts(hosts = ["*.example.com"])
         fun `JUnit 5 - wildcard patterns work`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("other.com", 80)

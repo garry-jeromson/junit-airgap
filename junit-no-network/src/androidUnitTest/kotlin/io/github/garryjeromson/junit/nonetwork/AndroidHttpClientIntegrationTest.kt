@@ -47,7 +47,7 @@ class AndroidHttpClientIntegrationTest {
     // ==================== HttpURLConnection Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block HttpURLConnection to external host`() {
         assertNetworkBlocked("HttpURLConnection should be blocked") {
             val url = URL("http://example.com/api")
@@ -57,8 +57,8 @@ class AndroidHttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow HttpURLConnection to localhost`() {
         assertNetworkNotBlocked("HttpURLConnection to localhost should work") {
             val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
@@ -69,7 +69,7 @@ class AndroidHttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block HTTPS connections`() {
         assertNetworkBlocked("HTTPS should be blocked") {
             val url = URL("https://api.example.com/data")
@@ -81,7 +81,7 @@ class AndroidHttpClientIntegrationTest {
     // ==================== OkHttp Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block OkHttp to external host`() {
         assertNetworkBlocked("OkHttp should be blocked") {
             val client = OkHttpClient()
@@ -95,8 +95,8 @@ class AndroidHttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow OkHttp to localhost`() {
         assertNetworkNotBlocked("OkHttp to localhost should work") {
             val client = OkHttpClient()
@@ -114,7 +114,7 @@ class AndroidHttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block OkHttp HTTPS requests`() {
         assertNetworkBlocked("OkHttp HTTPS should be blocked") {
             val client = OkHttpClient()
@@ -128,7 +128,7 @@ class AndroidHttpClientIntegrationTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block OkHttp POST requests`() {
         assertNetworkBlocked("OkHttp POST should be blocked") {
             val client = OkHttpClient()
@@ -145,8 +145,8 @@ class AndroidHttpClientIntegrationTest {
     // ==================== Configuration Tests ====================
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*"])
     fun `should allow all HTTP clients when wildcard is configured`() {
         assertNetworkNotBlocked("Wildcard should allow HttpURLConnection") {
             val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
@@ -168,7 +168,7 @@ class AndroidHttpClientIntegrationTest {
     // ==================== Multiple Client Tests ====================
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block multiple different HTTP clients`() {
         // Test that all Android HTTP client types are blocked
         assertNetworkBlocked("HttpURLConnection should be blocked") {

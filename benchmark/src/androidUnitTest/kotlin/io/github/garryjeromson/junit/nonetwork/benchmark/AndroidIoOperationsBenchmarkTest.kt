@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,7 +21,7 @@ class AndroidIoOperationsBenchmarkTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark file write and read operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {
@@ -51,7 +51,7 @@ class AndroidIoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark byte stream operations`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -80,7 +80,7 @@ class AndroidIoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark buffered file operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {
@@ -118,7 +118,7 @@ class AndroidIoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark directory operations`() {
         val tempRoot = createTempDirectory("benchmark").toFile()
         try {
@@ -154,7 +154,7 @@ class AndroidIoOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark file metadata operations`() {
         val tempDir = createTempDirectory("benchmark").toFile()
         try {

@@ -1,9 +1,9 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
-import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkBlocked
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
 import okhttp3.OkHttpClient
@@ -29,7 +29,7 @@ class AndroidRealWorldScenariosTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block API calls in Android unit tests`() {
         // Simulate a test that accidentally calls a real API
         assertNetworkBlocked("Real API calls should be blocked in unit tests") {
@@ -39,7 +39,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block OkHttp API calls`() {
         // OkHttp is very common in Android apps
         assertNetworkBlocked("OkHttp API calls should be blocked") {
@@ -54,7 +54,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block remote database connections`() {
         // Simulate attempt to connect to remote database
         assertNetworkBlocked("Remote database connections should be blocked") {
@@ -63,8 +63,8 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `should allow local database connections`() {
         // Simulate connection to local database
         assertNetworkNotBlocked("Local database should be allowed") {
@@ -77,7 +77,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should NOT block file I-O operations`() {
         // Verify that file operations still work on Android
         val tempDir =
@@ -98,7 +98,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block image loading from CDN`() {
         // Common pattern in Android apps - loading images from CDN
         assertNetworkBlocked("CDN requests should be blocked") {
@@ -107,7 +107,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block analytics and crash reporting`() {
         // Block analytics services
         assertNetworkBlocked("Analytics should be blocked") {
@@ -121,8 +121,8 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["localhost", "127.0.0.1", "10.0.2.2"]) // 10.0.2.2 is Android emulator host
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "10.0.2.2"]) // 10.0.2.2 is Android emulator host
     fun `should allow Android emulator localhost scenarios`() {
         // Android emulator uses 10.0.2.2 to access host machine
         assertNetworkNotBlocked("Localhost should work") {
@@ -135,7 +135,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should provide clear error messages for blocked requests`() {
         try {
             val url = URL("http://api.example.com:8080/test")
@@ -157,22 +157,22 @@ class AndroidRealWorldScenariosTest {
 
     @Test
     fun `should NOT block requests when annotation is absent`() {
-        // Without @NoNetworkTest, network should not be blocked
+        // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("Network should not be blocked without annotation") {
             try {
                 Socket("example.com", 80)
             } catch (e: Exception) {
                 // Other exceptions are fine, just not NetworkRequestAttemptedException
                 assert(e !is NetworkRequestAttemptedException) {
-                    "Should not throw NetworkRequestAttemptedException without @NoNetworkTest"
+                    "Should not throw NetworkRequestAttemptedException without @BlockNetworkRequests"
                 }
             }
         }
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*.internal", "*.local"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*.internal", "*.local"])
     fun `should support internal network patterns for enterprise apps`() {
         // Test that internal network patterns work (common in enterprise Android apps)
         assertNetworkBlocked("External networks should be blocked") {
@@ -181,7 +181,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block retrofit-style REST API calls`() {
         // Simulate Retrofit/REST API pattern (very common in Android)
         assertNetworkBlocked("REST API calls should be blocked") {
@@ -197,7 +197,7 @@ class AndroidRealWorldScenariosTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should block GraphQL API calls`() {
         // GraphQL is increasingly common in Android apps
         assertNetworkBlocked("GraphQL API calls should be blocked") {

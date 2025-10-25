@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,22 +18,22 @@ class AndroidExtensionLifecycleBenchmarkTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark annotation processing overhead`() {
-        // This test measures the overhead of having @NoNetworkTest annotation
+        // This test measures the overhead of having @BlockNetworkRequests annotation
         // and SecurityManager installation/removal
         val result =
             BenchmarkRunner.runBenchmark(
-                name = "Android Lifecycle (@NoNetworkTest Overhead)",
+                name = "Android Lifecycle (@BlockNetworkRequests Overhead)",
                 control = {
-                    // Control: Simple operation without @NoNetworkTest
+                    // Control: Simple operation without @BlockNetworkRequests
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val x = 1 + 1
                         assertTrue(x == 2)
                     }
                 },
                 treatment = {
-                    // Treatment: Same operation but under @NoNetworkTest
+                    // Treatment: Same operation but under @BlockNetworkRequests
                     // (this test method already has it, so SecurityManager is active)
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val x = 1 + 1
@@ -44,7 +44,7 @@ class AndroidExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark rule with minimal work`() {
         // Measure overhead when test does almost nothing
         val result =
@@ -68,7 +68,7 @@ class AndroidExtensionLifecycleBenchmarkTest {
 
     @Test
     fun `benchmark rule enabled vs disabled`() {
-        // This test doesn't have @NoNetworkTest, so we can measure
+        // This test doesn't have @BlockNetworkRequests, so we can measure
         // the difference between rule being present vs not present
         val result =
             BenchmarkRunner.runBenchmark(
@@ -89,7 +89,7 @@ class AndroidExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark multiple test method calls`() {
         // Simulates a test that calls multiple methods
         val result =
@@ -113,7 +113,7 @@ class AndroidExtensionLifecycleBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark exception creation overhead`() {
         // Measure if exception creation for potential blocking has overhead
         val result =

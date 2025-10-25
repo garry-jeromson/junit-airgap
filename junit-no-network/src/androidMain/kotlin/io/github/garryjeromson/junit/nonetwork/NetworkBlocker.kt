@@ -89,7 +89,7 @@ actual class NetworkBlocker actual constructor(
                     )
 
                 throw NetworkRequestAttemptedException(
-                    "Network request blocked by @NoNetworkTest: Attempted to connect to $host:$port",
+                    "Network request blocked by @BlockNetworkRequests: Attempted to connect to $host:$port",
                     requestDetails = details,
                 )
             }

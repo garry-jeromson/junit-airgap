@@ -10,8 +10,8 @@ import kotlin.test.assertFailsWith
  * Tests for default network blocking configuration.
  * These tests verify the new configuration options:
  * - Constructor parameter (applyToAllTests)
- * - @NoNetworkByDefault annotation
- * - @AllowNetwork opt-out
+ * - @BlockNetworkRequests annotation
+ * - @AllowNetworkRequests opt-out
  * - System property
  */
 class DefaultBlockingConfigurationTest {
@@ -33,21 +33,21 @@ class DefaultBlockingConfigurationTest {
         }
 
         @Test
-        @AllowNetwork
+        @AllowNetworkRequests
         fun `should allow network when AllowNetwork annotation is present`() {
             // This should NOT throw NetworkRequestAttemptedException
             try {
                 Socket("example.com", 80)
                 // May fail with connection error, but should not be blocked
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should prevent blocking", e)
+                throw AssertionError("@AllowNetworkRequests should prevent blocking", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }
         }
 
         @Test
-        @AllowedHosts(hosts = ["localhost"])
+        @AllowRequestsToHosts(hosts = ["localhost"])
         fun `should respect AllowedHosts configuration when applyToAllTests is true`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
@@ -56,11 +56,11 @@ class DefaultBlockingConfigurationTest {
     }
 
     /**
-     * Test 2: @NoNetworkByDefault annotation
+     * Test 2: @BlockNetworkRequests annotation
      * When applied to a class, all tests should block network
      */
     @Nested
-    @NoNetworkByDefault
+    @BlockNetworkRequests
     inner class NoNetworkByDefaultAnnotationTest {
         @JvmField
         @RegisterExtension
@@ -74,12 +74,12 @@ class DefaultBlockingConfigurationTest {
         }
 
         @Test
-        @AllowNetwork
+        @AllowNetworkRequests
         fun `should allow network with AllowNetwork even when NoNetworkByDefault is set`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should override @NoNetworkByDefault", e)
+                throw AssertionError("@AllowNetworkRequests should override @BlockNetworkRequests", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }
@@ -88,7 +88,7 @@ class DefaultBlockingConfigurationTest {
 
     /**
      * Test 3: Priority/Precedence Rules
-     * @AllowNetwork should take precedence over everything
+     * @AllowNetworkRequests should take precedence over everything
      */
     @Nested
     inner class PriorityTest {
@@ -97,13 +97,13 @@ class DefaultBlockingConfigurationTest {
         val extension = NoNetworkExtension(applyToAllTests = true)
 
         @Test
-        @NoNetworkTest
-        @AllowNetwork
+        @BlockNetworkRequests
+        @AllowNetworkRequests
         fun `AllowNetwork should override NoNetworkTest`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should have highest priority", e)
+                throw AssertionError("@AllowNetworkRequests should have highest priority", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }
@@ -122,7 +122,7 @@ class DefaultBlockingConfigurationTest {
 
         @Test
         fun `should NOT block network without any annotation when applyToAllTests is false`() {
-            // This should work as before - no blocking without @NoNetworkTest
+            // This should work as before - no blocking without @BlockNetworkRequests
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
@@ -133,7 +133,7 @@ class DefaultBlockingConfigurationTest {
         }
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `should block network with NoNetworkTest annotation (existing behavior)`() {
             // Existing behavior should still work
             assertFailsWith<NetworkRequestAttemptedException> {
@@ -143,12 +143,12 @@ class DefaultBlockingConfigurationTest {
     }
 
     /**
-     * Test 5: Class-level @AllowNetwork
+     * Test 5: Class-level @AllowNetworkRequests
      * When applied at class level, should allow all tests
      */
     @Nested
-    @AllowNetwork
-    @NoNetworkByDefault
+    @AllowNetworkRequests
+    @BlockNetworkRequests
     inner class ClassLevelAllowNetworkTest {
         @JvmField
         @RegisterExtension
@@ -159,7 +159,7 @@ class DefaultBlockingConfigurationTest {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("Class-level @AllowNetwork should prevent blocking", e)
+                throw AssertionError("Class-level @AllowNetworkRequests should prevent blocking", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }

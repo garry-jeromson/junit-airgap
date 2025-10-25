@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,13 +27,13 @@ class AndroidBaselineBenchmarkTest {
             BenchmarkRunner.runBenchmark(
                 name = "Android Empty Test (No Operations)",
                 control = {
-                    // Control: Run test without @NoNetworkTest
+                    // Control: Run test without @BlockNetworkRequests
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         // Completely empty - just test overhead
                     }
                 },
                 treatment = {
-                    // Treatment: Run test with rule but without @NoNetworkTest
+                    // Treatment: Run test with rule but without @BlockNetworkRequests
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         // Completely empty - just test overhead
                     }
@@ -47,7 +47,7 @@ class AndroidBaselineBenchmarkTest {
             BenchmarkRunner.runBenchmark(
                 name = "Android Simple Assertion Test",
                 control = {
-                    // Control: Run test without @NoNetworkTest
+                    // Control: Run test without @BlockNetworkRequests
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val x = 1 + 1
                         assertTrue(x == 2)
@@ -93,11 +93,11 @@ class AndroidBaselineBenchmarkTest {
 
     @Test
     fun `benchmark with rule enabled but no network test annotation`() {
-        // This test has the rule enabled but doesn't use @NoNetworkTest
+        // This test has the rule enabled but doesn't use @BlockNetworkRequests
         // so no SecurityManager should be installed
         val result =
             BenchmarkRunner.runBenchmark(
-                name = "Android Rule Enabled (No @NoNetworkTest)",
+                name = "Android Rule Enabled (No @BlockNetworkRequests)",
                 control = {
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val result = calculateSum(1, 2, 3, 4, 5)
@@ -115,13 +115,13 @@ class AndroidBaselineBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark with network test annotation but no network calls`() {
-        // This test has @NoNetworkTest enabled but makes no network calls
+        // This test has @BlockNetworkRequests enabled but makes no network calls
         // SecurityManager is installed but never triggered
         val result =
             BenchmarkRunner.runBenchmark(
-                name = "Android @NoNetworkTest (No Network Calls)",
+                name = "Android @BlockNetworkRequests (No Network Calls)",
                 control = {
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val result = calculateProduct(2, 3, 4)
@@ -129,7 +129,7 @@ class AndroidBaselineBenchmarkTest {
                     }
                 },
                 treatment = {
-                    // Same operation but running under @NoNetworkTest
+                    // Same operation but running under @BlockNetworkRequests
                     repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
                         val result = calculateProduct(2, 3, 4)
                         assertTrue(result == 24)

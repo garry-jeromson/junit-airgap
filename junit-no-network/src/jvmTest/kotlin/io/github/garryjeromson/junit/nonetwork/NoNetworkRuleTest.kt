@@ -10,7 +10,7 @@ class NoNetworkRuleTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldBlockNetworkRequestsWhenAnnotated() {
         assertFailsWith<NetworkRequestAttemptedException> {
             Socket("example.com", 80)
@@ -18,9 +18,9 @@ class NoNetworkRuleTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowedHosts(hosts = ["*"])
-    @BlockedHosts(hosts = ["evil.com"])
+    @BlockNetworkRequests
+    @AllowRequestsToHosts(hosts = ["*"])
+    @BlockRequestsToHosts(hosts = ["evil.com"])
     fun shouldRespectBlockedHostsAnnotation() {
         assertFailsWith<NetworkRequestAttemptedException> {
             Socket("evil.com", 80)
@@ -29,12 +29,12 @@ class NoNetworkRuleTest {
 
     @Test
     fun shouldNotBlockWhenAnnotationIsAbsent() {
-        // This test doesn't have @NoNetworkTest, so blocking should not occur
+        // This test doesn't have @BlockNetworkRequests, so blocking should not occur
         // The actual connection may fail, but it should not throw NetworkRequestAttemptedException
         try {
             Socket("example.com", 80)
         } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Should not block without @NoNetworkTest")
+            throw AssertionError("Should not block without @BlockNetworkRequests")
         } catch (e: Exception) {
             // Other exceptions are fine
         }

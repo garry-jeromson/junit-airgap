@@ -5,14 +5,14 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
 /**
- * JUnit 5 Extension that blocks network requests during tests annotated with @NoNetworkTest.
+ * JUnit 5 Extension that blocks network requests during tests annotated with @BlockNetworkRequests.
  *
  * Usage:
  * ```
  * @ExtendWith(NoNetworkExtension::class)
  * class MyTest {
  *     @Test
- *     @NoNetworkTest
+ *     @BlockNetworkRequests
  *     fun testSomething() {
  *         // Network requests will be blocked here
  *     }
@@ -34,17 +34,17 @@ import org.junit.jupiter.api.extension.ExtensionContext
  *     }
  *
  *     @Test
- *     @AllowNetwork
+ *     @AllowNetworkRequests
  *     fun testWithNetwork() {
  *         // Network is allowed (opt-out)
  *     }
  * }
  * ```
  *
- * **Option 2: @NoNetworkByDefault annotation**
+ * **Option 2: Class-level @BlockNetworkRequests annotation**
  * ```
  * @ExtendWith(NoNetworkExtension::class)
- * @NoNetworkByDefault
+ * @BlockNetworkRequests
  * class MyTest {
  *     // All tests have network blocked by default
  * }
@@ -55,10 +55,10 @@ import org.junit.jupiter.api.extension.ExtensionContext
  * -Djunit.nonetwork.applyToAllTests=true
  * ```
  *
- * The extension respects @AllowedHosts and @BlockedHosts annotations for fine-grained control.
+ * The extension respects @AllowRequestsToHosts and @BlockRequestsToHosts annotations for fine-grained control.
  *
  * @param applyToAllTests If true, network blocking is applied to all tests by default.
- *                       When null, the value is determined by system property or @NoNetworkByDefault annotation.
+ *                       When null, the value is determined by system property or class-level @BlockNetworkRequests annotation.
  */
 class NoNetworkExtension(
     private val applyToAllTests: Boolean? = null,
@@ -70,26 +70,26 @@ class NoNetworkExtension(
 
     override fun beforeEach(context: ExtensionContext) {
         // Priority order for determining whether to block network:
-        // 1. @AllowNetwork (opt-out - highest priority)
+        // 1. @AllowNetworkRequests (opt-out - highest priority)
         // 2. Constructor parameter (applyToAllTests)
         // 3. System property
-        // 4. @NoNetworkByDefault annotation
-        // 5. @NoNetworkTest annotation
+        // 4. Class-level @BlockNetworkRequests annotation
+        // 5. Method-level @BlockNetworkRequests annotation
         // 6. Default (no blocking)
 
-        // Check for @AllowNetwork (opt-out with highest priority)
-        val hasAllowNetwork =
+        // Check for @AllowNetworkRequests (opt-out with highest priority)
+        val hasAllowNetworkRequests =
             context.testMethod
                 .map { method ->
-                    method.isAnnotationPresent(AllowNetwork::class.java)
+                    method.isAnnotationPresent(AllowNetworkRequests::class.java)
                 }.orElse(false) ||
                 context.testClass
                     .map { clazz ->
-                        clazz.isAnnotationPresent(AllowNetwork::class.java)
+                        clazz.isAnnotationPresent(AllowNetworkRequests::class.java)
                     }.orElse(false)
 
-        if (hasAllowNetwork) {
-            // @AllowNetwork takes precedence - don't block
+        if (hasAllowNetworkRequests) {
+            // @AllowNetworkRequests takes precedence - don't block
             return
         }
 
@@ -137,29 +137,18 @@ class NoNetworkExtension(
             return true
         }
 
-        // Priority 3: @NoNetworkByDefault annotation
-        val hasNoNetworkByDefault =
-            context.testClass
-                .map { clazz ->
-                    clazz.isAnnotationPresent(NoNetworkByDefault::class.java)
-                }.orElse(false)
-
-        if (hasNoNetworkByDefault) {
-            return true
-        }
-
-        // Priority 4: @NoNetworkTest annotation (existing behavior)
-        val hasNoNetworkTest =
+        // Priority 4: @BlockNetworkRequests annotation (class or method level)
+        val hasBlockNetworkRequests =
             context.testMethod
                 .map { method ->
-                    method.isAnnotationPresent(NoNetworkTest::class.java)
+                    method.isAnnotationPresent(BlockNetworkRequests::class.java)
                 }.orElse(false) ||
                 context.testClass
                     .map { clazz ->
-                        clazz.isAnnotationPresent(NoNetworkTest::class.java)
+                        clazz.isAnnotationPresent(BlockNetworkRequests::class.java)
                     }.orElse(false)
 
-        return hasNoNetworkTest
+        return hasBlockNetworkRequests
     }
 
     override fun afterEach(context: ExtensionContext) {

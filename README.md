@@ -4,7 +4,7 @@ A JUnit extension that automatically fails tests attempting to make outgoing net
 
 ## Features
 
-- ✅ **Automatic network blocking** - Tests annotated with `@NoNetworkTest` will fail if they attempt network requests
+- ✅ **Automatic network blocking** - Tests annotated with `@BlockNetworkRequests` will fail if they attempt network requests
 - ✅ **Default blocking mode** - Apply network blocking to all tests by default with opt-out capability
 - ✅ **Flexible configuration** - Three ways to configure: constructor parameter, annotation, or system property
 - ✅ **JUnit 5 and JUnit 4 support** - Works with both JUnit versions
@@ -137,7 +137,7 @@ plugins {
 
 junitNoNetwork {
     enabled = true
-    applyToAllTests = true  // Block network by default, opt-out with @AllowNetwork
+    applyToAllTests = true  // Block network by default, opt-out with @AllowNetworkRequests
 }
 ```
 
@@ -147,7 +147,7 @@ junitNoNetwork {
 - ✅ Configures test tasks with appropriate system properties
 - ✅ Works with JVM, Android, and Kotlin Multiplatform projects
 
-**Next steps:** See the [Usage](#usage) section to learn about `@NoNetworkTest` and `@AllowNetwork` annotations.
+**Next steps:** See the [Usage](#usage) section to learn about `@BlockNetworkRequests` and `@AllowNetworkRequests` annotations.
 
 #### Plugin Configuration Reference
 
@@ -157,8 +157,8 @@ junitNoNetwork {
     enabled = true
 
     // Apply network blocking to all tests by default (default: false)
-    // When true: tests block network unless annotated with @AllowNetwork
-    // When false: tests only block when annotated with @NoNetworkTest
+    // When true: tests block network unless annotated with @AllowNetworkRequests
+    // When false: tests only block when annotated with @BlockNetworkRequests
     applyToAllTests = false
 
     // Library version to use (default: matches plugin version)
@@ -180,7 +180,7 @@ junitNoNetwork {
 
 ### JUnit 5
 
-Use the `@ExtendWith` annotation at the class level and `@NoNetworkTest` on methods that should block network access:
+Use the `@ExtendWith` annotation at the class level and `@BlockNetworkRequests` on methods that should block network access:
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
@@ -192,7 +192,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 class MyTest {
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `should not make network requests`() {
         // This will throw NetworkRequestAttemptedException
         val connection = URL("http://example.com").openConnection()
@@ -201,7 +201,7 @@ class MyTest {
 
     @Test
     fun `can make network requests without annotation`() {
-        // This test is not annotated with @NoNetworkTest,
+        // This test is not annotated with @BlockNetworkRequests,
         // so network requests are allowed
         val connection = URL("http://example.com").openConnection()
         connection.connect()  // This is allowed
@@ -225,7 +225,7 @@ class MyTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldNotMakeNetworkRequests() {
         // This will throw NetworkRequestAttemptedException
         val socket = Socket("example.com", 80)
@@ -250,7 +250,7 @@ class AndroidTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldBlockOkHttpRequests() {
         // OkHttp requests will be blocked
         val client = OkHttpClient()
@@ -365,7 +365,7 @@ import kotlin.test.assertFailsWith
 class KmpKtorBasicUsageTest {
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldBlockSharedApiClientRequests() = runTest {
         val apiClient = DefaultApiClient()
         try {
@@ -398,7 +398,7 @@ class AndroidKmpKtorBasicUsageTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun shouldBlockSharedApiClientRequests() = runTest {
         val apiClient = DefaultApiClient()
         try {
@@ -448,14 +448,14 @@ The `integration-test-app` module includes a complete working example of KMP Kto
 **Test scenarios covered**:
 - Basic network blocking with shared clients
 - Platform-specific engine configuration
-- Host filtering (`@AllowedHosts`, `@BlockedHosts`)
-- Default blocking (`applyToAllTests`, `@NoNetworkByDefault`)
+- Host filtering (`@AllowRequestsToHosts`, `@BlockRequestsToHosts`)
+- Default blocking (`applyToAllTests`, `@BlockNetworkRequests (class-level)`)
 
 See `integration-test-app/src/` for the complete implementation.
 
 ## Applying Network Blocking by Default
 
-Instead of adding `@NoNetworkTest` to every test method, you can configure the extension to block network access by default for all tests. This is useful when most of your tests should be isolated from the network.
+Instead of adding `@BlockNetworkRequests` to every test method, you can configure the extension to block network access by default for all tests. This is useful when most of your tests should be isolated from the network.
 
 ### Option 1: Constructor Parameter with @RegisterExtension (JUnit 5)
 
@@ -475,15 +475,15 @@ class MyTest {
 
     @Test
     fun `test 1 - network is blocked by default`() {
-        // Network is blocked without needing @NoNetworkTest
+        // Network is blocked without needing @BlockNetworkRequests
         // This will throw NetworkRequestAttemptedException
         val socket = Socket("example.com", 80)
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun `test 2 - can opt-out with AllowNetwork`() {
-        // @AllowNetwork allows this test to make network requests
+        // @AllowNetworkRequests allows this test to make network requests
         val socket = Socket("example.com", 80)  // ✅ Allowed
     }
 }
@@ -504,17 +504,17 @@ class MyTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun testNetworkAllowed() {
-        // Opt-out with @AllowNetwork
+        // Opt-out with @AllowNetworkRequests
         Socket("example.com", 80)  // ✅ Allowed
     }
 }
 ```
 
-### Option 2: @NoNetworkByDefault Annotation
+### Option 2: @BlockNetworkRequests (class-level) Annotation
 
-Apply the `@NoNetworkByDefault` annotation at the class level:
+Apply the `@BlockNetworkRequests (class-level)` annotation at the class level:
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.AllowNetwork
@@ -524,7 +524,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(NoNetworkExtension::class)
-@NoNetworkByDefault
+@BlockNetworkRequests (class-level)
 class MyTest {
 
     @Test
@@ -534,7 +534,7 @@ class MyTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun `except those marked with AllowNetwork`() {
         // Opt-out for specific tests
         val socket = Socket("example.com", 80)  // ✅ Allowed
@@ -569,11 +569,11 @@ tasks.test {
 
 When multiple configuration options are present, they are evaluated in this priority order (highest to lowest):
 
-1. **@AllowNetwork** - Opt-out annotation (always takes precedence)
+1. **@AllowNetworkRequests** - Opt-out annotation (always takes precedence)
 2. **Constructor parameter** - `applyToAllTests = true/false`
 3. **System property** - `-Djunit.nonetwork.applyToAllTests=true`
-4. **@NoNetworkByDefault** - Class-level annotation
-5. **@NoNetworkTest** - Method/class-level annotation (existing behavior)
+4. **@BlockNetworkRequests (class-level)** - Class-level annotation
+5. **@BlockNetworkRequests** - Method/class-level annotation (existing behavior)
 6. **Default** - No blocking (default behavior)
 
 **Example demonstrating priority:**
@@ -593,10 +593,10 @@ class MyTest {
     }
 
     @Test
-    @NoNetworkTest
-    @AllowNetwork
+    @BlockNetworkRequests
+    @AllowNetworkRequests
     fun `AllowNetwork always wins`() {
-        // @AllowNetwork has highest priority
+        // @AllowNetworkRequests has highest priority
         // Overrides everything else
         val socket = Socket("example.com", 80)  // ✅ Allowed
     }
@@ -611,8 +611,8 @@ Sometimes you need to allow connections to specific hosts (e.g., localhost for t
 
 ```kotlin
 @Test
-@NoNetworkTest
-@AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
 fun `can connect to localhost`() {
     val socket = Socket("localhost", 8080)  // ✅ Allowed
     val blocked = Socket("example.com", 80)  // ❌ Blocked
@@ -625,8 +625,8 @@ Use wildcard patterns to allow entire domains:
 
 ```kotlin
 @Test
-@NoNetworkTest
-@AllowedHosts(hosts = ["*.example.com", "*.test.local"])
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["*.example.com", "*.test.local"])
 fun `can connect to subdomains`() {
     // ✅ Allowed: api.example.com, www.example.com
     // ❌ Blocked: example.com (doesn't match *.example.com)
@@ -640,9 +640,9 @@ Use `*` to allow all hosts, then block specific ones:
 
 ```kotlin
 @Test
-@NoNetworkTest
-@AllowedHosts(hosts = ["*"])
-@BlockedHosts(hosts = ["evil.com", "tracking.example.com"])
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["*"])
+@BlockRequestsToHosts(hosts = ["evil.com", "tracking.example.com"])
 fun `blocks specific hosts only`() {
     val allowed = Socket("api.example.com", 80)     // ✅ Allowed
     val blocked = Socket("evil.com", 80)             // ❌ Blocked
@@ -657,8 +657,8 @@ Apply annotations at the class level to affect all tests:
 
 ```kotlin
 @ExtendWith(NoNetworkExtension::class)
-@NoNetworkTest
-@AllowedHosts(hosts = ["localhost"])
+@BlockNetworkRequests
+@AllowRequestsToHosts(hosts = ["localhost"])
 class MyTestClass {
 
     @Test
@@ -781,7 +781,7 @@ make benchmark-android
 
 ### JVM Implementation
 
-The JVM implementation uses a custom `SecurityManager` to intercept socket connection attempts. When a test is annotated with `@NoNetworkTest`:
+The JVM implementation uses a custom `SecurityManager` to intercept socket connection attempts. When a test is annotated with `@BlockNetworkRequests`:
 
 1. Before the test runs, a custom `SecurityManager` is installed
 2. Any attempt to create a socket connection is checked against the configuration
@@ -827,7 +827,7 @@ When a network request is blocked, you'll receive a `NetworkRequestAttemptedExce
 
 ```
 io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException:
-Network request blocked by @NoNetworkTest: Attempted to connect to example.com:443
+Network request blocked by @BlockNetworkRequests: Attempted to connect to example.com:443
 
 Attempted network request details:
   Host: example.com

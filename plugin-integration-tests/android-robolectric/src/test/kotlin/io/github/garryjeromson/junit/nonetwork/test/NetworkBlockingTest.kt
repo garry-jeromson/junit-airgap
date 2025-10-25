@@ -2,9 +2,9 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.AllowNetwork
+import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -19,7 +19,7 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 class NetworkBlockingTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun networkIsBlockedWithNoNetworkTest() {
         // Verify we can access Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -32,7 +32,7 @@ class NetworkBlockingTest {
     }
 
     @Test
-    @AllowNetwork
+    @AllowNetworkRequests
     fun networkIsAllowedWithAllowNetwork() {
         // Verify we can access Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -42,7 +42,7 @@ class NetworkBlockingTest {
         try {
             Socket("example.com", 80).close()
         } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network is NOT blocked with @AllowNetwork", e)
+            throw AssertionError("Network is NOT blocked with @AllowNetworkRequests", e)
         } catch (e: Exception) {
             // Other exceptions (no internet, DNS failure, etc.) are OK
         }

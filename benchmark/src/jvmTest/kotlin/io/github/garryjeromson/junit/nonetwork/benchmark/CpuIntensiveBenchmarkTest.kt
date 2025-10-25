@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(NoNetworkExtension::class)
 class CpuIntensiveBenchmarkTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark fibonacci calculation`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "CPU-Intensive (Fibonacci)",
@@ -31,7 +31,7 @@ class CpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark prime number generation`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "CPU-Intensive (Prime Numbers)",
@@ -49,7 +49,7 @@ class CpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark array sorting`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "CPU-Intensive (Array Sorting)",
@@ -69,7 +69,7 @@ class CpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark string manipulation`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "CPU-Intensive (String Operations)",
@@ -95,7 +95,7 @@ class CpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark regex operations`() {
         val emailPattern = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         val text = "Contact us at support@example.com or sales@example.org for more info"

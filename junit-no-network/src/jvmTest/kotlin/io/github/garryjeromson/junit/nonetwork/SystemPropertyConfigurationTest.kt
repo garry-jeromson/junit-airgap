@@ -64,12 +64,12 @@ class SystemPropertyConfigurationTest {
         }
 
         @Test
-        @AllowNetwork
+        @AllowNetworkRequests
         fun `should allow network with AllowNetwork even when system property is true`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
-                throw AssertionError("@AllowNetwork should override system property", e)
+                throw AssertionError("@AllowNetworkRequests should override system property", e)
             } catch (e: Exception) {
                 // Other network errors are fine
             }
@@ -106,9 +106,9 @@ class SystemPropertyConfigurationTest {
         }
 
         @Test
-        @NoNetworkTest
+        @BlockNetworkRequests
         fun `should still block with NoNetworkTest when system property is not set`() {
-            // Existing @NoNetworkTest behavior should still work
+            // Existing @BlockNetworkRequests behavior should still work
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
             }

@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(NoNetworkExtension::class)
 class MemoryOperationsBenchmarkTest {
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark object allocation`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (Object Allocation)",
@@ -32,7 +32,7 @@ class MemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark list operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (List Operations)",
@@ -62,7 +62,7 @@ class MemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark map operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (Map Operations)",
@@ -90,7 +90,7 @@ class MemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark set operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (Set Operations)",
@@ -116,7 +116,7 @@ class MemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark array copying`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (Array Copying)",
@@ -138,7 +138,7 @@ class MemoryOperationsBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark data class operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
             name = "Memory (Data Class Operations)",

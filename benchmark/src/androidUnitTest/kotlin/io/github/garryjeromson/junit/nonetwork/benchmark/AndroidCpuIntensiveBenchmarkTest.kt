@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
 import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
-import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,7 +18,7 @@ class AndroidCpuIntensiveBenchmarkTest {
     val noNetworkRule = NoNetworkRule()
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark fibonacci calculation`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -37,7 +37,7 @@ class AndroidCpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark prime number generation`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -56,7 +56,7 @@ class AndroidCpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark array sorting`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -77,7 +77,7 @@ class AndroidCpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark string manipulation`() {
         val result =
             BenchmarkRunner.runBenchmark(
@@ -104,7 +104,7 @@ class AndroidCpuIntensiveBenchmarkTest {
     }
 
     @Test
-    @NoNetworkTest
+    @BlockNetworkRequests
     fun `benchmark regex operations`() {
         val emailPattern = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         val text = "Contact us at support@example.com or sales@example.org for more info"
