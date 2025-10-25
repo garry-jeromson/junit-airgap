@@ -12,7 +12,7 @@ junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @NoNetworkTest annotation
     debug = false
-    injectJUnit4Rule = false // This project uses JUnit 5 only
+    injectJUnit4Rule = false // This project uses kotlin.test
 }
 
 kotlin {
@@ -24,29 +24,17 @@ kotlin {
     sourceSets {
         val commonTest by getting {
             dependencies {
+                // Only kotlin.test - no explicit JUnit dependencies
+                // Let KMP choose the test framework defaults for each platform
                 implementation(kotlin("test"))
                 implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
-            }
-        }
-
-        val jvmTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.junit.jupiter.engine)
-            }
-        }
-
-        val androidUnitTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.junit.jupiter.engine)
             }
         }
     }
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.test.kmpjunit5"
+    namespace = "io.github.garryjeromson.junit.nonetwork.test.kmpkotlintest"
     compileSdk = 34
 
     defaultConfig {
@@ -59,7 +47,6 @@ android {
     }
 }
 
-// Configure JUnit Platform for test tasks
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
+// NOTE: No useJUnitPlatform() call - let KMP use its defaults
+// This tests the most common KMP configuration where the test framework
+// is automatically configured based on the platform
