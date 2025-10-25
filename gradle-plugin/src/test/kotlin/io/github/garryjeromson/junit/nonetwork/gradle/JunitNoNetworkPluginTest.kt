@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -50,7 +49,8 @@ class JunitNoNetworkPluginTest {
         )
 
         val result =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(testProjectDir)
                 .withArguments("tasks", "--stacktrace")
                 .withPluginClasspath()
@@ -80,7 +80,8 @@ class JunitNoNetworkPluginTest {
             """.trimIndent(),
         )
 
-        GradleRunner.create()
+        GradleRunner
+            .create()
             .withProjectDir(testProjectDir)
             .withArguments("help", "--stacktrace")
             .withPluginClasspath()
@@ -121,7 +122,8 @@ class JunitNoNetworkPluginTest {
             """.trimIndent(),
         )
 
-        GradleRunner.create()
+        GradleRunner
+            .create()
             .withProjectDir(testProjectDir)
             .withArguments("help", "--stacktrace")
             .withPluginClasspath()
@@ -153,7 +155,8 @@ class JunitNoNetworkPluginTest {
         )
 
         val result =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(testProjectDir)
                 .withArguments("dependencies", "--configuration", "testRuntimeClasspath", "--stacktrace")
                 .withPluginClasspath()
@@ -201,7 +204,8 @@ class JunitNoNetworkPluginTest {
         )
 
         val result =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(testProjectDir)
                 .withArguments("printTestProps", "--stacktrace")
                 .withPluginClasspath()
@@ -238,7 +242,8 @@ class JunitNoNetworkPluginTest {
             """.trimIndent(),
         )
 
-        GradleRunner.create()
+        GradleRunner
+            .create()
             .withProjectDir(testProjectDir)
             .withArguments("help", "--stacktrace")
             .withPluginClasspath()
@@ -276,7 +281,8 @@ class JunitNoNetworkPluginTest {
         )
 
         val result =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(testProjectDir)
                 .withArguments("dependencies", "--configuration", "testRuntimeClasspath", "--stacktrace")
                 .withPluginClasspath()

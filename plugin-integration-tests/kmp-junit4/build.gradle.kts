@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 // Configure the plugin
 junitNoNetwork {
     enabled = true
-    applyToAllTests = false  // Test explicit @NoNetworkTest annotation
+    applyToAllTests = false // Test explicit @NoNetworkTest annotation
     debug = false
 }
 

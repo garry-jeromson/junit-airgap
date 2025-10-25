@@ -26,4 +26,5 @@ class NetworkBlockingTest {
 
 // Platform-specific implementations
 expect fun testNetworkBlocking()
+
 expect fun testNetworkAllowed()
