@@ -12,7 +12,6 @@ import kotlin.test.assertTrue
  */
 @ExtendWith(NoNetworkExtension::class)
 class ExtensionLifecycleBenchmarkTest {
-
     @Test
     @NoNetworkTest
     fun `benchmark annotation processing overhead`() {

@@ -14,90 +14,93 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class AndroidCpuIntensiveBenchmarkTest {
-
     @get:Rule
     val noNetworkRule = NoNetworkRule()
 
     @Test
     @NoNetworkTest
     fun `benchmark fibonacci calculation`() {
-        val result = BenchmarkRunner.runBenchmark(
-            name = "Android CPU-Intensive (Fibonacci)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    fibonacci(20) // Calculate 20th Fibonacci number
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    fibonacci(20)
-                }
-            },
-        )
+        val result =
+            BenchmarkRunner.runBenchmark(
+                name = "Android CPU-Intensive (Fibonacci)",
+                control = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        fibonacci(20) // Calculate 20th Fibonacci number
+                    }
+                },
+                treatment = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        fibonacci(20)
+                    }
+                },
+            )
     }
 
     @Test
     @NoNetworkTest
     fun `benchmark prime number generation`() {
-        val result = BenchmarkRunner.runBenchmark(
-            name = "Android CPU-Intensive (Prime Numbers)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    generatePrimes(100) // Generate first 100 primes
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    generatePrimes(100)
-                }
-            },
-        )
+        val result =
+            BenchmarkRunner.runBenchmark(
+                name = "Android CPU-Intensive (Prime Numbers)",
+                control = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        generatePrimes(100) // Generate first 100 primes
+                    }
+                },
+                treatment = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        generatePrimes(100)
+                    }
+                },
+            )
     }
 
     @Test
     @NoNetworkTest
     fun `benchmark array sorting`() {
-        val result = BenchmarkRunner.runBenchmark(
-            name = "Android CPU-Intensive (Array Sorting)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    val array = (1..1000).shuffled().toIntArray()
-                    array.sort()
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    val array = (1..1000).shuffled().toIntArray()
-                    array.sort()
-                }
-            },
-        )
+        val result =
+            BenchmarkRunner.runBenchmark(
+                name = "Android CPU-Intensive (Array Sorting)",
+                control = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        val array = (1..1000).shuffled().toIntArray()
+                        array.sort()
+                    }
+                },
+                treatment = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        val array = (1..1000).shuffled().toIntArray()
+                        array.sort()
+                    }
+                },
+            )
     }
 
     @Test
     @NoNetworkTest
     fun `benchmark string manipulation`() {
-        val result = BenchmarkRunner.runBenchmark(
-            name = "Android CPU-Intensive (String Operations)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    var result = "hello"
-                    repeat(100) {
-                        result = result.uppercase().lowercase()
-                        result = result.replace("l", "L")
+        val result =
+            BenchmarkRunner.runBenchmark(
+                name = "Android CPU-Intensive (String Operations)",
+                control = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        var result = "hello"
+                        repeat(100) {
+                            result = result.uppercase().lowercase()
+                            result = result.replace("l", "L")
+                        }
                     }
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    var result = "hello"
-                    repeat(100) {
-                        result = result.uppercase().lowercase()
-                        result = result.replace("l", "L")
+                },
+                treatment = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        var result = "hello"
+                        repeat(100) {
+                            result = result.uppercase().lowercase()
+                            result = result.replace("l", "L")
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
     }
 
     @Test
@@ -106,19 +109,20 @@ class AndroidCpuIntensiveBenchmarkTest {
         val emailPattern = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         val text = "Contact us at support@example.com or sales@example.org for more info"
 
-        val result = BenchmarkRunner.runBenchmark(
-            name = "Android CPU-Intensive (Regex Matching)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    emailPattern.findAll(text).toList()
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    emailPattern.findAll(text).toList()
-                }
-            },
-        )
+        val result =
+            BenchmarkRunner.runBenchmark(
+                name = "Android CPU-Intensive (Regex Matching)",
+                control = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        emailPattern.findAll(text).toList()
+                    }
+                },
+                treatment = {
+                    repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                        emailPattern.findAll(text).toList()
+                    }
+                },
+            )
     }
 
     // Helper functions

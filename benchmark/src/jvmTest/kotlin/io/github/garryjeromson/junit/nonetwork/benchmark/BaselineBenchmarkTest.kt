@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
  * These establish the floor for overhead - if these fail, something is seriously wrong.
  */
 class BaselineBenchmarkTest {
-
     @Test
     fun `benchmark empty test - no operations`() {
         BenchmarkRunner.runBenchmarkAndAssert(
@@ -126,11 +125,7 @@ class BaselineBenchmarkTest {
         )
     }
 
-    private fun calculateSum(vararg numbers: Int): Int {
-        return numbers.sum()
-    }
+    private fun calculateSum(vararg numbers: Int): Int = numbers.sum()
 
-    private fun calculateProduct(vararg numbers: Int): Int {
-        return numbers.fold(1) { acc, n -> acc * n }
-    }
+    private fun calculateProduct(vararg numbers: Int): Int = numbers.fold(1) { acc, n -> acc * n }
 }

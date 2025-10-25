@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith
  */
 @ExtendWith(NoNetworkExtension::class)
 class MemoryOperationsBenchmarkTest {
-
     @Test
     @NoNetworkTest
     fun `benchmark object allocation`() {
@@ -163,5 +162,8 @@ class MemoryOperationsBenchmarkTest {
     }
 
     // Helper classes
-    data class TestObject(val id: Int, val value: String)
+    data class TestObject(
+        val id: Int,
+        val value: String,
+    )
 }

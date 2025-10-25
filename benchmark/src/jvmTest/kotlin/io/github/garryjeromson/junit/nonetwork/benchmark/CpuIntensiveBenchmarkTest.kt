@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith
  */
 @ExtendWith(NoNetworkExtension::class)
 class CpuIntensiveBenchmarkTest {
-
     @Test
     @NoNetworkTest
     fun `benchmark fibonacci calculation`() {

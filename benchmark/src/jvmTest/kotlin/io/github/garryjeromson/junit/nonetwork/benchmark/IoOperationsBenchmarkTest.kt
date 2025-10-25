@@ -8,7 +8,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.io.path.createTempDirectory
-import kotlin.io.path.deleteExisting
 
 /**
  * I/O operation benchmarks to verify no overhead for file and stream operations.
@@ -16,7 +15,6 @@ import kotlin.io.path.deleteExisting
  */
 @ExtendWith(NoNetworkExtension::class)
 class IoOperationsBenchmarkTest {
-
     @Test
     @NoNetworkTest
     fun `benchmark file write and read operations`() {
