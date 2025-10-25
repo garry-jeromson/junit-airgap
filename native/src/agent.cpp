@@ -214,8 +214,45 @@ void JNICALL NativeMethodBindCallback(
     DEBUG_LOGF("Native method bind: %s.%s%s -> %p",
                class_signature, method_name, method_signature, address);
 
-    // TODO: Check if this is a method we want to intercept
-    // For now, just log it
+    // Check if this is sun.nio.ch.Net.connect0() - used by modern Socket implementation
+    if (strcmp(class_signature, "Lsun/nio/ch/Net;") == 0 &&
+        strcmp(method_name, "connect0") == 0) {
+
+        fprintf(stderr, "[JVMTI-Agent] Intercepted sun.nio.ch.Net.connect0() binding\n");
+
+        // Store original function pointer
+        std::string key = "sun.nio.ch.Net.connect0";
+        StoreOriginalFunction(key, address);
+
+        // TODO: Replace with wrapper function
+        // This method is used by modern Java Socket implementation
+    }
+
+    // Check if this is Socket.socketConnect0() (legacy, pre-Java 7)
+    if (strcmp(class_signature, "Ljava/net/Socket;") == 0 &&
+        strcmp(method_name, "socketConnect0") == 0) {
+
+        fprintf(stderr, "[JVMTI-Agent] Intercepted Socket.socketConnect0() binding\n");
+
+        // Store original function pointer
+        std::string key = "java.net.Socket.socketConnect0";
+        StoreOriginalFunction(key, address);
+
+        // TODO: Replace with wrapper function
+    }
+
+    // Check if this is SocketChannelImpl.connect0()
+    if (strcmp(class_signature, "Lsun/nio/ch/SocketChannelImpl;") == 0 &&
+        strcmp(method_name, "connect0") == 0) {
+
+        fprintf(stderr, "[JVMTI-Agent] Intercepted SocketChannel.connect0() binding\n");
+
+        // Store original function pointer
+        std::string key = "sun.nio.ch.SocketChannelImpl.connect0";
+        StoreOriginalFunction(key, address);
+
+        // TODO: Replace with wrapper function
+    }
 
     // Cleanup
     jvmti_env->Deallocate((unsigned char*)method_name);
