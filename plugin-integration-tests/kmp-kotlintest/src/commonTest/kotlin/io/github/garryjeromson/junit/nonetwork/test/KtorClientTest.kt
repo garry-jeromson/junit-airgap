@@ -21,16 +21,20 @@ class KtorClientTest {
     @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTest() {
         val exception =
-            assertFailsWith<Exception> {
+            assertFailsWith<Throwable> {
                 makeKtorRequest()
             }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
-        // Check if it's either the exception itself or in the cause chain
+        // Check by class name since direct instance check doesn't work in common code
+        val exceptionClass = exception::class.simpleName
+        val causeClass = exception.cause?.let { it::class.simpleName }
+        val isNetworkException =
+            exceptionClass == "NetworkRequestAttemptedException" ||
+                causeClass == "NetworkRequestAttemptedException" ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true
         assertTrue(
-            exception is NetworkRequestAttemptedException ||
-                exception.cause is NetworkRequestAttemptedException ||
-                exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
+            isNetworkException,
+            "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${exception.message}",
         )
     }
 
@@ -51,16 +55,20 @@ class KtorClientTest {
     @BlockNetworkRequests
     fun `ktor client with spaces in test name is blocked in kotlin test`() {
         val exception =
-            assertFailsWith<Exception> {
+            assertFailsWith<Throwable> {
                 makeKtorRequest()
             }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
-        // Check if it's either the exception itself or in the cause chain
+        // Check by class name since direct instance check doesn't work in common code
+        val exceptionClass = exception::class.simpleName
+        val causeClass = exception.cause?.let { it::class.simpleName }
+        val isNetworkException =
+            exceptionClass == "NetworkRequestAttemptedException" ||
+                causeClass == "NetworkRequestAttemptedException" ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true
         assertTrue(
-            exception is NetworkRequestAttemptedException ||
-                exception.cause is NetworkRequestAttemptedException ||
-                exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
+            isNetworkException,
+            "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${exception.message}",
         )
     }
 }

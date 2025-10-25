@@ -6,7 +6,6 @@ import java.io.OutputStream
 import java.net.InetAddress
 import java.net.SocketAddress
 import java.net.SocketImpl
-import java.net.SocketOptions
 
 /**
  * Custom SocketImpl that checks network configuration before allowing connections.

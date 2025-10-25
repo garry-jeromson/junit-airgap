@@ -312,12 +312,11 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Register injection task for JVM project
-        val injectionTask =
-            project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
-                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
-                debug.set(extension.debug)
-                testTaskName.set("test")
-            }
+        project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+            testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
+            debug.set(extension.debug)
+            testTaskName.set("test")
+        }
 
         // Hook after test compilation
         project.tasks.matching { it.name == "compileTestKotlin" || it.name == "compileTestJava" }.all {
@@ -403,7 +402,6 @@ class JunitNoNetworkPlugin : Plugin<Project> {
 
             // Wire Android target tasks for both variants
             listOf("Debug", "Release").forEach { variant ->
-                val variantLower = variant.lowercase()
                 val injectionTaskName = "injectAndroid${variant}JUnit4NetworkRule"
                 val compilationTaskName = "compile${variant}UnitTestKotlinAndroid"
                 val testTaskName = "test${variant}UnitTest"

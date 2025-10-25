@@ -5,7 +5,7 @@ import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetwor
 import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetworkNotBlocked
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -136,7 +136,7 @@ class AndroidHttpClientIntegrationTest {
                 Request
                     .Builder()
                     .url("http://example.com/api")
-                    .post(RequestBody.create(null, """{"test": "data"}"""))
+                    .post("""{"test": "data"}""".toRequestBody(null))
                     .build()
             client.newCall(request).execute()
         }

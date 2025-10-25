@@ -9,6 +9,7 @@ import io.github.garryjeromson.junit.nonetwork.integration.fixtures.assertNetwor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -161,7 +162,7 @@ class AndroidRealWorldScenariosTest {
         assertNetworkNotBlocked("Network should not be blocked without annotation") {
             try {
                 Socket("example.com", 80)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 // Other exceptions are fine, just not NetworkRequestAttemptedException
                 assert(e !is NetworkRequestAttemptedException) {
                     "Should not throw NetworkRequestAttemptedException without @BlockNetworkRequests"
@@ -202,11 +203,7 @@ class AndroidRealWorldScenariosTest {
         // GraphQL is increasingly common in Android apps
         assertNetworkBlocked("GraphQL API calls should be blocked") {
             val client = OkHttpClient()
-            val body =
-                okhttp3.RequestBody.create(
-                    "application/json".toMediaType(),
-                    """{"query": "{ user(id: 1) { name } }"}""",
-                )
+            val body = """{"query": "{ user(id: 1) { name } }"}""".toRequestBody("application/json".toMediaType())
             val request =
                 Request
                     .Builder()

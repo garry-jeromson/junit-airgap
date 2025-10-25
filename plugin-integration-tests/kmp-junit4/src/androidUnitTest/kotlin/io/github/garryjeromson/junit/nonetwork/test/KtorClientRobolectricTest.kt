@@ -45,11 +45,16 @@ class KtorClientRobolectricTest {
             fail("Expected exception to be thrown")
         } catch (e: Exception) {
             // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
+            // Check by class name since direct instance check doesn't work in platform code
+            val exceptionClass = e::class.simpleName
+            val causeClass = e.cause?.let { it::class.simpleName }
+            val isNetworkException =
+                exceptionClass == "NetworkRequestAttemptedException" ||
+                    causeClass == "NetworkRequestAttemptedException" ||
+                    e.message?.contains("NetworkRequestAttemptedException") == true
             assertTrue(
-                e is NetworkRequestAttemptedException ||
-                    e.cause is NetworkRequestAttemptedException ||
-                    e.message?.contains("NetworkRequestAttemptedException") == true,
-                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}",
+                isNetworkException,
+                "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${e.message}",
             )
         }
     }
@@ -83,11 +88,17 @@ class KtorClientRobolectricTest {
             makeKtorRequest()
             fail("Expected exception to be thrown")
         } catch (e: Exception) {
+            // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
+            // Check by class name since direct instance check doesn't work in platform code
+            val exceptionClass = e::class.simpleName
+            val causeClass = e.cause?.let { it::class.simpleName }
+            val isNetworkException =
+                exceptionClass == "NetworkRequestAttemptedException" ||
+                    causeClass == "NetworkRequestAttemptedException" ||
+                    e.message?.contains("NetworkRequestAttemptedException") == true
             assertTrue(
-                e is NetworkRequestAttemptedException ||
-                    e.cause is NetworkRequestAttemptedException ||
-                    e.message?.contains("NetworkRequestAttemptedException") == true,
-                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}",
+                isNetworkException,
+                "Expected NetworkRequestAttemptedException but got: $exceptionClass (cause: $causeClass): ${e.message}",
             )
         }
     }

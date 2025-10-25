@@ -112,6 +112,7 @@ class HttpClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
+    @Suppress("DEPRECATION")
     fun `blocks Apache HttpClient to external host`() {
         assertNetworkBlocked("Apache HttpClient should be blocked") {
             val httpClient = HttpClients.createDefault()
@@ -124,6 +125,7 @@ class HttpClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
+    @Suppress("DEPRECATION")
     fun `allows Apache HttpClient to 127_0_0_1`() {
         assertNetworkNotBlocked("Apache HttpClient to 127.0.0.1 should work") {
             val httpClient = HttpClients.createDefault()

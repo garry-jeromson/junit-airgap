@@ -60,7 +60,7 @@ class AndroidNetworkBlockerTest {
         // (It may throw ConnectException if no server is running, which is fine)
         try {
             Socket("localhost", 8080)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // Should NOT be NetworkRequestAttemptedException
             assertTrue(
                 e !is NetworkRequestAttemptedException,
@@ -124,7 +124,7 @@ class AndroidNetworkBlockerTest {
         // (May throw other exceptions like UnknownHostException, which is fine)
         try {
             Socket("example.com", 80)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             assertTrue(
                 e !is NetworkRequestAttemptedException,
                 "Should not throw NetworkRequestAttemptedException after uninstall",

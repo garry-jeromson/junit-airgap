@@ -127,7 +127,7 @@ class RealWorldScenariosTest {
         assertNetworkNotBlocked("Network should not be blocked without annotation") {
             try {
                 Socket("example.com", 80)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 // Other exceptions are fine, just not NetworkRequestAttemptedException
                 assert(e !is io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException) {
                     "Should not throw NetworkRequestAttemptedException without @BlockNetworkRequests"
