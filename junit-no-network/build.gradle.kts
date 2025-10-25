@@ -161,9 +161,34 @@ kotlin.jvm().compilations.create("integrationTest") {
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
+    // Use Java 21 toolchain (native agent built with Java 21)
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    })
+
+    // Load JVMTI agent for network blocking
+    val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
+
+    doFirst {
+        val agentFile = file(agentPath)
+        if (agentFile.exists()) {
+            println("Loading JVMTI agent from: $agentPath")
+        } else {
+            println("WARNING: JVMTI agent not found at: $agentPath")
+            println("Run 'make build-native' to build the native agent.")
+            println("Tests will fail without the agent.")
+        }
+    }
+
+    jvmArgs("-agentpath:$agentPath")
+
     // Pass junit.nonetwork system properties to test JVM
-    systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
     systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
+}
+
+// Make jvmTest depend on native build
+tasks.named("jvmTest") {
+    dependsOn("buildNativeAgent")
 }
 
 // Configure Android test tasks
@@ -178,7 +203,6 @@ tasks.withType<Test>().configureEach {
         }
 
         // Pass junit.nonetwork system properties to test JVM
-        systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
         systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
     }
 }
@@ -200,7 +224,6 @@ tasks.register<Test>("integrationTest") {
     exclude("**/*\$Companion.class")
 
     // Pass junit.nonetwork system properties to test JVM
-    systemProperty("junit.nonetwork.implementation", System.getProperty("junit.nonetwork.implementation") ?: "auto")
     systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
 
     testLogging {
@@ -230,8 +253,7 @@ tasks.register<Test>("integrationTestJvmti") {
         languageVersion.set(JavaLanguageVersion.of(21))
     })
 
-    // CRITICAL: Force JVMTI implementation and disable SecurityManager
-    systemProperty("junit.nonetwork.implementation", "jvmti")
+    // Enable debug logging
     systemProperty("junit.nonetwork.debug", "true")
 
     // Load JVMTI agent

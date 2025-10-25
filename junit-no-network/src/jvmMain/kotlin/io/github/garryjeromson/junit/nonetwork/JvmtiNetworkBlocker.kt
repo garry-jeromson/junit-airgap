@@ -206,6 +206,4 @@ internal class JvmtiNetworkBlocker(
         // The Gradle plugin ensures the agent is loaded correctly.
         return true
     }
-
-    override fun getImplementation(): NetworkBlockerImplementation = NetworkBlockerImplementation.JVMTI
 }

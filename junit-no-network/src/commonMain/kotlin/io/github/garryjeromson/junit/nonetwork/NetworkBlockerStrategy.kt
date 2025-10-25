@@ -38,11 +38,4 @@ internal interface NetworkBlockerStrategy {
      * @return true if this strategy can be used, false otherwise
      */
     fun isAvailable(): Boolean
-
-    /**
-     * Get the implementation type of this strategy.
-     *
-     * @return NetworkBlockerImplementation representing this strategy
-     */
-    fun getImplementation(): NetworkBlockerImplementation
 }
