@@ -371,6 +371,12 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
             debug.set(extension.debug)
             testTaskName.set("jvmTest")
+
+            // Depend on compilation task
+            project.tasks.findByName("compileTestKotlinJvm")?.let { compileTask ->
+                mustRunAfter(compileTask)
+                dependsOn(compileTask)
+            }
         }
 
         // Android target
@@ -379,8 +385,14 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
             debug.set(extension.debug)
             testTaskName.set("testDebugUnitTest")
+
+            // Depend on compilation task
+            project.tasks.findByName("compileDebugUnitTestKotlinAndroid")?.let { compileTask ->
+                mustRunAfter(compileTask)
+                dependsOn(compileTask)
+            }
         }
 
-        project.logger.info("Configured JUnit 4 rule injection for KMP project (tasks registered, manual wiring required)")
+        project.logger.info("Configured JUnit 4 rule injection for KMP project (manual execution: run injection tasks then test tasks)")
     }
 }

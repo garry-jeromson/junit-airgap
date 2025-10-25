@@ -11,7 +11,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @NoNetworkTest annotation
-    debug = false
+    debug = true // Enable debug logging
     injectJUnit4Rule = true // Enable automatic @Rule injection for JUnit 4
 }
 
