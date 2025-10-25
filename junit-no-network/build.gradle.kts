@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     `maven-publish`
+    signing
 }
 
 kotlin {
@@ -183,5 +184,57 @@ tasks.register<Test>("integrationTest") {
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
+    }
+}
+
+// ============================================================================
+// Maven Central Publishing Configuration
+// ============================================================================
+
+publishing {
+    publications.withType<MavenPublication> {
+        // POM metadata for Maven Central
+        pom {
+            name.set("JUnit No-Network Extension")
+            description.set("A JUnit extension that automatically fails tests attempting to make outgoing network requests")
+            url.set("https://github.com/garry-jeromson/junit-request-blocker")
+
+            licenses {
+                license {
+                    name.set("MIT License")
+                    url.set("https://opensource.org/licenses/MIT")
+                }
+            }
+
+            developers {
+                developer {
+                    id.set("garry-jeromson")
+                    name.set("Garry Jeromson")
+                    email.set("garry.jeromson@gmail.com")
+                }
+            }
+
+            scm {
+                connection.set("scm:git:git://github.com/garry-jeromson/junit-request-blocker.git")
+                developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-request-blocker.git")
+                url.set("https://github.com/garry-jeromson/junit-request-blocker")
+            }
+        }
+    }
+}
+
+// Signing configuration for Maven Central
+signing {
+    // Only require signing if publishing to Maven Central (not for local builds)
+    setRequired { gradle.taskGraph.allTasks.any { it.name.contains("publish") } }
+
+    // Use in-memory key from environment variables or gradle.properties
+    val signingKeyId: String? = findProperty("signingKeyId") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKeyId")
+    val signingKey: String? = findProperty("signingKey") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKey")
+    val signingPassword: String? = findProperty("signingPassword") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingPassword")
+
+    if (signingKeyId != null && signingKey != null && signingPassword != null) {
+        useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        sign(publishing.publications)
     }
 }

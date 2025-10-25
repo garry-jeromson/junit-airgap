@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.nexus.publish)
 }
 
 allprojects {
@@ -21,6 +22,18 @@ allprojects {
 
         filter {
             exclude("**/build/**")
+        }
+    }
+}
+
+// Configure Nexus publishing for Maven Central
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(findProperty("ossrhUsername") as String? ?: System.getenv("ORG_GRADLE_PROJECT_ossrhUsername"))
+            password.set(findProperty("ossrhPassword") as String? ?: System.getenv("ORG_GRADLE_PROJECT_ossrhPassword"))
         }
     }
 }

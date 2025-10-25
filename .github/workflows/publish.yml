@@ -1,0 +1,135 @@
+name: Publish to Maven Central
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (leave empty to auto-detect from git tag)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    name: Publish artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for version detection
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            echo "Using manually specified version: $VERSION"
+          else
+            # Get the latest git tag
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -z "$TAG" ]; then
+              echo "No git tag found. Use workflow input to specify version."
+              exit 1
+            fi
+            # Strip 'v' prefix if present
+            VERSION="${TAG#v}"
+            echo "Detected version from git tag: $VERSION"
+          fi
+
+          # Validate version format (basic semver check)
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected semantic version format: X.Y.Z or X.Y.Z-qualifier"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Update version in build files
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update root build.gradle.kts
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" build.gradle.kts
+
+          # Update gradle-plugin build.gradle.kts
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" gradle-plugin/build.gradle.kts
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" gradle-plugin/build.gradle.kts
+
+          echo "Updated version to $VERSION in build files"
+
+      - name: Run CI checks
+        run: |
+          echo "Running full CI suite before publishing..."
+          make lint
+          make test
+          make test-plugin-integration
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.SIGNING_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+        run: |
+          ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository --no-daemon --stacktrace
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## JUnit No-Network Extension v${{ steps.version.outputs.version }}
+
+            Published to Maven Central: https://central.sonatype.com/artifact/io.github.garryjeromson/junit-no-network
+
+            ### Installation
+            ```gradle
+            dependencies {
+                testImplementation("io.github.garryjeromson:junit-no-network:${{ steps.version.outputs.version }}")
+            }
+            ```
+
+            Or use the Gradle plugin:
+            ```gradle
+            plugins {
+                id("io.github.garryjeromson.junit-no-network") version "${{ steps.version.outputs.version }}"
+            }
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish summary
+        run: |
+          echo "## :rocket: Published to Maven Central" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts are being synchronized to Maven Central. This may take a few hours." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Maven Central:** https://central.sonatype.com/artifact/io.github.garryjeromson/junit-no-network/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
