@@ -336,29 +336,40 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project: Project,
         extension: JunitNoNetworkExtension,
     ) {
-        // Register injection task for Android unit tests
-        val injectionTask =
-            project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
-                // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
-                testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
-                debug.set(extension.debug)
-                testTaskName.set("testDebugUnitTest")
-            }
-
-        // Hook after Android test compilation
-        project.tasks
-            .matching {
-                it.name.contains("compileDebugUnitTestKotlin") || it.name.contains("compileDebugUnitTestJava")
-            }.all {
-                finalizedBy("injectJUnit4NetworkRule")
-            }
-
-        // Ensure test task depends on injection
-        project.tasks.matching { it.name.contains("testDebugUnitTest") }.all {
-            dependsOn("injectJUnit4NetworkRule")
+        // Configure injection for both Debug and Release variants
+        listOf("Debug", "Release").forEach { variant ->
+            configureAndroidVariantInjection(project, extension, variant)
         }
 
-        project.logger.info("Configured JUnit 4 rule injection for Android project")
+        project.logger.info("Configured JUnit 4 rule injection for Android project (Debug and Release variants)")
+    }
+
+    private fun configureAndroidVariantInjection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+        variant: String,
+    ) {
+        val variantLower = variant.lowercase()
+        val taskName = "inject${variant}JUnit4NetworkRule"
+        val testTaskName = "test${variant}UnitTest"
+        val compilationTaskName = "compile${variant}UnitTestKotlin"
+
+        // Register injection task for this variant
+        project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
+            testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
+            debug.set(extension.debug)
+            this.testTaskName.set(testTaskName)
+        }
+
+        // Configure automatic task wiring after project evaluation
+        project.afterEvaluate {
+            // Wire compilation task to finalize with injection
+            configureTaskWiring(this, compilationTaskName, taskName)
+            // Wire test task to depend on injection
+            configureTaskWiring(this, testTaskName, null, taskName)
+        }
+
+        project.logger.debug("Configured injection task $taskName for Android $variant variant")
     }
 
     private fun configureKmpJUnit4Injection(
@@ -379,18 +390,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             }
         }
 
-        // Android target
-        project.tasks.register("injectAndroidJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
-            // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
-            testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
-            debug.set(extension.debug)
-            testTaskName.set("testDebugUnitTest")
-
-            // Depend on compilation task
-            project.tasks.findByName("compileDebugUnitTestKotlinAndroid")?.let { compileTask ->
-                mustRunAfter(compileTask)
-                dependsOn(compileTask)
-            }
+        // Android target - configure both Debug and Release variants
+        listOf("Debug", "Release").forEach { variant ->
+            configureKmpAndroidVariantInjection(project, extension, variant)
         }
 
         // Configure automatic task wiring after project evaluation
@@ -399,12 +401,44 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             configureTaskWiring(project, "compileTestKotlinJvm", "injectJvmJUnit4NetworkRule")
             configureTaskWiring(project, "jvmTest", null, "injectJvmJUnit4NetworkRule")
 
-            // Wire Android target tasks
-            configureTaskWiring(project, "compileDebugUnitTestKotlinAndroid", "injectAndroidJUnit4NetworkRule")
-            configureTaskWiring(project, "testDebugUnitTest", null, "injectAndroidJUnit4NetworkRule")
+            // Wire Android target tasks for both variants
+            listOf("Debug", "Release").forEach { variant ->
+                val variantLower = variant.lowercase()
+                val injectionTaskName = "injectAndroid${variant}JUnit4NetworkRule"
+                val compilationTaskName = "compile${variant}UnitTestKotlinAndroid"
+                val testTaskName = "test${variant}UnitTest"
+
+                configureTaskWiring(project, compilationTaskName, injectionTaskName)
+                configureTaskWiring(project, testTaskName, null, injectionTaskName)
+            }
         }
 
-        project.logger.info("Configured JUnit 4 rule injection for KMP project with automatic task wiring")
+        project.logger.info("Configured JUnit 4 rule injection for KMP project with automatic task wiring (Debug and Release variants)")
+    }
+
+    private fun configureKmpAndroidVariantInjection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+        variant: String,
+    ) {
+        val variantLower = variant.lowercase()
+        val taskName = "injectAndroid${variant}JUnit4NetworkRule"
+        val testTaskName = "test${variant}UnitTest"
+        val compilationTaskName = "compile${variant}UnitTestKotlinAndroid"
+
+        project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
+            testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
+            debug.set(extension.debug)
+            this.testTaskName.set(testTaskName)
+
+            // Depend on compilation task
+            project.tasks.findByName(compilationTaskName)?.let { compileTask ->
+                mustRunAfter(compileTask)
+                dependsOn(compileTask)
+            }
+        }
+
+        project.logger.debug("Configured injection task $taskName for KMP Android $variant variant")
     }
 
     private fun configureTaskWiring(
