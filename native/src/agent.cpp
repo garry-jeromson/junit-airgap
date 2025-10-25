@@ -224,8 +224,11 @@ void JNICALL NativeMethodBindCallback(
         std::string key = "sun.nio.ch.Net.connect0";
         StoreOriginalFunction(key, address);
 
-        // TODO: Replace with wrapper function
-        // This method is used by modern Java Socket implementation
+        // Replace with wrapper function
+        void* wrapper_address = InstallNetConnect0Wrapper(address);
+        *new_address_ptr = wrapper_address;
+
+        fprintf(stderr, "[JVMTI-Agent] Replaced Net.connect0() with wrapper at %p\n", wrapper_address);
     }
 
     // Check if this is Socket.socketConnect0() (legacy, pre-Java 7)

@@ -45,4 +45,7 @@ extern std::mutex g_functions_mutex;
 void* GetOriginalFunction(const std::string& key);
 void StoreOriginalFunction(const std::string& key, void* address);
 
+// Socket interception functions
+void* InstallNetConnect0Wrapper(void* original_address);
+
 #endif // JUNIT_NO_NETWORK_AGENT_H
