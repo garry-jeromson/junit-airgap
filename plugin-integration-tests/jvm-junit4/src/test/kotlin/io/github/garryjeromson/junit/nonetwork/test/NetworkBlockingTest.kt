@@ -1,11 +1,11 @@
 package io.github.garryjeromson.junit.nonetwork.test
 
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import org.junit.Test
 import java.net.Socket
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -16,8 +16,7 @@ class NetworkBlockingTest {
     @Test
     @BlockNetworkRequests
     fun networkIsBlockedWithNoNetworkTest() {
-        // Network is blocked - expect exception
-        assertFailsWith<NetworkRequestAttemptedException>("Network is blocked") {
+        assertRequestBlocked {
             Socket("example.com", 80).use { }
         }
     }
@@ -25,13 +24,8 @@ class NetworkBlockingTest {
     @Test
     @AllowNetworkRequests
     fun networkIsAllowedWithAllowNetwork() {
-        // Network is allowed - may throw IOException but not NetworkRequestAttemptedException
-        try {
-            Socket("example.com", 80).close()
-        } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network is NOT blocked with @AllowNetworkRequests", e)
-        } catch (e: Exception) {
-            // Other exceptions (no internet, DNS failure, etc.) are OK
+        assertRequestAllowed {
+            Socket("example.com", 80).use { }
         }
     }
 
