@@ -184,4 +184,74 @@ object NetworkBlockerContext {
             }
         }
     }
+
+    /**
+     * Check if a host is explicitly in the blockedHosts list.
+     *
+     * This is used by the JVMTI agent to determine if a hostname/IP should be blocked
+     * regardless of whether an alternative identifier (hostname vs IP) is allowed.
+     *
+     * @param host Hostname or IP address to check
+     * @return true if host is explicitly blocked, false otherwise
+     */
+    @JvmStatic
+    fun isExplicitlyBlocked(host: String): Boolean {
+        val configuration = getConfiguration()
+
+        if (debugMode) {
+            println("NetworkBlockerContext.isExplicitlyBlocked: host=$host")
+            println("  Configuration: $configuration")
+        }
+
+        // No configuration = not blocked
+        if (configuration == null) {
+            if (debugMode) {
+                println("  No configuration set, not blocked")
+            }
+            return false
+        }
+
+        // Check if host matches any pattern in blockedHosts
+        val normalizedHost = host.lowercase()
+        val blocked = configuration.blockedHosts.any { pattern ->
+            val matches = matchesPattern(normalizedHost, pattern.lowercase())
+            if (debugMode && matches) {
+                println("  Host $host matches blocked pattern: $pattern")
+            }
+            matches
+        }
+
+        if (debugMode) {
+            println("  isExplicitlyBlocked($host) = $blocked")
+        }
+
+        return blocked
+    }
+
+    /**
+     * Check if a host matches a wildcard pattern.
+     * This mirrors the logic in NetworkConfiguration.matchesPattern().
+     *
+     * @param host Normalized (lowercase) hostname
+     * @param pattern Normalized (lowercase) pattern with wildcards
+     * @return true if host matches pattern
+     */
+    private fun matchesPattern(
+        host: String,
+        pattern: String,
+    ): Boolean {
+        // Handle wildcard for "allow all"
+        if (pattern == "*") {
+            return true
+        }
+
+        // Convert wildcard pattern to regex
+        // Escape special regex characters except *
+        val regexPattern =
+            pattern
+                .replace(".", "\\.")
+                .replace("*", ".*")
+
+        return host.matches(Regex("^$regexPattern$"))
+    }
 }

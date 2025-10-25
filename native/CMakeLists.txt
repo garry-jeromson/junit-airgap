@@ -18,6 +18,7 @@ include_directories(
 set(AGENT_SOURCES
     src/agent.cpp
     src/socket_interceptor.cpp
+    src/dns_interceptor.cpp
 )
 
 # Create shared library (agent)

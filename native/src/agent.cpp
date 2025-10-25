@@ -55,6 +55,7 @@ std::mutex g_functions_mutex;
 // Cached NetworkBlockerContext class and method references
 jclass g_network_blocker_context_class = nullptr;
 jmethodID g_check_connection_method = nullptr;
+jmethodID g_is_explicitly_blocked_method = nullptr;
 std::mutex g_context_mutex;
 
 /**
@@ -262,6 +263,40 @@ void JNICALL NativeMethodBindCallback(
         // TODO: Replace with wrapper function
     }
 
+    // Check if this is Inet6AddressImpl.lookupAllHostAddr() - DNS resolution
+    if (strcmp(class_signature, "Ljava/net/Inet6AddressImpl;") == 0 &&
+        strcmp(method_name, "lookupAllHostAddr") == 0) {
+
+        fprintf(stderr, "[JVMTI-Agent] Intercepted Inet6AddressImpl.lookupAllHostAddr() binding\n");
+
+        // Store original function pointer
+        std::string key = "java.net.Inet6AddressImpl.lookupAllHostAddr";
+        StoreOriginalFunction(key, address);
+
+        // Replace with wrapper function
+        void* wrapper_address = InstallInet6LookupWrapper(address);
+        *new_address_ptr = wrapper_address;
+
+        fprintf(stderr, "[JVMTI-Agent] Replaced Inet6AddressImpl.lookupAllHostAddr() with wrapper at %p\n", wrapper_address);
+    }
+
+    // Check if this is Inet4AddressImpl.lookupAllHostAddr() - DNS resolution
+    if (strcmp(class_signature, "Ljava/net/Inet4AddressImpl;") == 0 &&
+        strcmp(method_name, "lookupAllHostAddr") == 0) {
+
+        fprintf(stderr, "[JVMTI-Agent] Intercepted Inet4AddressImpl.lookupAllHostAddr() binding\n");
+
+        // Store original function pointer
+        std::string key = "java.net.Inet4AddressImpl.lookupAllHostAddr";
+        StoreOriginalFunction(key, address);
+
+        // Replace with wrapper function
+        void* wrapper_address = InstallInet4LookupWrapper(address);
+        *new_address_ptr = wrapper_address;
+
+        fprintf(stderr, "[JVMTI-Agent] Replaced Inet4AddressImpl.lookupAllHostAddr() with wrapper at %p\n", wrapper_address);
+    }
+
     // Cleanup
     jvmti_env->Deallocate((unsigned char*)method_name);
     jvmti_env->Deallocate((unsigned char*)method_signature);
@@ -351,6 +386,16 @@ jmethodID GetCheckConnectionMethod() {
 }
 
 /**
+ * Get cached isExplicitlyBlocked method ID.
+ *
+ * @return Cached method ID, or nullptr if not registered
+ */
+jmethodID GetIsExplicitlyBlockedMethod() {
+    std::lock_guard<std::mutex> lock(g_context_mutex);
+    return g_is_explicitly_blocked_method;
+}
+
+/**
  * Registration function called from Java to cache class and method references.
  *
  * This is called from NetworkBlockerContext's static initializer to register
@@ -391,6 +436,21 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_Ne
         fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find checkConnection method\n");
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
+        return;
+    }
+
+    // Get isExplicitlyBlocked method
+    g_is_explicitly_blocked_method = env->GetStaticMethodID(
+        g_network_blocker_context_class,
+        "isExplicitlyBlocked",
+        "(Ljava/lang/String;)Z"
+    );
+
+    if (g_is_explicitly_blocked_method == nullptr) {
+        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find isExplicitlyBlocked method\n");
+        env->DeleteGlobalRef(g_network_blocker_context_class);
+        g_network_blocker_context_class = nullptr;
+        g_check_connection_method = nullptr;
         return;
     }
 

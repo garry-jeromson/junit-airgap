@@ -55,15 +55,36 @@ jint JNICALL wrapped_Net_connect0(
 ) {
     DEBUG_LOG("wrapped_Net_connect0() called - intercepting connection attempt");
 
-    // Extract hostname from InetAddress
-    // IMPORTANT: Use getHostName() not getHostAddress() to get the original hostname,
-    // not the resolved IP address. This is critical for blockedHosts matching.
-    jstring hostString = nullptr;
-    const char* hostCStr = nullptr;
+    // Extract both hostname and IP address from InetAddress
+    // We need to check BOTH because:
+    // 1. User might allowlist "example.com" (hostname)
+    // 2. User might allowlist "127.0.0.1" (IP address)
+    // 3. DNS interception checks hostname, socket should check both hostname and IP
+    jstring hostNameString = nullptr;
+    jstring hostAddressString = nullptr;
+    const char* hostNameCStr = nullptr;
+    const char* hostAddressCStr = nullptr;
 
     if (remote != nullptr) {
         jclass inetAddressClass = env->FindClass("java/net/InetAddress");
         if (inetAddressClass != nullptr) {
+            // Get IP address (never does reverse DNS)
+            jmethodID getHostAddressMethod = env->GetMethodID(
+                inetAddressClass,
+                "getHostAddress",
+                "()Ljava/lang/String;"
+            );
+
+            if (getHostAddressMethod != nullptr) {
+                hostAddressString = (jstring)env->CallObjectMethod(remote, getHostAddressMethod);
+                if (hostAddressString != nullptr) {
+                    hostAddressCStr = env->GetStringUTFChars(hostAddressString, nullptr);
+                }
+            }
+
+            // Get hostname (may return cached hostname or do reverse DNS)
+            // Note: This might trigger reverse DNS lookup (e.g., "127.0.0.1" -> "localhost")
+            // but that's okay because we're already past DNS resolution at this point
             jmethodID getHostNameMethod = env->GetMethodID(
                 inetAddressClass,
                 "getHostName",
@@ -71,48 +92,126 @@ jint JNICALL wrapped_Net_connect0(
             );
 
             if (getHostNameMethod != nullptr) {
-                hostString = (jstring)env->CallObjectMethod(remote, getHostNameMethod);
-                if (hostString != nullptr) {
-                    hostCStr = env->GetStringUTFChars(hostString, nullptr);
-                    DEBUG_LOGF("Connection attempt to %s:%d", hostCStr, remotePort);
+                hostNameString = (jstring)env->CallObjectMethod(remote, getHostNameMethod);
+                if (hostNameString != nullptr) {
+                    hostNameCStr = env->GetStringUTFChars(hostNameString, nullptr);
                 }
             }
+
+            DEBUG_LOGF("Connection attempt - hostname: %s, IP: %s, port: %d",
+                      hostNameCStr ? hostNameCStr : "(null)",
+                      hostAddressCStr ? hostAddressCStr : "(null)",
+                      remotePort);
         }
     }
 
     // Check NetworkConfiguration via JNI call to Kotlin
-    if (hostString != nullptr && hostCStr != nullptr) {
+    // Logic:
+    // 1. If hostname is EXPLICITLY in blockedHosts → block (don't check IP)
+    // 2. If IP is EXPLICITLY in blockedHosts → block (don't check hostname)
+    // 3. If hostname is allowed → allow
+    // 4. If IP is allowed → allow
+    // 5. Otherwise → block
+    bool connectionBlocked = false;
+    if (remote != nullptr) {
         // Get cached class and method references
         jclass contextClass = GetNetworkBlockerContextClass();
         jmethodID checkConnectionMethod = GetCheckConnectionMethod();
+        jmethodID isExplicitlyBlockedMethod = GetIsExplicitlyBlockedMethod();
 
-        if (contextClass != nullptr && checkConnectionMethod != nullptr) {
-            DEBUG_LOG("Calling NetworkBlockerContext.checkConnection()");
-
+        if (contextClass != nullptr && checkConnectionMethod != nullptr && isExplicitlyBlockedMethod != nullptr) {
             // Create caller string
             jstring callerString = env->NewStringUTF("JVMTI-Agent");
 
-            // Call checkConnection - this will throw exception if blocked
-            env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostString, remotePort, callerString);
+            // First, check if hostname or IP are explicitly blocked
+            bool hostnameExplicitlyBlocked = false;
+            bool ipExplicitlyBlocked = false;
 
-            // Check if exception was thrown
-            if (env->ExceptionCheck()) {
-                DEBUG_LOG("Connection blocked - NetworkRequestAttemptedException thrown");
-                // Release resources before returning
-                env->ReleaseStringUTFChars(hostString, hostCStr);
-                // Exception will propagate to Java
-                return -2; // Error code
+            if (hostNameString != nullptr && hostNameCStr != nullptr) {
+                hostnameExplicitlyBlocked = env->CallStaticBooleanMethod(contextClass, isExplicitlyBlockedMethod, hostNameString);
+                if (hostnameExplicitlyBlocked) {
+                    DEBUG_LOGF("Hostname %s is explicitly blocked", hostNameCStr);
+                }
             }
 
-            DEBUG_LOG("Connection allowed by NetworkBlockerContext");
+            if (hostAddressString != nullptr && hostAddressCStr != nullptr) {
+                ipExplicitlyBlocked = env->CallStaticBooleanMethod(contextClass, isExplicitlyBlockedMethod, hostAddressString);
+                if (ipExplicitlyBlocked) {
+                    DEBUG_LOGF("IP address %s is explicitly blocked", hostAddressCStr);
+                }
+            }
+
+            // If either hostname or IP is explicitly blocked, block the connection
+            if (hostnameExplicitlyBlocked || ipExplicitlyBlocked) {
+                DEBUG_LOG("Connection blocked - host explicitly in blockedHosts");
+                connectionBlocked = true;
+                // Call checkConnection to throw the exception with proper details
+                if (hostNameString != nullptr) {
+                    env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostNameString, remotePort, callerString);
+                } else if (hostAddressString != nullptr) {
+                    env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostAddressString, remotePort, callerString);
+                }
+            } else {
+                // Not explicitly blocked, try checking if allowed
+                // Try hostname first (if available)
+                if (hostNameString != nullptr && hostNameCStr != nullptr) {
+                    DEBUG_LOGF("Checking hostname: %s", hostNameCStr);
+                    env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostNameString, remotePort, callerString);
+
+                    if (env->ExceptionCheck()) {
+                        // Hostname not allowed, clear exception and try IP address
+                        DEBUG_LOGF("Hostname %s not allowed, trying IP address", hostNameCStr);
+                        env->ExceptionClear();
+
+                        // Now try with IP address
+                        if (hostAddressString != nullptr && hostAddressCStr != nullptr) {
+                            DEBUG_LOGF("Checking IP address: %s", hostAddressCStr);
+                            env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostAddressString, remotePort, callerString);
+
+                            if (env->ExceptionCheck()) {
+                                // Neither hostname nor IP are allowed
+                                DEBUG_LOG("Both hostname and IP address not allowed");
+                                connectionBlocked = true;
+                            } else {
+                                DEBUG_LOG("IP address allowed (hostname was not)");
+                            }
+                        } else {
+                            // No IP address to check, connection is blocked
+                            connectionBlocked = true;
+                            // Re-throw the exception from hostname check
+                            env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostNameString, remotePort, callerString);
+                        }
+                    } else {
+                        DEBUG_LOG("Hostname allowed");
+                    }
+                } else if (hostAddressString != nullptr && hostAddressCStr != nullptr) {
+                    // No hostname, only check IP address
+                    DEBUG_LOGF("Checking IP address only: %s", hostAddressCStr);
+                    env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostAddressString, remotePort, callerString);
+
+                    if (env->ExceptionCheck()) {
+                        DEBUG_LOG("IP address not allowed");
+                        connectionBlocked = true;
+                    }
+                }
+            }
         } else {
             DEBUG_LOG("NetworkBlockerContext not registered - allowing connection (agent may not be loaded or class not initialized yet)");
         }
     }
 
-    // Release hostname string if we got it
-    if (hostString != nullptr && hostCStr != nullptr) {
-        env->ReleaseStringUTFChars(hostString, hostCStr);
+    // Release strings
+    if (hostNameString != nullptr && hostNameCStr != nullptr) {
+        env->ReleaseStringUTFChars(hostNameString, hostNameCStr);
+    }
+    if (hostAddressString != nullptr && hostAddressCStr != nullptr) {
+        env->ReleaseStringUTFChars(hostAddressString, hostAddressCStr);
+    }
+
+    // If connection is blocked, return error
+    if (connectionBlocked && env->ExceptionCheck()) {
+        DEBUG_LOG("Connection blocked - NetworkRequestAttemptedException will propagate");
+        return -2; // Error code
     }
 
     // Call original function

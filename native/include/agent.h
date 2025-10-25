@@ -48,15 +48,21 @@ void StoreOriginalFunction(const std::string& key, void* address);
 // Socket interception functions
 void* InstallNetConnect0Wrapper(void* original_address);
 
+// DNS interception functions
+void* InstallInet6LookupWrapper(void* original_address);
+void* InstallInet4LookupWrapper(void* original_address);
+
 // Cached NetworkBlockerContext class and method references
 // These are set by registerWithAgent() called from Java
 extern jclass g_network_blocker_context_class;
 extern jmethodID g_check_connection_method;
+extern jmethodID g_is_explicitly_blocked_method;
 extern std::mutex g_context_mutex;
 
 // Get cached context class and method (thread-safe)
 jclass GetNetworkBlockerContextClass();
 jmethodID GetCheckConnectionMethod();
+jmethodID GetIsExplicitlyBlockedMethod();
 
 // Registration function called from Java to cache class/method references
 extern "C" {
