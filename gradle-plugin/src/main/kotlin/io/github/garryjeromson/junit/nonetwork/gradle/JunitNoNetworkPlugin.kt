@@ -113,7 +113,12 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Generate junit-platform.properties in build directory (not src/)
-        val generatedResourcesDir = project.layout.buildDirectory.dir("generated/junit-platform/test/resources").get().asFile
+        val generatedResourcesDir =
+            project.layout.buildDirectory
+                .dir(
+                    "generated/junit-platform/test/resources",
+                ).get()
+                .asFile
         val propsFile = File(generatedResourcesDir, "junit-platform.properties")
 
         // Create directory if it doesn't exist
@@ -173,6 +178,11 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
             systemProperty("junit.nonetwork.applyToAllTests", extension.applyToAllTests.get())
 
+            // Enable SecurityManager on Java 21+ (required for SECURITY_MANAGER and SECURITY_POLICY implementations)
+            // On Java 21+, SecurityManager is deprecated and disabled by default
+            // This JVM argument allows setting it: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/SecurityManager.html
+            jvmArgs("-Djava.security.manager=allow")
+
             if (extension.debug.get()) {
                 systemProperty("junit.nonetwork.debug", "true")
             }
@@ -223,7 +233,12 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Generate in build directory, not src/
-        val generatedResourcesDir = project.layout.buildDirectory.dir("generated/junit-platform/$sourceSetName/resources").get().asFile
+        val generatedResourcesDir =
+            project.layout.buildDirectory
+                .dir(
+                    "generated/junit-platform/$sourceSetName/resources",
+                ).get()
+                .asFile
         val propsFile = File(generatedResourcesDir, "junit-platform.properties")
 
         generatedResourcesDir.mkdirs()
@@ -268,15 +283,25 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project.logger.lifecycle("Configuring JUnit 4 @Rule injection via bytecode enhancement")
 
         // Detect project type and configure accordingly
+        val hasKmpPlugin = project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
+        val hasAndroidLibrary = project.plugins.hasPlugin("com.android.library")
+        val hasAndroidApp = project.plugins.hasPlugin("com.android.application")
+
+        project.logger.lifecycle(
+            "Plugin detection: KMP=$hasKmpPlugin, AndroidLib=$hasAndroidLibrary, AndroidApp=$hasAndroidApp",
+        )
+
         when {
-            project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
+            hasKmpPlugin -> {
+                project.logger.lifecycle("Detected KMP project - configuring KMP injection")
                 configureKmpJUnit4Injection(project, extension)
             }
-            project.plugins.hasPlugin("com.android.library") ||
-                project.plugins.hasPlugin("com.android.application") -> {
+            hasAndroidLibrary || hasAndroidApp -> {
+                project.logger.lifecycle("Detected Android project - configuring Android injection")
                 configureAndroidJUnit4Injection(project, extension)
             }
             else -> {
+                project.logger.lifecycle("Detected JVM project - configuring JVM injection")
                 configureJvmJUnit4Injection(project, extension)
             }
         }
@@ -287,24 +312,21 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Register injection task for JVM project
-        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
-            configure {
+        val injectionTask =
+            project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
                 testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
                 debug.set(extension.debug)
-                testClasspath.set(project.provider {
-                    project.configurations.findByName("testRuntimeClasspath")?.asPath ?: ""
-                })
+                testTaskName.set("test")
             }
-        }
 
         // Hook after test compilation
-        project.tasks.matching { it.name == "compileTestKotlin" || it.name == "compileTestJava" }.configureEach {
-            finalizedBy(injectionTask)
+        project.tasks.matching { it.name == "compileTestKotlin" || it.name == "compileTestJava" }.all {
+            finalizedBy("injectJUnit4NetworkRule")
         }
 
         // Ensure test task depends on injection
-        project.tasks.matching { it.name == "test" }.configureEach {
-            dependsOn(injectionTask)
+        project.tasks.matching { it.name == "test" }.all {
+            dependsOn("injectJUnit4NetworkRule")
         }
 
         project.logger.info("Configured JUnit 4 rule injection for JVM project")
@@ -315,34 +337,25 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Register injection task for Android unit tests
-        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
-            configure {
+        val injectionTask =
+            project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
                 // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
                 testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
                 debug.set(extension.debug)
-                testClasspath.set(project.provider {
-                    try {
-                        project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
-                    } catch (e: Exception) {
-                        // Fallback for self-referencing projects or resolution errors
-                        project.logger.warn("Could not resolve debugUnitTestRuntimeClasspath: ${e.message}. Using minimal classpath.")
-                        // Provide minimal classpath: just the classes directory
-                        project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest").get().asFile.absolutePath
-                    }
-                })
+                testTaskName.set("testDebugUnitTest")
             }
-        }
 
         // Hook after Android test compilation
-        project.tasks.matching {
-            it.name.contains("compileDebugUnitTestKotlin") || it.name.contains("compileDebugUnitTestJava")
-        }.configureEach {
-            finalizedBy(injectionTask)
-        }
+        project.tasks
+            .matching {
+                it.name.contains("compileDebugUnitTestKotlin") || it.name.contains("compileDebugUnitTestJava")
+            }.all {
+                finalizedBy("injectJUnit4NetworkRule")
+            }
 
         // Ensure test task depends on injection
-        project.tasks.matching { it.name.contains("testDebugUnitTest") }.configureEach {
-            dependsOn(injectionTask)
+        project.tasks.matching { it.name.contains("testDebugUnitTest") }.all {
+            dependsOn("injectJUnit4NetworkRule")
         }
 
         project.logger.info("Configured JUnit 4 rule injection for Android project")
@@ -354,53 +367,20 @@ class JunitNoNetworkPlugin : Plugin<Project> {
     ) {
         // For KMP, we need to configure injection for each target platform
         // JVM target
-        val jvmInjectionTask = project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
-            configure {
-                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
-                debug.set(extension.debug)
-                testClasspath.set(project.provider {
-                    project.configurations.findByName("jvmTestRuntimeClasspath")?.asPath ?: ""
-                })
-            }
-        }
-
-        project.tasks.matching { it.name == "compileTestKotlinJvm" }.configureEach {
-            finalizedBy(jvmInjectionTask)
-        }
-
-        project.tasks.matching { it.name == "jvmTest" }.configureEach {
-            dependsOn(jvmInjectionTask)
+        project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+            testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
+            debug.set(extension.debug)
+            testTaskName.set("jvmTest")
         }
 
         // Android target
-        val androidInjectionTask = project.tasks.register("injectAndroidJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
-            configure {
-                // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
-                testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
-                debug.set(extension.debug)
-                testClasspath.set(project.provider {
-                    try {
-                        project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
-                    } catch (e: Exception) {
-                        // Fallback for self-referencing projects or resolution errors
-                        project.logger.warn("Could not resolve debugUnitTestRuntimeClasspath: ${e.message}. Using minimal classpath.")
-                        // Provide minimal classpath: just the classes directory
-                        project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest").get().asFile.absolutePath
-                    }
-                })
-            }
+        project.tasks.register("injectAndroidJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+            // Use Kotlin classes directory - this includes both androidUnitTest and commonTest classes
+            testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/debugUnitTest"))
+            debug.set(extension.debug)
+            testTaskName.set("testDebugUnitTest")
         }
 
-        project.tasks.matching {
-            it.name.contains("compileDebugUnitTestKotlinAndroid")
-        }.configureEach {
-            finalizedBy(androidInjectionTask)
-        }
-
-        project.tasks.matching { it.name.contains("testDebugUnitTest") }.configureEach {
-            dependsOn(androidInjectionTask)
-        }
-
-        project.logger.info("Configured JUnit 4 rule injection for KMP project")
+        project.logger.info("Configured JUnit 4 rule injection for KMP project (tasks registered, manual wiring required)")
     }
 }
