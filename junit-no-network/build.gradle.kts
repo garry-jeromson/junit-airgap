@@ -268,6 +268,86 @@ tasks.register<Test>("integrationTestJvmti") {
 }
 
 // ============================================================================
+// Native Agent Build Integration (JVMTI)
+// ============================================================================
+
+// Task to configure CMake (only runs if CMakeLists.txt changes)
+tasks.register<Exec>("cmakeConfigureNativeAgent") {
+    description = "Configure CMake for JVMTI native agent"
+    group = "native"
+
+    workingDir = project.file("../native")
+
+    // Create build directory if it doesn't exist
+    doFirst {
+        val buildDir = project.file("../native/build")
+        if (!buildDir.exists()) {
+            buildDir.mkdirs()
+        }
+    }
+
+    commandLine("cmake", "-S", ".", "-B", "build")
+
+    // Only re-run if CMakeLists.txt or source files change
+    inputs.files(
+        "../native/CMakeLists.txt",
+        "../native/include/agent.h",
+        "../native/src/agent.cpp",
+        "../native/src/socket_interceptor.cpp"
+    )
+    outputs.dir("../native/build")
+}
+
+// Task to build the native agent using CMake
+tasks.register<Exec>("buildNativeAgent") {
+    description = "Build JVMTI native agent (.dylib/.so/.dll)"
+    group = "native"
+
+    dependsOn("cmakeConfigureNativeAgent")
+
+    workingDir = project.file("../native/build")
+    commandLine("cmake", "--build", ".")
+
+    // Input: all source files
+    inputs.files(
+        "../native/include/agent.h",
+        "../native/src/agent.cpp",
+        "../native/src/socket_interceptor.cpp"
+    )
+
+    // Output: the built native library (platform-specific)
+    val libraryName = when {
+        org.gradle.internal.os.OperatingSystem.current().isMacOsX -> "libjunit-no-network-agent.dylib"
+        org.gradle.internal.os.OperatingSystem.current().isLinux -> "libjunit-no-network-agent.so"
+        org.gradle.internal.os.OperatingSystem.current().isWindows -> "junit-no-network-agent.dll"
+        else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
+    }
+    outputs.file("../native/build/$libraryName")
+
+    doLast {
+        println("✅ Native agent built: ../native/build/$libraryName")
+    }
+}
+
+// Task to clean native build artifacts
+tasks.register<Delete>("cleanNativeAgent") {
+    description = "Clean JVMTI native agent build artifacts"
+    group = "native"
+
+    delete("../native/build")
+}
+
+// Make integrationTestJvmti depend on native build
+tasks.named("integrationTestJvmti") {
+    dependsOn("buildNativeAgent")
+}
+
+// Add native clean to main clean task
+tasks.named("clean") {
+    dependsOn("cleanNativeAgent")
+}
+
+// ============================================================================
 // Maven Central Publishing Configuration
 // ============================================================================
 
