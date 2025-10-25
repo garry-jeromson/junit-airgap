@@ -46,6 +46,9 @@ kotlin {
                 // JUnit Vintage engine to run JUnit 4 tests under JUnit Platform
                 implementation(libs.junit.vintage.engine)
                 implementation(libs.junit4)
+                // Robolectric for Android framework testing
+                implementation(libs.robolectric)
+                implementation(libs.androidx.test.core)
             }
         }
     }
@@ -62,6 +65,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
 }
 
