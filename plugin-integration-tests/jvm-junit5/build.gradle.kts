@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = false
+    debug = true // Enable debug logging for diagnosing network blocking
 }
 
 kotlin {

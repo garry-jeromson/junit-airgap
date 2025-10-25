@@ -45,7 +45,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    // Note: junit-no-network and junit-no-network-jvm are added automatically by the plugin
 
     // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)

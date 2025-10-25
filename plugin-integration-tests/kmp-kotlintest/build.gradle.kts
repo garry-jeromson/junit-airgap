@@ -49,6 +49,7 @@ kotlin {
                 // Robolectric for Android framework testing
                 implementation(libs.robolectric)
                 implementation(libs.androidx.test.core)
+                // Note: junit-no-network-jvm is added automatically by the plugin for Robolectric support
             }
         }
     }

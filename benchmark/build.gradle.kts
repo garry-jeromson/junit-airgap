@@ -50,6 +50,10 @@ kotlin {
                 implementation(libs.androidx.test.core)
 
                 implementation(kotlin("test"))
+
+                // Note: junit-no-network-jvm would be added automatically by the plugin,
+                // but benchmark doesn't use the plugin, so we add it manually
+                implementation("io.github.garryjeromson:junit-no-network-jvm:0.1.0-SNAPSHOT")
             }
         }
     }

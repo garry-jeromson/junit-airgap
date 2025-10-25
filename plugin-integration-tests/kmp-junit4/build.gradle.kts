@@ -57,6 +57,7 @@ kotlin {
                 // Ktor HTTP client for Android (OkHttp engine for Robolectric compatibility)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.kotlinx.coroutines.test)
+                // Note: junit-no-network-jvm is added automatically by the plugin for Robolectric support
             }
         }
     }

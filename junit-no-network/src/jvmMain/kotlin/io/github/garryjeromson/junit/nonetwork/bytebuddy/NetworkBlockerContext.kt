@@ -56,9 +56,24 @@ object NetworkBlockerContext {
 
     /**
      * Thread-local storage for network configuration.
-     * Each test thread has its own configuration.
+     * Uses InheritableThreadLocal so that configuration is inherited by child threads
+     * (e.g., coroutine workers, HTTP client threads).
      */
-    private val configurationThreadLocal = ThreadLocal<NetworkConfiguration?>()
+    private val configurationThreadLocal = InheritableThreadLocal<NetworkConfiguration?>()
+
+    /**
+     * Global generation counter to invalidate stale configurations in inherited threads.
+     * Incremented each time clearConfiguration() is called.
+     */
+    @Volatile
+    private var currentGeneration = 0L
+
+    /**
+     * Global reference to the currently active configuration.
+     * Used to provide fresh configuration to worker threads.
+     */
+    @Volatile
+    private var globalConfiguration: NetworkConfiguration? = null
 
     /**
      * Debug mode flag (read from system property).
@@ -73,32 +88,67 @@ object NetworkBlockerContext {
      */
     @JvmStatic
     fun setConfiguration(configuration: NetworkConfiguration) {
+        // Create a new configuration with the current generation
+        val configWithGeneration = configuration.copy(generation = currentGeneration)
+
         if (debugMode) {
             println("NetworkBlockerContext: Setting configuration for thread ${Thread.currentThread().name}")
-            println("  allowedHosts: ${configuration.allowedHosts}")
-            println("  blockedHosts: ${configuration.blockedHosts}")
+            println("  allowedHosts: ${configWithGeneration.allowedHosts}")
+            println("  blockedHosts: ${configWithGeneration.blockedHosts}")
+            println("  generation: ${configWithGeneration.generation}")
         }
-        configurationThreadLocal.set(configuration)
+        globalConfiguration = configWithGeneration
+        configurationThreadLocal.set(configWithGeneration)
     }
 
     /**
      * Clear the configuration for the current thread.
+     * Also increments the generation counter to invalidate any stale configurations
+     * in child threads (worker threads, coroutine threads, etc.).
      */
     @JvmStatic
     fun clearConfiguration() {
         if (debugMode) {
             println("NetworkBlockerContext: Clearing configuration for thread ${Thread.currentThread().name}")
+            println("  Incrementing generation: $currentGeneration -> ${currentGeneration + 1}")
         }
+        globalConfiguration = null
         configurationThreadLocal.remove()
+        currentGeneration++  // Invalidate all inherited configurations
     }
 
     /**
      * Get the current thread's configuration.
+     * If the thread-local config is stale, returns the global config instead.
      *
      * @return Current configuration, or null if not set
      */
     @JvmStatic
-    fun getConfiguration(): NetworkConfiguration? = configurationThreadLocal.get()
+    fun getConfiguration(): NetworkConfiguration? {
+        val config = configurationThreadLocal.get()
+
+        if (debugMode) {
+            println("NetworkBlockerContext.getConfiguration() on thread ${Thread.currentThread().name}")
+            println("  ThreadLocal config: $config")
+            println("  Current generation: $currentGeneration")
+            println("  Global config: $globalConfiguration")
+        }
+
+        // If we have a config and it matches current generation, use it
+        if (config != null && config.generation == currentGeneration) {
+            if (debugMode) println("  Using thread-local config (generation matches)")
+            return config
+        }
+
+        // Otherwise, use the global configuration (for worker threads)
+        val global = globalConfiguration
+        if (global != null && debugMode) {
+            println("  Using global configuration (thread-local was stale or missing)")
+        } else if (debugMode) {
+            println("  No configuration available!")
+        }
+        return global
+    }
 
     /**
      * Check if a connection to the given host:port should be allowed.

@@ -106,6 +106,21 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                 project.logger.info("Added junit-no-network:$version to $configName")
             }
         }
+
+        // For Android projects (non-KMP), also add the JVM variant for Robolectric support
+        if (project.plugins.hasPlugin("com.android.library") || project.plugins.hasPlugin("com.android.application")) {
+            project.configurations.findByName("testImplementation")?.let { _ ->
+                try {
+                    project.dependencies.add(
+                        "testImplementation",
+                        "io.github.garryjeromson:junit-no-network-jvm:$version",
+                    )
+                    project.logger.info("Added junit-no-network-jvm:$version to testImplementation for Robolectric support")
+                } catch (e: Exception) {
+                    project.logger.debug("Failed to add JVM dependency to testImplementation: ${e.message}")
+                }
+            }
+        }
     }
 
     private fun configureJunitPlatform(
@@ -189,7 +204,14 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                 val agentPath = NativeAgentExtractor.getAgentPath(project, project.logger)
 
                 if (agentPath != null) {
-                    jvmArgs("-agentpath:$agentPath")
+                    // Add debug option if debug mode is enabled
+                    val agentArg =
+                        if (extension.debug.get()) {
+                            "-agentpath:$agentPath=debug"
+                        } else {
+                            "-agentpath:$agentPath"
+                        }
+                    jvmArgs(agentArg)
                     project.logger.lifecycle("Loading JVMTI agent from: $agentPath")
                 } else {
                     project.logger.warn(
@@ -235,6 +257,20 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                     project.logger.debug("Failed to add dependency to $configName: ${e.message}")
                 }
             } ?: project.logger.debug("Configuration $configName not found")
+        }
+
+        // For Android unit tests (Robolectric), also add the JVM variant
+        // Robolectric runs tests on the JVM, so it needs access to JVM-specific classes like NetworkBlockerContext
+        project.configurations.findByName("androidUnitTestImplementation")?.let { _ ->
+            try {
+                project.dependencies.add(
+                    "androidUnitTestImplementation",
+                    "io.github.garryjeromson:junit-no-network-jvm:$version",
+                )
+                project.logger.info("Added junit-no-network-jvm:$version to androidUnitTestImplementation for Robolectric support")
+            } catch (e: Exception) {
+                project.logger.debug("Failed to add JVM dependency to androidUnitTestImplementation: ${e.message}")
+            }
         }
 
         // Note: We don't generate junit-platform.properties files for KMP projects
