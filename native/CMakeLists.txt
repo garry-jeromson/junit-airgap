@@ -5,6 +5,22 @@ project(junit-no-network-agent)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Default to Release build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
+endif()
+
+# Compiler flags for Release and Debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Release: optimize for speed, strip debug symbols
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+    message(STATUS "Building in RELEASE mode - optimizations enabled, debug logging disabled")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Debug: keep debug symbols, enable debug logging
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
+    message(STATUS "Building in DEBUG mode - debug symbols and logging enabled")
+endif()
+
 # Find JNI (includes JVMTI headers)
 find_package(JNI REQUIRED)
 
@@ -61,6 +77,7 @@ install(TARGETS junit-no-network-agent
 
 # Print configuration
 message(STATUS "Building JVMTI agent for junit-no-network")
+message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "  CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "  JNI_INCLUDE_DIRS: ${JNI_INCLUDE_DIRS}")

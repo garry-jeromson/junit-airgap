@@ -183,6 +183,22 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             // This JVM argument allows setting it: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/SecurityManager.html
             jvmArgs("-Djava.security.manager=allow")
 
+            // Extract native agent at execution time (doFirst)
+            // This ensures the agent is extracted before the test JVM starts
+            doFirst {
+                val agentPath = NativeAgentExtractor.getAgentPath(project, project.logger)
+
+                if (agentPath != null) {
+                    jvmArgs("-agentpath:$agentPath")
+                    project.logger.lifecycle("Loading JVMTI agent from: $agentPath")
+                } else {
+                    project.logger.warn(
+                        "JVMTI agent not available for test task '$name'. " +
+                            "Network blocking may not work on this platform.",
+                    )
+                }
+            }
+
             if (extension.debug.get()) {
                 systemProperty("junit.nonetwork.debug", "true")
             }

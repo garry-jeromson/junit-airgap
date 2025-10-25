@@ -45,6 +45,92 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// ============================================================================
+// Native Agent Packaging
+// ============================================================================
+
+// Task to copy the native agent from the junit-no-network build to plugin resources
+tasks.register<Copy>("packageNativeAgent") {
+    description = "Copy native JVMTI agent into plugin resources for packaging"
+    group = "native"
+
+    // Determine platform-specific paths
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch").lowercase()
+
+    val os =
+        when {
+            osName.contains("mac") || osName.contains("darwin") -> "darwin"
+            osName.contains("linux") -> "linux"
+            osName.contains("windows") -> "windows"
+            else -> {
+                logger.warn("Unsupported OS: $osName - native agent will not be packaged")
+                return@register
+            }
+        }
+
+    val arch =
+        when {
+            osArch.contains("aarch64") || osArch.contains("arm64") -> "aarch64"
+            osArch.contains("x86_64") || osArch.contains("amd64") -> "x86-64"
+            else -> {
+                logger.warn("Unsupported architecture: $osArch - native agent will not be packaged")
+                return@register
+            }
+        }
+
+    val agentFileName =
+        when (os) {
+            "darwin" -> "libjunit-no-network-agent.dylib"
+            "linux" -> "libjunit-no-network-agent.so"
+            "windows" -> "junit-no-network-agent.dll"
+            else -> {
+                logger.warn("Unknown OS: $os")
+                return@register
+            }
+        }
+
+    // Source: built agent from junit-no-network module
+    from(project(":junit-no-network").layout.projectDirectory.dir("../native/build")) {
+        include(agentFileName)
+    }
+
+    // Destination: plugin resources by platform
+    into("src/main/resources/native/$os-$arch")
+
+    // Depend on the native build task from junit-no-network
+    dependsOn(":junit-no-network:buildNativeAgent")
+
+    doFirst {
+        // Determine if this is a release build
+        val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }
+        val buildType = if (isReleaseBuild) "Release" else "Debug"
+
+        logger.lifecycle("Packaging native agent (BUILD_TYPE=$buildType) for $os-$arch")
+
+        // Verify the agent file exists
+        val agentFile =
+            project(":junit-no-network").layout.projectDirectory
+                .file("../native/build/$agentFileName")
+                .asFile
+        if (!agentFile.exists()) {
+            throw GradleException(
+                "Native agent not found at ${agentFile.absolutePath}. " +
+                    "Run ':junit-no-network:buildNativeAgent' first.",
+            )
+        }
+    }
+
+    doLast {
+        logger.lifecycle("Packaged native agent for $os-$arch into plugin resources")
+    }
+}
+
+// Make processResources depend on packaging the native agent
+tasks.named("processResources") {
+    dependsOn("packageNativeAgent")
+}
+
 publishing {
     publications {
         create<MavenPublication>("pluginMaven") {

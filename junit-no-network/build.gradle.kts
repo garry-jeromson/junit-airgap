@@ -345,7 +345,19 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
         }
     }
 
-    commandLine("cmake", "-S", ".", "-B", "build")
+    // Determine build type: Release for publishing, Debug for local development
+    val buildType =
+        if (project.gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }) {
+            "Release"
+        } else {
+            "Debug"
+        }
+
+    commandLine("cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=$buildType")
+
+    doFirst {
+        println("Configuring native agent with CMAKE_BUILD_TYPE=$buildType")
+    }
 
     // Only re-run if CMakeLists.txt or source files change
     inputs.files(
@@ -353,6 +365,7 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
         "../native/include/agent.h",
         "../native/src/agent.cpp",
         "../native/src/socket_interceptor.cpp",
+        "../native/src/dns_interceptor.cpp",
     )
     outputs.dir("../native/build")
 }
