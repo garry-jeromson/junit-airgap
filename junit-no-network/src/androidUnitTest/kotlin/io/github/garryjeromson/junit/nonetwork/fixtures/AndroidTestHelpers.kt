@@ -5,6 +5,7 @@ import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 /**
  * Helper function to assert that a network request is blocked.
  * For Android/Robolectric integration tests.
+ * Checks for NetworkRequestAttemptedException either directly or in the cause chain.
  */
 fun assertNetworkBlocked(
     message: String,
@@ -18,10 +19,23 @@ fun assertNetworkBlocked(
     } catch (e: AssertionError) {
         throw e
     } catch (e: Exception) {
-        throw AssertionError(
-            "$message - Expected NetworkRequestAttemptedException but got ${e::class.simpleName}: ${e.message}",
-            e,
-        )
+        // Check if NetworkRequestAttemptedException is in the cause chain
+        var cause: Throwable? = e.cause
+        var foundNetworkException = false
+        while (cause != null) {
+            if (cause is NetworkRequestAttemptedException) {
+                foundNetworkException = true
+                break
+            }
+            cause = cause.cause
+        }
+        if (!foundNetworkException) {
+            throw AssertionError(
+                "$message - Expected NetworkRequestAttemptedException but got ${e::class.simpleName}: ${e.message}",
+                e,
+            )
+        }
+        // If we found NetworkRequestAttemptedException in the cause chain, that's expected
     }
 }
 

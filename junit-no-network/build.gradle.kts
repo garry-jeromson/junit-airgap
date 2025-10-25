@@ -74,6 +74,8 @@ kotlin {
 
                 // HTTP clients for Android integration testing
                 implementation(libs.okhttp)
+                implementation(libs.retrofit)
+                implementation(libs.retrofit.converter.scalars)
                 implementation(libs.nanohttpd)
             }
         }
@@ -133,6 +135,8 @@ kotlin.jvm().compilations.create("integrationTest") {
             // HTTP clients for integration testing
             implementation(libs.okhttp)
             implementation(libs.apache.httpclient5)
+            implementation(libs.retrofit)
+            implementation(libs.retrofit.converter.scalars)
 
             // Ktor client for integration testing
             implementation(libs.ktor.client.core)

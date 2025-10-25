@@ -5,6 +5,7 @@ import kotlin.test.fail
 
 /**
  * Assert that a block of code throws NetworkRequestAttemptedException
+ * or an exception caused by NetworkRequestAttemptedException (e.g., wrapped in IOException).
  */
 fun assertNetworkBlocked(
     message: String = "Expected network to be blocked",
@@ -16,7 +17,20 @@ fun assertNetworkBlocked(
     } catch (e: NetworkRequestAttemptedException) {
         // Expected - network was blocked
     } catch (e: Exception) {
-        fail("$message - but got ${e.javaClass.simpleName} instead of NetworkRequestAttemptedException: ${e.message}")
+        // Check if NetworkRequestAttemptedException is in the cause chain
+        var cause: Throwable? = e.cause
+        var foundNetworkException = false
+        while (cause != null) {
+            if (cause is NetworkRequestAttemptedException) {
+                foundNetworkException = true
+                break
+            }
+            cause = cause.cause
+        }
+        if (!foundNetworkException) {
+            fail("$message - but got ${e.javaClass.simpleName} instead of NetworkRequestAttemptedException: ${e.message}")
+        }
+        // If we found NetworkRequestAttemptedException in the cause chain, that's expected
     }
 }
 
