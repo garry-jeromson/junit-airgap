@@ -30,6 +30,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "21"
+        allWarningsAsErrors = true
     }
 
     testOptions {

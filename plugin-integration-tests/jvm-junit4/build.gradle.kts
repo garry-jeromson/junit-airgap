@@ -33,5 +33,12 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+// Enable strict compilation - treat all warnings as errors
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        allWarningsAsErrors = true
+    }
+}
+
 // NOTE: NOT using useJUnitPlatform() - this runs pure JUnit 4 tests
 // This configuration tests the bytecode enhancement path for JUnit 4 @Rule injection

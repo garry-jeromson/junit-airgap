@@ -95,6 +95,15 @@ kotlin {
     }
 }
 
+// Enable strict compilation - treat all warnings as errors
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        allWarningsAsErrors = true
+        // Suppress Beta warning for expect/actual classes (KMP standard pattern)
+        freeCompilerArgs = freeCompilerArgs + "-Xexpect-actual-classes"
+    }
+}
+
 android {
     namespace = "io.github.garryjeromson.junit.nonetwork"
     compileSdk = 35

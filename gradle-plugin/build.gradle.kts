@@ -34,6 +34,13 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
+// Enable strict compilation - treat all warnings as errors
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        allWarningsAsErrors = true
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }

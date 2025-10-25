@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // Policy and SecurityManager intentionally used for network blocking
+
 package io.github.garryjeromson.junit.nonetwork
 
 import java.io.FilePermission
@@ -36,6 +38,7 @@ import java.util.PropertyPermission
  *
  * Based on: https://tech.clevertap.com/using-javas-security-policy-to-block-internet-access-for-junit-tests/
  */
+@Suppress("DEPRECATION") // Policy and SecurityManager intentionally used for network blocking
 internal class SecurityPolicyNetworkBlocker(
     private val configuration: NetworkConfiguration,
 ) : NetworkBlockerStrategy {

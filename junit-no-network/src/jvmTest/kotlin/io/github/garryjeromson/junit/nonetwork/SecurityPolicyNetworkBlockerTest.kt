@@ -8,12 +8,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * Tests for SecurityPolicyNetworkBlocker implementation.
  */
 class SecurityPolicyNetworkBlockerTest {
     @AfterTest
+    @Suppress("DEPRECATION")
     fun cleanup() {
         // Ensure we don't leave any security manager or policy installed
         try {
@@ -23,7 +25,6 @@ class SecurityPolicyNetworkBlockerTest {
             // Ignore
         }
         try {
-            @Suppress("DEPRECATION")
             System.setSecurityManager(null)
         } catch (e: Exception) {
             // Ignore
@@ -72,10 +73,10 @@ class SecurityPolicyNetworkBlockerTest {
             // This might fail if nothing is listening, but should NOT throw NetworkRequestAttemptedException
             try {
                 Socket("localhost", 8080)
+            } catch (e: NetworkRequestAttemptedException) {
+                fail("Should not throw NetworkRequestAttemptedException for localhost: ${e.message}")
             } catch (e: Exception) {
                 // Connection refused or other exceptions are fine
-                // We just care that it's not NetworkRequestAttemptedException
-                assertTrue(e !is NetworkRequestAttemptedException)
             }
         } finally {
             blocker.uninstall()
@@ -92,8 +93,10 @@ class SecurityPolicyNetworkBlockerTest {
             // 127.0.0.1 should always be allowed
             try {
                 Socket("127.0.0.1", 8080)
+            } catch (e: NetworkRequestAttemptedException) {
+                fail("Should not throw NetworkRequestAttemptedException for 127.0.0.1: ${e.message}")
             } catch (e: Exception) {
-                assertTrue(e !is NetworkRequestAttemptedException)
+                // Connection refused or other exceptions are fine
             }
         } finally {
             blocker.uninstall()
@@ -114,8 +117,10 @@ class SecurityPolicyNetworkBlockerTest {
             // May throw other exceptions (connection refused, etc.)
             try {
                 Socket("allowed.example.com", 80)
+            } catch (e: NetworkRequestAttemptedException) {
+                fail("Should not throw NetworkRequestAttemptedException for allowed host: ${e.message}")
             } catch (e: Exception) {
-                assertTrue(e !is NetworkRequestAttemptedException)
+                // Other exceptions (connection refused, timeout, etc.) are acceptable
             }
         } finally {
             blocker.uninstall()
@@ -172,8 +177,10 @@ class SecurityPolicyNetworkBlockerTest {
             // Should allow subdomain
             try {
                 Socket("api.example.com", 80)
+            } catch (e: NetworkRequestAttemptedException) {
+                fail("Should not throw NetworkRequestAttemptedException for wildcard subdomain: ${e.message}")
             } catch (e: Exception) {
-                assertTrue(e !is NetworkRequestAttemptedException)
+                // Other exceptions (connection refused, timeout, etc.) are acceptable
             }
         } finally {
             blocker.uninstall()

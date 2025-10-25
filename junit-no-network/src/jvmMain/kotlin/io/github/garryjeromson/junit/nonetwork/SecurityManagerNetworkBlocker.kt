@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // SecurityManager intentionally used for network blocking
+
 package io.github.garryjeromson.junit.nonetwork
 
 import java.security.Permission
@@ -11,6 +13,7 @@ import java.security.Permission
  * This implementation installs a custom SecurityManager that intercepts all
  * socket connection attempts via checkConnect().
  */
+@Suppress("DEPRECATION") // SecurityManager intentionally used for network blocking
 internal class SecurityManagerNetworkBlocker(
     private val configuration: NetworkConfiguration,
 ) : NetworkBlockerStrategy {

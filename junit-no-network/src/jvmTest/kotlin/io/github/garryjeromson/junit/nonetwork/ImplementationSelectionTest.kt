@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * Tests for implementation selection and fallback behavior.
@@ -245,8 +246,10 @@ class ImplementationSelectionTest {
             // May throw other exceptions (connection refused, etc.)
             try {
                 Socket("allowed.example.com", 80)
+            } catch (e: NetworkRequestAttemptedException) {
+                fail("Should not throw NetworkRequestAttemptedException for allowed host: ${e.message}")
             } catch (e: Exception) {
-                assertTrue(e !is NetworkRequestAttemptedException)
+                // Other exceptions (connection refused, timeout, etc.) are acceptable
             }
         } finally {
             blocker.uninstall()
