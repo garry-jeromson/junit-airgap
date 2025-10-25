@@ -393,6 +393,34 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             }
         }
 
-        project.logger.info("Configured JUnit 4 rule injection for KMP project (manual execution: run injection tasks then test tasks)")
+        // Configure automatic task wiring after project evaluation
+        project.afterEvaluate {
+            // Wire JVM target tasks
+            configureTaskWiring(project, "compileTestKotlinJvm", "injectJvmJUnit4NetworkRule")
+            configureTaskWiring(project, "jvmTest", null, "injectJvmJUnit4NetworkRule")
+
+            // Wire Android target tasks
+            configureTaskWiring(project, "compileDebugUnitTestKotlinAndroid", "injectAndroidJUnit4NetworkRule")
+            configureTaskWiring(project, "testDebugUnitTest", null, "injectAndroidJUnit4NetworkRule")
+        }
+
+        project.logger.info("Configured JUnit 4 rule injection for KMP project with automatic task wiring")
+    }
+
+    private fun configureTaskWiring(
+        project: Project,
+        taskName: String,
+        finalizedByTask: String? = null,
+        dependsOnTask: String? = null,
+    ) {
+        try {
+            project.tasks.named(taskName) {
+                finalizedByTask?.let { finalizedBy(it) }
+                dependsOnTask?.let { dependsOn(it) }
+            }
+            project.logger.debug("Configured task wiring for $taskName")
+        } catch (e: Exception) {
+            project.logger.debug("Task $taskName not found, skipping wiring: ${e.message}")
+        }
     }
 }
