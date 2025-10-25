@@ -1,0 +1,264 @@
+package io.github.garryjeromson.junit.nonetwork.integration
+
+import io.github.garryjeromson.junit.nonetwork.AllowedHosts
+import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
+import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.integration.fixtures.MockHttpServer
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.java.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+
+/**
+ * Integration tests verifying that Ktor HTTP client is properly blocked.
+ * Tests different Ktor engines (CIO, OkHttp, Java) and both sync/async patterns.
+ */
+@ExtendWith(NoNetworkExtension::class)
+class KtorClientIntegrationTest {
+    companion object {
+        private lateinit var mockServer: MockHttpServer
+
+        @JvmStatic
+        @BeforeAll
+        fun startMockServer() {
+            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer.start()
+            Thread.sleep(100)
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun stopMockServer() {
+            mockServer.stop()
+        }
+    }
+
+    // ==================== CIO Engine Tests ====================
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor CIO client to external host`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking { client.get("http://example.com/api") }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    fun `should allow Ktor CIO client to localhost`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val body = response.bodyAsText()
+                assertTrue(body.isNotEmpty() || response.status.value == 200)
+            } catch (e: NetworkRequestAttemptedException) {
+                throw AssertionError("Should not block localhost", e)
+            } finally {
+                client.close()
+            }
+        }
+
+    // ==================== OkHttp Engine Tests ====================
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor OkHttp client to external host`() =
+        runBlocking {
+            val client = HttpClient(OkHttp)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking { client.get("http://example.com/api") }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    @AllowedHosts(hosts = ["localhost", "127.0.0.1"])
+    fun `should allow Ktor OkHttp client to localhost`() =
+        runBlocking {
+            val client = HttpClient(OkHttp)
+            try {
+                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val body = response.bodyAsText()
+                assertTrue(body.isNotEmpty() || response.status.value == 200)
+            } catch (e: NetworkRequestAttemptedException) {
+                throw AssertionError("Should not block localhost with OkHttp engine", e)
+            } finally {
+                client.close()
+            }
+        }
+
+    // ==================== Java Engine Tests ====================
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor Java client to external host`() =
+        runBlocking {
+            val client = HttpClient(Java)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking { client.get("http://example.com/api") }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    @AllowedHosts(hosts = ["127.0.0.1", "localhost"])
+    fun `should allow Ktor Java client to 127_0_0_1`() =
+        runBlocking {
+            val client = HttpClient(Java)
+            try {
+                val response: HttpResponse = client.get("http://127.0.0.1:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val body = response.bodyAsText()
+                assertTrue(body.isNotEmpty() || response.status.value == 200)
+            } catch (e: NetworkRequestAttemptedException) {
+                throw AssertionError("Should not block 127.0.0.1 with Java engine", e)
+            } finally {
+                client.close()
+            }
+        }
+
+    // ==================== Request Type Tests ====================
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor GET requests`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking { client.get("http://example.com/api") }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor POST requests`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking {
+                        client.post("http://example.com/api") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"test": "data"}""")
+                        }
+                    }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    // ==================== Async/Coroutine Tests ====================
+
+    @Test
+    @NoNetworkTest
+    fun `should block async Ktor requests in runBlocking`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                assertFailsWith<NetworkRequestAttemptedException> {
+                    runBlocking { client.get("http://api.example.com/data") }
+                }
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    fun `should block suspended Ktor calls`() =
+        runTest {
+            assertFailsWith<NetworkRequestAttemptedException> {
+                suspendedHttpCall()
+            }
+        }
+
+    private suspend fun suspendedHttpCall() {
+        val client = HttpClient(CIO)
+        try {
+            client.get("http://example.com/api")
+        } finally {
+            client.close()
+        }
+    }
+
+    // ==================== Configuration Tests ====================
+
+    @Test
+    @NoNetworkTest
+    @AllowedHosts(hosts = ["*"])
+    fun `should allow Ktor client with wildcard configuration`() =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val body = response.bodyAsText()
+                assertTrue(body.isNotEmpty() || response.status.value == 200)
+            } catch (e: NetworkRequestAttemptedException) {
+                throw AssertionError("Should not block with wildcard config", e)
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    @NoNetworkTest
+    fun `should block Ktor client even when using different engines`() =
+        runBlocking {
+            // Test that all engines are blocked
+            assertFailsWith<NetworkRequestAttemptedException>("CIO engine should be blocked") {
+                runBlocking {
+                    HttpClient(CIO).use { client ->
+                        client.get("http://example.com")
+                    }
+                }
+            }
+
+            assertFailsWith<NetworkRequestAttemptedException>("OkHttp engine should be blocked") {
+                runBlocking {
+                    HttpClient(OkHttp).use { client ->
+                        client.get("http://example.com")
+                    }
+                }
+            }
+
+            assertFailsWith<NetworkRequestAttemptedException>("Java engine should be blocked") {
+                runBlocking {
+                    HttpClient(Java).use { client ->
+                        client.get("http://example.com")
+                    }
+                }
+            }
+        }
+}

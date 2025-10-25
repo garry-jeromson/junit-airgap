@@ -1,0 +1,42 @@
+package io.github.garryjeromson.junit.nonetwork
+
+import org.junit.Rule
+import org.junit.Test
+import java.net.Socket
+import kotlin.test.assertFailsWith
+
+class NoNetworkRuleTest {
+    @get:Rule
+    val noNetworkRule = NoNetworkRule()
+
+    @Test
+    @NoNetworkTest
+    fun shouldBlockNetworkRequestsWhenAnnotated() {
+        assertFailsWith<NetworkRequestAttemptedException> {
+            Socket("example.com", 80)
+        }
+    }
+
+    @Test
+    @NoNetworkTest
+    @AllowedHosts(hosts = ["*"])
+    @BlockedHosts(hosts = ["evil.com"])
+    fun shouldRespectBlockedHostsAnnotation() {
+        assertFailsWith<NetworkRequestAttemptedException> {
+            Socket("evil.com", 80)
+        }
+    }
+
+    @Test
+    fun shouldNotBlockWhenAnnotationIsAbsent() {
+        // This test doesn't have @NoNetworkTest, so blocking should not occur
+        // The actual connection may fail, but it should not throw NetworkRequestAttemptedException
+        try {
+            Socket("example.com", 80)
+        } catch (e: NetworkRequestAttemptedException) {
+            throw AssertionError("Should not block without @NoNetworkTest")
+        } catch (e: Exception) {
+            // Other exceptions are fine
+        }
+    }
+}
