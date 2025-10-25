@@ -22,6 +22,12 @@ dependencies {
     implementation(gradleApi())
     implementation(kotlin("stdlib"))
 
+    // ByteBuddy for JUnit 4 rule injection via bytecode enhancement
+    implementation("net.bytebuddy:byte-buddy:1.15.11")
+
+    // JUnit 4 API for detecting test annotations
+    implementation("junit:junit:4.13.2")
+
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")

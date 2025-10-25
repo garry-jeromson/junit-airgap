@@ -56,11 +56,16 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // 2. Configure Test tasks (system properties work for all project types)
         configureTestTasks(project, extension)
 
-        // 3. Handle Kotlin Multiplatform projects
+        // 3. Configure JUnit 4 rule injection (if enabled)
+        if (extension.injectJUnit4Rule.get()) {
+            configureJUnit4RuleInjection(project, extension)
+        }
+
+        // 4. Handle Kotlin Multiplatform projects
         if (project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")) {
             configureKmpProject(project, extension)
         } else {
-            // 4. For non-KMP projects, configure JUnit Platform properties
+            // 5. For non-KMP projects, configure JUnit Platform properties
             configureJunitPlatform(project, extension)
         }
     }
@@ -254,5 +259,132 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         } catch (e: Exception) {
             project.logger.debug("Could not add generated resources to KMP source set $sourceSetName: ${e.message}")
         }
+    }
+
+    private fun configureJUnit4RuleInjection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+    ) {
+        project.logger.lifecycle("Configuring JUnit 4 @Rule injection via bytecode enhancement")
+
+        // Detect project type and configure accordingly
+        when {
+            project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform") -> {
+                configureKmpJUnit4Injection(project, extension)
+            }
+            project.plugins.hasPlugin("com.android.library") ||
+                project.plugins.hasPlugin("com.android.application") -> {
+                configureAndroidJUnit4Injection(project, extension)
+            }
+            else -> {
+                configureJvmJUnit4Injection(project, extension)
+            }
+        }
+    }
+
+    private fun configureJvmJUnit4Injection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+    ) {
+        // Register injection task for JVM project
+        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
+            configure {
+                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
+                debug.set(extension.debug)
+                testClasspath.set(project.provider {
+                    project.configurations.findByName("testRuntimeClasspath")?.asPath ?: ""
+                })
+            }
+        }
+
+        // Hook after test compilation
+        project.tasks.matching { it.name == "compileTestKotlin" || it.name == "compileTestJava" }.configureEach {
+            finalizedBy(injectionTask)
+        }
+
+        // Ensure test task depends on injection
+        project.tasks.matching { it.name == "test" }.configureEach {
+            dependsOn(injectionTask)
+        }
+
+        project.logger.info("Configured JUnit 4 rule injection for JVM project")
+    }
+
+    private fun configureAndroidJUnit4Injection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+    ) {
+        // Register injection task for Android unit tests
+        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
+            configure {
+                testClassesDir.set(project.layout.buildDirectory.dir("intermediates/javac/debugUnitTest/classes"))
+                debug.set(extension.debug)
+                testClasspath.set(project.provider {
+                    project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                })
+            }
+        }
+
+        // Hook after Android test compilation
+        project.tasks.matching {
+            it.name.contains("compileDebugUnitTestKotlin") || it.name.contains("compileDebugUnitTestJava")
+        }.configureEach {
+            finalizedBy(injectionTask)
+        }
+
+        // Ensure test task depends on injection
+        project.tasks.matching { it.name.contains("testDebugUnitTest") }.configureEach {
+            dependsOn(injectionTask)
+        }
+
+        project.logger.info("Configured JUnit 4 rule injection for Android project")
+    }
+
+    private fun configureKmpJUnit4Injection(
+        project: Project,
+        extension: JunitNoNetworkExtension,
+    ) {
+        // For KMP, we need to configure injection for each target platform
+        // JVM target
+        val jvmInjectionTask = project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
+            configure {
+                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
+                debug.set(extension.debug)
+                testClasspath.set(project.provider {
+                    project.configurations.findByName("jvmTestRuntimeClasspath")?.asPath ?: ""
+                })
+            }
+        }
+
+        project.tasks.matching { it.name == "compileTestKotlinJvm" }.configureEach {
+            finalizedBy(jvmInjectionTask)
+        }
+
+        project.tasks.matching { it.name == "jvmTest" }.configureEach {
+            dependsOn(jvmInjectionTask)
+        }
+
+        // Android target
+        val androidInjectionTask = project.tasks.register("injectAndroidJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java).apply {
+            configure {
+                testClassesDir.set(project.layout.buildDirectory.dir("intermediates/javac/debugUnitTest/classes"))
+                debug.set(extension.debug)
+                testClasspath.set(project.provider {
+                    project.configurations.findByName("debugUnitTestRuntimeClasspath")?.asPath ?: ""
+                })
+            }
+        }
+
+        project.tasks.matching {
+            it.name.contains("compileDebugUnitTestKotlinAndroid")
+        }.configureEach {
+            finalizedBy(androidInjectionTask)
+        }
+
+        project.tasks.matching { it.name.contains("testDebugUnitTest") }.configureEach {
+            dependsOn(androidInjectionTask)
+        }
+
+        project.logger.info("Configured JUnit 4 rule injection for KMP project")
     }
 }

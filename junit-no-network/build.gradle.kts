@@ -151,6 +151,19 @@ tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 }
 
+// Configure Android test tasks
+// Note: Android tests use Robolectric which primarily supports JUnit 4
+// JUnit 5 support on Android requires junit-vintage-engine to run both frameworks together
+// For now, we keep Android tests using JUnit 4 runner (default behavior)
+tasks.withType<Test>().configureEach {
+    if (name.contains("UnitTest")) {
+        testLogging {
+            events("passed", "skipped", "failed")
+            showStandardStreams = false
+        }
+    }
+}
+
 // Create integration test task (JVM)
 tasks.register<Test>("integrationTest") {
     description = "Runs JVM integration tests using the compiled extension"

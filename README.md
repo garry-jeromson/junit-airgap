@@ -19,6 +19,24 @@ A JUnit extension that automatically fails tests attempting to make outgoing net
 - **Android**: API 26 (Android 8.0) or later
 - **iOS**: Kotlin Multiplatform iOS target (API structure only, see limitations)
 
+## Framework Compatibility
+
+The following table shows which test framework versions have been validated with comprehensive integration tests:
+
+| Platform | JUnit 4 | JUnit 5 |
+|----------|---------|---------|
+| **JVM** | ✅ Fully tested | ✅ Fully tested |
+| **Android** (Robolectric) | ✅ Fully tested | ⚠️ Not tested |
+| **iOS** | ⚠️ API only | ⚠️ API only |
+
+**Implementation Notes:**
+
+- **JVM**: Both JUnit 4 (`NoNetworkRule`) and JUnit 5 (`NoNetworkExtension`) are fully supported with comprehensive integration tests validating identical functionality across frameworks
+- **Android**: JUnit 4 with Robolectric is fully tested and recommended. JUnit 5 support on Android requires additional configuration (junit-vintage-engine to run JUnit 4 and 5 together) and is not currently tested
+- **iOS**: Provides API structure for multiplatform compatibility but does not actively block network requests (see Limitations section for details)
+
+**Recommendation**: Use JUnit 4 (`NoNetworkRule`) for Android projects with Robolectric. Use either JUnit 4 or JUnit 5 for JVM projects based on your preference.
+
 ## ⚠️ Important Limitations and Future Compatibility
 
 ### Java 24+ Compatibility Warning
