@@ -21,24 +21,26 @@ internal actual object ExtensionConfiguration {
      *
      * @return Set of allowed host patterns, empty if not configured
      */
-    actual fun getAllowedHosts(): Set<String> =
-        System
-            .getProperty(ALLOWED_HOSTS_PROPERTY, "")
+    actual fun getAllowedHosts(): Set<String> {
+        val property = System.getProperty(ALLOWED_HOSTS_PROPERTY) ?: return emptySet()
+        return property
             .split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .toSet()
+    }
 
     /**
      * Retrieves the list of globally blocked hosts from system property.
      *
      * @return Set of blocked host patterns, empty if not configured
      */
-    actual fun getBlockedHosts(): Set<String> =
-        System
-            .getProperty(BLOCKED_HOSTS_PROPERTY, "")
+    actual fun getBlockedHosts(): Set<String> {
+        val property = System.getProperty(BLOCKED_HOSTS_PROPERTY) ?: return emptySet()
+        return property
             .split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .toSet()
+    }
 }
