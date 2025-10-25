@@ -39,8 +39,7 @@ This is a Kotlin Multiplatform (KMP) project with three main components:
 Located in `plugin-integration-tests/`:
 - `jvm-junit4` - Pure JVM with JUnit 4
 - `jvm-junit5` - Pure JVM with JUnit 5
-- `android-junit4` - Android library with JUnit 4
-- `android-junit5` - Android library with JUnit 5
+- `android-robolectric` - Android library with JUnit 4 + Robolectric
 - `kmp-junit4` - KMP (JVM + Android) with JUnit 4
 - `kmp-junit5` - KMP (JVM + Android) with JUnit 5
 - `kmp-kotlintest` - KMP (JVM + Android) with kotlin.test
@@ -85,6 +84,9 @@ JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/
 
 # Run specific integration test
 JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :plugin-integration-tests:jvm-junit4:test
+
+# Run Android Robolectric tests
+JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :plugin-integration-tests:android-robolectric:testDebugUnitTest
 ```
 
 ## Plugin Development Workflow
