@@ -2,7 +2,7 @@ rootProject.name = "junit-no-network"
 
 pluginManagement {
     repositories {
-        mavenLocal()  // For plugin-integration-test to consume locally published plugin
+        mavenLocal() // For plugin-integration-test to consume locally published plugin
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -24,6 +24,7 @@ include(":benchmark")
 // Plugin integration tests
 include(":plugin-integration-tests:kmp-junit5")
 include(":plugin-integration-tests:kmp-junit4")
+include(":plugin-integration-tests:kmp-kotlintest")
 include(":plugin-integration-tests:android-junit5")
 include(":plugin-integration-tests:android-junit4")
 include(":plugin-integration-tests:jvm-junit5")
