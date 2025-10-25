@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * CommonTest with expect/actual for platform-specific network operations.
- * Tests actual network blocking behavior.
+ * Uses JUnit 5 annotations.
  */
 class NetworkBlockingTest {
     @Test

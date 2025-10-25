@@ -25,6 +25,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                // Test contracts for shared test behaviors
+                implementation(project(":plugin-integration-tests:test-contracts"))
                 // Ktor HTTP client core (platform-independent)
                 implementation(libs.ktor.client.core)
             }
