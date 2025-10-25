@@ -1,0 +1,48 @@
+#ifndef JUNIT_NO_NETWORK_AGENT_H
+#define JUNIT_NO_NETWORK_AGENT_H
+
+#include <jvmti.h>
+#include <jni.h>
+#include <string>
+#include <map>
+#include <mutex>
+
+// Debug logging
+extern bool g_debug_mode;
+#define DEBUG_LOG(msg) if (g_debug_mode) fprintf(stderr, "[JVMTI-Agent] %s\n", msg)
+#define DEBUG_LOGF(fmt, ...) if (g_debug_mode) fprintf(stderr, "[JVMTI-Agent] " fmt "\n", __VA_ARGS__)
+
+// Agent entry point
+extern "C" {
+    JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
+    JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm);
+}
+
+// Global state
+extern jvmtiEnv *g_jvmti;
+extern JavaVM *g_jvm;
+
+// Callback for native method binding
+void JNICALL NativeMethodBindCallback(
+    jvmtiEnv *jvmti_env,
+    JNIEnv* jni_env,
+    jthread thread,
+    jmethodID method,
+    void* address,
+    void** new_address_ptr
+);
+
+// Initialize JVMTI capabilities and callbacks
+bool InitializeJVMTI(jvmtiEnv *jvmti);
+
+// Get JNI environment for current thread
+JNIEnv* GetJNIEnv();
+
+// Original function storage
+extern std::map<std::string, void*> g_original_functions;
+extern std::mutex g_functions_mutex;
+
+void* GetOriginalFunction(const std::string& key);
+void StoreOriginalFunction(const std::string& key, void* address);
+
+#endif // JUNIT_NO_NETWORK_AGENT_H

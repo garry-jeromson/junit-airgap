@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-jvm test-android test-integration test-socketimpl test-jvm-socketimpl test-integration-socketimpl test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify
+.PHONY: help build clean test test-jvm test-android test-integration test-socketimpl test-jvm-socketimpl test-integration-socketimpl test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
 
 # Default Java version for the project (uses Java 17 toolchain internally)
 JAVA_VERSION ?= 21
@@ -39,6 +39,12 @@ help:
 	@echo "  test-socketimpl            Run all tests using SocketImplFactory (Java 24+ compatible)"
 	@echo "  test-jvm-socketimpl        Run JVM tests using SocketImplFactory"
 	@echo "  test-integration-socketimpl Run integration tests using SocketImplFactory"
+	@echo ""
+	@echo "Native Agent Commands (JVMTI Implementation):"
+	@echo "  setup-native       Install native build dependencies (CMake)"
+	@echo "  build-native       Build JVMTI native agent (.dylib/.so/.dll)"
+	@echo "  test-native        Run native agent tests (AgentLoadTest, SocketInterceptTest)"
+	@echo "  clean-native       Clean native build artifacts"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark          Run all performance benchmarks (JVM + Android)"
@@ -229,3 +235,52 @@ check-java:
 		echo "✅ Using Java from: $(JAVA_HOME)"; \
 		$(JAVA_HOME)/bin/java -version; \
 	fi
+
+## Native Agent Targets (JVMTI Implementation)
+
+# setup-native: Install native build dependencies (CMake)
+setup-native:
+	@echo "Checking for CMake installation..."
+	@if ! command -v cmake >/dev/null 2>&1; then \
+		echo "CMake not found. Installing via Homebrew..."; \
+		if command -v brew >/dev/null 2>&1; then \
+			brew install cmake; \
+		else \
+			echo "❌ Error: Homebrew not found. Please install Homebrew first:"; \
+			echo "  /bin/bash -c \"\$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""; \
+			exit 1; \
+		fi; \
+	else \
+		echo "✅ CMake already installed: $$(cmake --version | head -1)"; \
+	fi
+
+## build-native: Build JVMTI native agent
+build-native: setup-native
+	@echo "Building JVMTI native agent..."
+	@cd native && mkdir -p build && cd build && cmake .. && $(MAKE)
+	@echo "✅ Native agent built: native/build/libjunit-no-network-agent.dylib"
+
+## test-native: Run native agent tests
+test-native: build-native
+	@echo "Running native agent tests..."
+	@echo ""
+	@echo "Test 1: AgentLoadTest (verify agent loads)"
+	@echo "─────────────────────────────────────────────"
+	@cd native/test && \
+		$(JAVA_HOME)/bin/javac AgentLoadTest.java && \
+		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-no-network-agent.dylib AgentLoadTest
+	@echo ""
+	@echo "Test 2: SocketInterceptTest (verify Socket interception)"
+	@echo "─────────────────────────────────────────────────────────────"
+	@cd native/test && \
+		$(JAVA_HOME)/bin/javac SocketInterceptTest.java && \
+		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-no-network-agent.dylib SocketInterceptTest
+	@echo ""
+	@echo "✅ All native tests passed!"
+
+## clean-native: Clean native build artifacts
+clean-native:
+	@echo "Cleaning native build artifacts..."
+	@rm -rf native/build
+	@rm -f native/test/*.class
+	@echo "✅ Native build cleaned"

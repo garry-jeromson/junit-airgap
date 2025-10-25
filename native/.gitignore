@@ -1,0 +1,15 @@
+# CMake build directory
+build/
+
+# Compiled test classes
+test/*.class
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
