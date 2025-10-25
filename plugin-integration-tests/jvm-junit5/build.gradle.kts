@@ -22,9 +22,12 @@ dependencies {
     testImplementation(libs.junit.jupiter.engine)
     testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
 
-    // Ktor HTTP client for network testing
+    // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)
     testImplementation(libs.ktor.client.cio)
+    testImplementation(libs.retrofit)
+    testImplementation(libs.retrofit.converter.scalars)
+    testImplementation(libs.async.http.client)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

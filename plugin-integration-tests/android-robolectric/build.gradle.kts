@@ -46,9 +46,11 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
 
-    // Ktor HTTP client for network testing (OkHttp engine for Android/Robolectric)
+    // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)
     testImplementation(libs.ktor.client.okhttp)
+    testImplementation(libs.retrofit)
+    testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
