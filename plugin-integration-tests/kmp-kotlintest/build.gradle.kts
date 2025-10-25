@@ -28,6 +28,27 @@ kotlin {
                 // Let KMP choose the test framework defaults for each platform
                 implementation(kotlin("test"))
                 implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                // Ktor HTTP client core (platform-independent)
+                implementation(libs.ktor.client.core)
+            }
+        }
+
+        val jvmTest by getting {
+            dependencies {
+                // Ktor HTTP client for JVM (CIO engine)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
+        val androidUnitTest by getting {
+            dependencies {
+                // Ktor HTTP client for Android (OkHttp engine)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.kotlinx.coroutines.test)
+                // Robolectric for Android framework testing
+                implementation(libs.robolectric)
+                implementation(libs.androidx.test.core)
             }
         }
     }
@@ -44,6 +65,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
 }
 

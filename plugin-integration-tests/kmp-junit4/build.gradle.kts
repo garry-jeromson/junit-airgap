@@ -26,6 +26,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                // Ktor HTTP client core (platform-independent)
+                implementation(libs.ktor.client.core)
             }
         }
 
@@ -36,6 +38,9 @@ kotlin {
                 // JUnit Vintage engine to run JUnit 4 tests under JUnit Platform
                 implementation(libs.junit.vintage.engine)
                 implementation(libs.junit4)
+                // Ktor HTTP client for JVM (CIO engine)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
@@ -49,6 +54,9 @@ kotlin {
                 // Robolectric for Android framework testing
                 implementation(libs.robolectric)
                 implementation(libs.androidx.test.core)
+                // Ktor HTTP client for Android (OkHttp engine for Robolectric compatibility)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }

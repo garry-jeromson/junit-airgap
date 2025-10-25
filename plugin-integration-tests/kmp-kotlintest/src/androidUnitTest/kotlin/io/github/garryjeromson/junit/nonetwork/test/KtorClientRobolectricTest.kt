@@ -1,0 +1,96 @@
+package io.github.garryjeromson.junit.nonetwork.test
+
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import io.github.garryjeromson.junit.nonetwork.AllowNetwork
+import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
+import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
+
+/**
+ * Robolectric-specific tests for Ktor HTTP client on Android in KMP context (kotlin.test).
+ * These tests run with Robolectric to verify Android framework integration.
+ *
+ * Uses JUnit's @Test instead of kotlin.test's @Test to ensure Robolectric compatibility.
+ */
+@RunWith(RobolectricTestRunner::class)
+class KtorClientRobolectricTest {
+
+    private fun makeKtorRequest(): String = runBlocking {
+        val client = HttpClient(OkHttp)
+        try {
+            client.get("https://example.com").toString()
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    @NoNetworkTest
+    fun ktorClientShouldBeBlockedWithNoNetworkTestOnAndroid() {
+        // Verify we're running with Robolectric
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNotNull(context, "Should have Android context via Robolectric")
+
+        // Verify network blocking works
+        try {
+            makeKtorRequest()
+            fail("Expected exception to be thrown")
+        } catch (e: Exception) {
+            // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
+            assertTrue(
+                e is NetworkRequestAttemptedException ||
+                e.cause is NetworkRequestAttemptedException ||
+                e.message?.contains("NetworkRequestAttemptedException") == true,
+                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}"
+            )
+        }
+    }
+
+    @Test
+    @AllowNetwork
+    fun ktorClientShouldBeAllowedWithAllowNetworkOnAndroid() {
+        // Verify we're running with Robolectric
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNotNull(context, "Should have Android context via Robolectric")
+
+        // Verify network is allowed
+        try {
+            makeKtorRequest()
+        } catch (e: NetworkRequestAttemptedException) {
+            fail("Network should be allowed with @AllowNetwork, but was blocked: ${e.message}")
+        } catch (e: Exception) {
+            // Other exceptions (like actual network errors) are fine
+        }
+    }
+
+    @Test
+    @NoNetworkTest
+    fun `ktor client with Robolectric and spaces in test name works on Android`() {
+        // Verify we're running with Robolectric
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNotNull(context, "Should have Android context via Robolectric")
+
+        // Verify network blocking works
+        try {
+            makeKtorRequest()
+            fail("Expected exception to be thrown")
+        } catch (e: Exception) {
+            assertTrue(
+                e is NetworkRequestAttemptedException ||
+                e.cause is NetworkRequestAttemptedException ||
+                e.message?.contains("NetworkRequestAttemptedException") == true,
+                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}"
+            )
+        }
+    }
+}

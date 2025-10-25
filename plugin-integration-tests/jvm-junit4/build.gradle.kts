@@ -22,6 +22,11 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit4)
     testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+
+    // Ktor HTTP client for network testing
+    testImplementation(libs.ktor.client.core)
+    testImplementation(libs.ktor.client.cio)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 // NOTE: NOT using useJUnitPlatform() - this runs pure JUnit 4 tests

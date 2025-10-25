@@ -25,6 +25,8 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                // Ktor HTTP client core (platform-independent)
+                implementation(libs.ktor.client.core)
             }
         }
 
@@ -32,6 +34,9 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.junit.jupiter.engine)
+                // Ktor HTTP client for JVM (CIO engine)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
@@ -39,6 +44,9 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.junit.jupiter.engine)
+                // Ktor HTTP client for Android (OkHttp engine)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
