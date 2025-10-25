@@ -101,6 +101,7 @@ test-plugin-integration:
 	@JAVA_HOME=$(JAVA_HOME) $(GRADLEW) \
 		:plugin-integration-tests:kmp-junit5:test \
 		:plugin-integration-tests:kmp-junit4:test \
+		:plugin-integration-tests:kmp-kotlintest:test \
 		:plugin-integration-tests:android-junit5:testDebugUnitTest \
 		:plugin-integration-tests:android-junit4:testDebugUnitTest \
 		:plugin-integration-tests:jvm-junit5:test \
