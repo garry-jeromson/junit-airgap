@@ -251,7 +251,11 @@ Uses Java's `SecurityManager` to intercept socket connections:
 
 ### Android Implementation
 
-Same as JVM - uses `SecurityManager` with Robolectric.
+Uses JVMTI agent for network blocking:
+- C++ JVMTI agent intercepts socket and DNS operations at native level
+- Agent automatically packaged with library and extracted at runtime
+- Works with Robolectric for unit testing
+- Supports both hostname and IP address blocking with DNS interception
 
 ### iOS Implementation
 
@@ -441,12 +445,16 @@ Developed using TDD with comprehensive test coverage to ensure reliability and m
 ### Example Projects
 
 Complete working examples in `plugin-integration-tests/`:
+- `test-contracts` - Shared test assertions module (used by all projects below)
 - `jvm-junit4` - JVM with JUnit 4
 - `jvm-junit5` - JVM with JUnit 5
 - `android-robolectric` - Android with Robolectric
 - `kmp-junit4` - KMP with JUnit 4
 - `kmp-junit5` - KMP with JUnit 5
-- `kmp-kotlintest` - KMP with kotlin.test
+- `kmp-kotlintest` - KMP with kotlin.test + JUnit 4 runtime
+- `kmp-kotlintest-junit5` - KMP with kotlin.test + JUnit 5 runtime
+
+All projects use the `test-contracts` module for generic, client-agnostic test assertions.
 
 ### Common Patterns
 

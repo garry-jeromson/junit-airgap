@@ -37,6 +37,7 @@ This is a Kotlin Multiplatform (KMP) project with three main components:
 ### Integration Test Projects
 
 Located in `plugin-integration-tests/`:
+- `test-contracts` - Shared KMP module with generic test assertions (used by all projects below)
 - `jvm-junit4` - Pure JVM with JUnit 4
 - `jvm-junit5` - Pure JVM with JUnit 5
 - `android-robolectric` - Android library with JUnit 4 + Robolectric
@@ -44,6 +45,8 @@ Located in `plugin-integration-tests/`:
 - `kmp-junit5` - KMP (JVM + Android) with JUnit 5
 - `kmp-kotlintest` - KMP (JVM + Android) with kotlin.test + JUnit 4 runtime
 - `kmp-kotlintest-junit5` - KMP (JVM + Android) with kotlin.test + JUnit 5 runtime
+
+All integration test projects use the `test-contracts` module for shared test assertions, eliminating code duplication.
 
 ## Running Tests
 
@@ -159,8 +162,80 @@ Three implementations (tried in order):
 
 ### Android Implementation
 
-- Uses socket factory replacement
-- No SecurityManager available on Android
+Uses JVMTI agent for network blocking:
+- C++ JVMTI agent intercepts socket and DNS operations
+- Agent automatically packaged with library and extracted at runtime
+- Supports both hostname and IP address blocking
+- Includes DNS interception for more reliable blocking
+
+## Test Contracts Module
+
+The `test-contracts` module provides generic, client-agnostic test assertions used by all integration test projects.
+
+### Architecture
+
+**Location**: `plugin-integration-tests/test-contracts/`
+
+**Structure**:
+- KMP module with JVM and Android targets
+- Uses expect/actual pattern for platform-specific implementations
+- Provides two main assertion helpers
+
+### Generic Assertions
+
+```kotlin
+// Assert that network is blocked
+assertRequestBlocked {
+    // Any network operation here
+    Socket("example.com", 80).use { }
+    // or
+    ktorClient.get("https://example.com")
+    // or
+    retrofit.getData().execute()
+}
+
+// Assert that network is allowed
+assertRequestAllowed {
+    // Any network operation here
+    Socket("example.com", 80).use { }
+}
+```
+
+### Benefits
+
+1. **Client-Agnostic**: Works with any HTTP client (Socket, Ktor, Retrofit, OkHttp, ReactorNetty, etc.)
+2. **Platform-Specific Handling**: Automatically handles exception wrapping differences between JVM and Android
+3. **Code Reduction**: Eliminated ~500+ lines of duplicated exception handling logic
+4. **Maintainability**: Changes to assertion logic only need to be made once
+5. **Consistency**: All integration tests use the same patterns
+
+### Platform Implementations
+
+**JVM** (`jvmMain/Assertions.jvm.kt`):
+- Checks for `NetworkRequestAttemptedException` directly or in cause chain
+- Handles wrapped exceptions from frameworks like Reactor
+
+**Android** (`androidMain/Assertions.android.kt`):
+- Checks exception by class name (Robolectric limitation)
+- Handles exceptions wrapped in `IOException`
+- Searches entire cause chain for network exceptions
+
+### Usage in Integration Tests
+
+All 7 integration test projects use test-contracts:
+
+```kotlin
+// Common pattern across all projects
+@Test
+@BlockNetworkRequests
+fun testNetworkBlocked() {
+    assertRequestBlocked {
+        makeHttpRequest() // Any HTTP client
+    }
+}
+```
+
+See `plugin-integration-tests/test-contracts/README.md` for complete documentation.
 
 ## Common Issues and Solutions
 
