@@ -2,14 +2,13 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
 /**
  * Tests that verify Ktor HTTP client network blocking works correctly
@@ -29,7 +28,7 @@ class KtorClientTest {
     @Test
     @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTest() {
-        assertFailsWith<NetworkRequestAttemptedException> {
+        assertRequestBlocked {
             makeKtorRequest()
         }
     }
@@ -37,20 +36,15 @@ class KtorClientTest {
     @Test
     @AllowNetworkRequests
     fun ktorClientIsAllowedWithAllowNetwork() {
-        try {
+        assertRequestAllowed {
             makeKtorRequest()
-        } catch (e: NetworkRequestAttemptedException) {
-            fail("Network is allowed with @AllowNetworkRequests, but was blocked: ${e.message}")
-        } catch (e: Exception) {
-            // Other exceptions (like actual network errors) are fine - we just want to ensure
-            // NetworkRequestAttemptedException is not thrown
         }
     }
 
     @Test
     @BlockNetworkRequests
     fun `ktor client with spaces in test name is blocked`() {
-        assertFailsWith<NetworkRequestAttemptedException> {
+        assertRequestBlocked {
             makeKtorRequest()
         }
     }

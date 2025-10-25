@@ -22,6 +22,7 @@ include(":gradle-plugin")
 include(":benchmark")
 
 // Plugin integration tests
+include(":plugin-integration-tests:test-contracts")
 include(":plugin-integration-tests:kmp-junit5")
 include(":plugin-integration-tests:kmp-junit4")
 include(":plugin-integration-tests:kmp-kotlintest")

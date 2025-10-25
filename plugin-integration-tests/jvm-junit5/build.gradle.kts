@@ -22,6 +22,9 @@ dependencies {
     testImplementation(libs.junit.jupiter.engine)
     testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
 
+    // Test contracts for shared test behaviors
+    testImplementation(project(":plugin-integration-tests:test-contracts"))
+
     // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)
     testImplementation(libs.ktor.client.cio)
