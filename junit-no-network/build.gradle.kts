@@ -41,10 +41,6 @@ kotlin {
                 // JUnit dependencies for JVM
                 implementation(libs.junit.jupiter.api)
                 implementation(libs.junit4)
-
-                // Byte Buddy for modern network blocking (no SecurityManager deprecation)
-                implementation(libs.byte.buddy)
-                implementation(libs.byte.buddy.agent)
             }
         }
 
