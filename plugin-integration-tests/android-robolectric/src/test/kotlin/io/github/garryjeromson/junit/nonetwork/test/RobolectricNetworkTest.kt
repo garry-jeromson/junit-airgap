@@ -51,4 +51,12 @@ class RobolectricNetworkTest {
         assertNotNull(context.contentResolver, "ContentResolver should be available")
         assertNotNull(context.applicationInfo, "ApplicationInfo should be available")
     }
+
+    @Test
+    @NoNetworkTest
+    fun `test names with spaces should work with bytecode injection`() {
+        // Verify that Kotlin backtick syntax (spaces in method names) works with ByteBuddy injection
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNotNull(context, "Context should be available even with spaces in test name")
+    }
 }

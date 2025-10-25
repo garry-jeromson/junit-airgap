@@ -6,6 +6,7 @@ import io.github.garryjeromson.junit.nonetwork.NoNetworkTest
 import org.junit.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * JVM tests that verify network blocking with JUnit 4.
@@ -32,5 +33,12 @@ class NetworkBlockingTest {
         } catch (e: Exception) {
             // Other exceptions (no internet, DNS failure, etc.) are OK
         }
+    }
+
+    @Test
+    @NoNetworkTest
+    fun `test method names with spaces work correctly in JUnit 4`() {
+        // Verify that Kotlin backtick syntax (spaces in method names) works with ByteBuddy injection
+        assertTrue(true, "Test with spaces in name executed successfully")
     }
 }

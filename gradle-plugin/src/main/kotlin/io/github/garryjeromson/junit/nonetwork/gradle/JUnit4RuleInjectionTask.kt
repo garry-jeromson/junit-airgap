@@ -3,6 +3,7 @@ package io.github.garryjeromson.junit.nonetwork.gradle
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.description.annotation.AnnotationDescription
 import net.bytebuddy.description.modifier.Visibility
+import net.bytebuddy.dynamic.scaffold.TypeValidation
 import net.bytebuddy.implementation.MethodCall
 import net.bytebuddy.implementation.SuperMethodCall
 import net.bytebuddy.matcher.ElementMatchers
@@ -268,7 +269,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         classFile: File,
         classLoader: ClassLoader,
     ) {
-        val buddy = ByteBuddy()
+        // Disable type validation to support Kotlin backtick method names (test names with spaces)
+        // The JVM runtime tolerates these names even though they don't conform to strict specifications
+        val buddy = ByteBuddy().with(TypeValidation.DISABLED)
 
         // Reference the NoNetworkRule class by name using ByteBuddy's type pool
         // This doesn't require the class to be in the gradle plugin's classpath
