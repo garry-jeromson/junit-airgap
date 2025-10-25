@@ -162,9 +162,11 @@ tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
     // Use Java 21 toolchain (native agent built with Java 21)
-    javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    })
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        },
+    )
 
     // Load JVMTI agent for network blocking
     val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
@@ -249,9 +251,11 @@ tasks.register<Test>("integrationTestJvmti") {
 
     // CRITICAL: Use Java 21 toolchain (native agent built with Java 21)
     // Project default is Java 17, but JVMTI agent is dynamically linked against Java 21 JVM
-    javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    })
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        },
+    )
 
     // Enable debug logging
     systemProperty("junit.nonetwork.debug", "true")
@@ -265,7 +269,7 @@ tasks.register<Test>("integrationTestJvmti") {
         if (!agentFile.exists()) {
             throw GradleException(
                 "JVMTI agent not found at: $agentPath\n" +
-                "Run 'make build-native' to build the native agent first."
+                    "Run 'make build-native' to build the native agent first.",
             )
         }
         println("Loading JVMTI agent from: $agentPath")
@@ -311,7 +315,7 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
         "../native/CMakeLists.txt",
         "../native/include/agent.h",
         "../native/src/agent.cpp",
-        "../native/src/socket_interceptor.cpp"
+        "../native/src/socket_interceptor.cpp",
     )
     outputs.dir("../native/build")
 }
@@ -330,16 +334,23 @@ tasks.register<Exec>("buildNativeAgent") {
     inputs.files(
         "../native/include/agent.h",
         "../native/src/agent.cpp",
-        "../native/src/socket_interceptor.cpp"
+        "../native/src/socket_interceptor.cpp",
     )
 
     // Output: the built native library (platform-specific)
-    val libraryName = when {
-        org.gradle.internal.os.OperatingSystem.current().isMacOsX -> "libjunit-no-network-agent.dylib"
-        org.gradle.internal.os.OperatingSystem.current().isLinux -> "libjunit-no-network-agent.so"
-        org.gradle.internal.os.OperatingSystem.current().isWindows -> "junit-no-network-agent.dll"
-        else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
-    }
+    val libraryName =
+        when {
+            org.gradle.internal.os.OperatingSystem
+                .current()
+                .isMacOsX -> "libjunit-no-network-agent.dylib"
+            org.gradle.internal.os.OperatingSystem
+                .current()
+                .isLinux -> "libjunit-no-network-agent.so"
+            org.gradle.internal.os.OperatingSystem
+                .current()
+                .isWindows -> "junit-no-network-agent.dll"
+            else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
+        }
     outputs.file("../native/build/$libraryName")
 
     doLast {

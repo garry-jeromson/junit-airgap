@@ -73,7 +73,9 @@ internal class BlockingSocketImpl(
         // Debug logging
         if (System.getProperty("junit.nonetwork.debug") == "true") {
             println("BlockingSocketImpl.checkConnection: host=$host, port=$port")
-            println("  Configuration: allowedHosts=${configuration.allowedHosts}, blockedHosts=${configuration.blockedHosts}")
+            println(
+                "  Configuration: allowedHosts=${configuration.allowedHosts}, blockedHosts=${configuration.blockedHosts}",
+            )
             println("  isAllowed($host) = ${configuration.isAllowed(host)}")
         }
 

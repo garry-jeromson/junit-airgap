@@ -53,6 +53,7 @@ object NetworkBlockerContext {
      */
     @JvmStatic
     private external fun registerWithAgent()
+
     /**
      * Thread-local storage for network configuration.
      * Each test thread has its own configuration.
