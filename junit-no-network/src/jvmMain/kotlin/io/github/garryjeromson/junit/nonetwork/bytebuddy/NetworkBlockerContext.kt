@@ -41,8 +41,8 @@ object NetworkBlockerContext {
         try {
             registerWithAgent()
         } catch (e: UnsatisfiedLinkError) {
-            // Agent not loaded - this is fine, JVMTI is optional
-            // Only ByteBuddy or SecurityManager will be used
+            // Agent not loaded - this is fine, JVMTI agent may not be available
+            // The library will continue to function without native interception
         }
     }
 

@@ -4,7 +4,7 @@ package io.github.garryjeromson.junit.nonetwork
  * iOS implementation of NetworkBlocker.
  *
  * Note: iOS support for network blocking is currently limited due to platform constraints.
- * Unlike JVM/Android which use SecurityManager, iOS requires different approaches:
+ * Unlike JVM/Android which use JVMTI native agent for socket interception, iOS requires different approaches:
  * - NSURLProtocol for URLSession (requires Objective-C bridge)
  * - No low-level socket interception available
  *

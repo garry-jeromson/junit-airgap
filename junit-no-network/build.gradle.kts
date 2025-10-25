@@ -63,6 +63,14 @@ kotlin {
 
         val androidUnitTest by getting {
             dependencies {
+                // Android unit tests (Robolectric) run on JVM, so they need jvmMain classes
+                // This gives access to NetworkBlockerContext for configuration
+                implementation(project(":junit-no-network")) {
+                    attributes {
+                        attribute(org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.attribute, org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.jvm)
+                    }
+                }
+
                 implementation(libs.junit.jupiter.engine)
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.robolectric)
@@ -194,11 +202,33 @@ tasks.named("jvmTest") {
 }
 
 // Configure Android test tasks
-// Note: Android tests use Robolectric which primarily supports JUnit 4
-// JUnit 5 support on Android requires junit-vintage-engine to run both frameworks together
-// For now, we keep Android tests using JUnit 4 runner (default behavior)
+// Note: Android tests use Robolectric which runs on JVM, so we can load the JVMTI agent
+// Robolectric tests need the JVMTI agent to block network requests
 tasks.withType<Test>().configureEach {
     if (name.contains("UnitTest")) {
+        // Use Java 21 toolchain (native agent built with Java 21)
+        javaLauncher.set(
+            javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(21))
+            },
+        )
+
+        // Load JVMTI agent for network blocking
+        val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
+
+        doFirst {
+            val agentFile = file(agentPath)
+            if (agentFile.exists()) {
+                println("Loading JVMTI agent for Android test: $agentPath")
+            } else {
+                println("WARNING: JVMTI agent not found at: $agentPath")
+                println("Run 'make build-native' to build the native agent.")
+                println("Android tests will fail without the agent.")
+            }
+        }
+
+        jvmArgs("-agentpath:$agentPath")
+
         testLogging {
             events("passed", "skipped", "failed")
             showStandardStreams = false
@@ -206,6 +236,13 @@ tasks.withType<Test>().configureEach {
 
         // Pass junit.nonetwork system properties to test JVM
         systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
+    }
+}
+
+// Make Android unit tests depend on native build
+tasks.withType<Test>().configureEach {
+    if (name.contains("UnitTest")) {
+        dependsOn("buildNativeAgent")
     }
 }
 

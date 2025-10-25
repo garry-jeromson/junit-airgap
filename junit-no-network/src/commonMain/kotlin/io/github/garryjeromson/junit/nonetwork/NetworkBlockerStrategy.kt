@@ -32,8 +32,8 @@ internal interface NetworkBlockerStrategy {
      * Check if this strategy is available in the current environment.
      *
      * For example:
-     * - Byte Buddy strategy requires Byte Buddy classes on the classpath
-     * - SecurityManager strategy requires ability to set SecurityManager
+     * - JVMTI strategy requires native agent to be loaded via -agentpath
+     * - SocketImpl strategy requires ability to set SocketImplFactory
      *
      * @return true if this strategy can be used, false otherwise
      */

@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 /**
  * Android-specific tests for NetworkBlocker using Robolectric.
- * Tests the Android implementation which uses SocketFactory instead of SecurityManager.
+ * Tests the Android implementation which uses JVMTI agent (Robolectric runs on JVM, not ART).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [26]) // Test on API 26 (Android 8.0)

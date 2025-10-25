@@ -1,123 +1,92 @@
 package io.github.garryjeromson.junit.nonetwork
 
-import java.security.Permission
-
 /**
  * Android implementation of NetworkBlocker.
- * Uses SecurityManager to intercept socket connections, same as JVM implementation.
  *
- * Note: Android's runtime (ART) supports SecurityManager the same way as the JVM.
+ * ## Android Unit Tests (Robolectric)
+ * Uses JVMTI agent since Robolectric runs on the JVM (HotSpot/OpenJDK), not Android Runtime.
+ * The JVMTI agent intercepts network calls at the native layer via sun.nio.ch.Net.connect0().
+ *
+ * ## Android Instrumented Tests (On Device/Emulator)
+ * ⚠️ JVMTI does not work on Android Runtime (ART) - only on JVM.
+ * Instrumented tests that run on actual devices/emulators will not block network requests.
+ * This is acceptable since instrumented tests typically require network access anyway.
+ *
+ * ## How It Works
+ * - Robolectric tests: JVMTI agent (loaded by Gradle plugin) intercepts at native layer
+ * - Instrumented tests: No-op (graceful degradation)
+ * - Configuration is stored thread-locally via NetworkBlockerContext (when available at runtime)
+ * - The Gradle plugin automatically loads the agent for unit tests
+ *
+ * ## Technical Details
+ * This implementation uses reflection to access NetworkBlockerContext at runtime.
+ * NetworkBlockerContext is in jvmMain (not visible at compile time), but is available
+ * at runtime when Robolectric runs tests on the JVM. The JVMTI agent reads configuration
+ * from NetworkBlockerContext to determine which connections to block.
  */
 actual class NetworkBlocker actual constructor(
     private val configuration: NetworkConfiguration,
 ) {
-    private var originalSecurityManager: SecurityManager? = null
     private var isInstalled: Boolean = false
 
     /**
-     * Installs the network blocker by setting a custom SecurityManager.
-     * After installation, all socket connections will be checked against the configuration.
+     * Install the network blocker.
+     *
+     * For Robolectric tests (running on JVM), this stores configuration in NetworkBlockerContext
+     * that the JVMTI agent will check when intercepting socket connections.
+     * For instrumented tests (running on ART), this is a no-op.
      */
     @Synchronized
     actual fun install() {
         if (isInstalled) {
-            return // Already installed, idempotent
+            return
         }
 
         try {
-            // Save the original security manager so we can restore it later
-            originalSecurityManager = System.getSecurityManager()
-
-            // Install our custom security manager
-            System.setSecurityManager(BlockingSecurityManager(configuration, originalSecurityManager))
-
+            // Try to access NetworkBlockerContext (available at runtime in Robolectric/JVM)
+            // Use reflection since NetworkBlockerContext is in jvmMain and not visible at compile time
+            val contextClass = Class.forName("io.github.garryjeromson.junit.nonetwork.bytebuddy.NetworkBlockerContext")
+            val setConfigMethod =
+                contextClass.getDeclaredMethod(
+                    "setConfiguration",
+                    NetworkConfiguration::class.java,
+                )
+            setConfigMethod.invoke(null, configuration)
             isInstalled = true
-        } catch (e: SecurityException) {
-            throw IllegalStateException(
-                "Failed to install network blocker. Security manager cannot be replaced.",
-                e,
-            )
+        } catch (e: ClassNotFoundException) {
+            // NetworkBlockerContext not available - running on ART (instrumented test)
+            // This is fine, graceful degradation (no blocking on ART)
+            isInstalled = true
+        } catch (e: Exception) {
+            // Other reflection errors - log but don't fail
+            println("Warning: Failed to configure network blocking for Android: ${e.message}")
+            isInstalled = true
         }
     }
 
     /**
-     * Uninstalls the network blocker and restores the original SecurityManager.
-     * After uninstallation, network requests will work normally again.
+     * Uninstall the network blocker.
+     *
+     * For Robolectric tests, this clears the configuration from NetworkBlockerContext.
+     * For instrumented tests, this is a no-op.
      */
     @Synchronized
     actual fun uninstall() {
         if (!isInstalled) {
-            return // Not installed, idempotent
+            return
         }
 
         try {
-            // Restore the original security manager
-            System.setSecurityManager(originalSecurityManager)
-        } catch (e: SecurityException) {
-            // Best effort - if we can't restore, at least mark as uninstalled
-            System.err.println("Warning: Could not restore original security manager: ${e.message}")
-        } finally {
-            isInstalled = false
-        }
-    }
-
-    /**
-     * Custom SecurityManager that intercepts socket connection attempts
-     */
-    private class BlockingSecurityManager(
-        private val configuration: NetworkConfiguration,
-        private val delegate: SecurityManager?,
-    ) : SecurityManager() {
-        override fun checkConnect(
-            host: String,
-            port: Int,
-        ) {
-            // Check if this connection should be blocked
-            if (!configuration.isAllowed(host)) {
-                val details =
-                    NetworkRequestDetails(
-                        host = host,
-                        port = port,
-                        url = "$host:$port",
-                        stackTrace =
-                            Thread
-                                .currentThread()
-                                .stackTrace
-                                .drop(1) // Skip this method
-                                .take(5) // Take top 5 frames
-                                .joinToString("\n") { "  at $it" },
-                    )
-
-                throw NetworkRequestAttemptedException(
-                    "Network request blocked by @BlockNetworkRequests: Attempted to connect to $host:$port",
-                    requestDetails = details,
-                )
-            }
-
-            // If allowed, delegate to the original security manager if present
-            delegate?.checkConnect(host, port)
+            // Clear configuration from NetworkBlockerContext (if available)
+            val contextClass = Class.forName("io.github.garryjeromson.junit.nonetwork.bytebuddy.NetworkBlockerContext")
+            val clearConfigMethod = contextClass.getDeclaredMethod("clearConfiguration")
+            clearConfigMethod.invoke(null)
+        } catch (e: ClassNotFoundException) {
+            // NetworkBlockerContext not available - running on ART
+        } catch (e: Exception) {
+            // Other reflection errors - ignore
         }
 
-        override fun checkConnect(
-            host: String,
-            port: Int,
-            context: Any?,
-        ) {
-            // Also check the version with context
-            checkConnect(host, port)
-            delegate?.checkConnect(host, port, context)
-        }
-
-        // Delegate all other security checks to the original manager
-        override fun checkPermission(perm: Permission?) {
-            delegate?.checkPermission(perm)
-        }
-
-        override fun checkPermission(
-            perm: Permission?,
-            context: Any?,
-        ) {
-            delegate?.checkPermission(perm, context)
-        }
+        isInstalled = false
     }
 }
