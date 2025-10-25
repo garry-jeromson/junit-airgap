@@ -137,6 +137,7 @@ kotlin.jvm().compilations.create("integrationTest") {
             implementation(libs.apache.httpclient5)
             implementation(libs.retrofit)
             implementation(libs.retrofit.converter.scalars)
+            implementation(libs.reactor.netty.http)
 
             // Ktor client for integration testing
             implementation(libs.ktor.client.core)

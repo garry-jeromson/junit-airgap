@@ -29,6 +29,7 @@ dependencies {
     testImplementation(libs.retrofit)
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.async.http.client)
+    testImplementation(libs.reactor.netty.http)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

@@ -28,6 +28,7 @@ apache-httpclient5 = "5.3.1"
 ktor = "2.3.7"
 retrofit = "2.11.0"
 async-http-client = "3.0.0"
+reactor-netty = "1.1.22"
 
 # Coroutines
 kotlinx-coroutines = "1.8.0"
@@ -60,6 +61,7 @@ apache-httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5",
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "retrofit" }
 async-http-client = { module = "org.asynchttpclient:async-http-client", version.ref = "async-http-client" }
+reactor-netty-http = { module = "io.projectreactor.netty:reactor-netty-http", version.ref = "reactor-netty" }
 
 # Ktor Client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
