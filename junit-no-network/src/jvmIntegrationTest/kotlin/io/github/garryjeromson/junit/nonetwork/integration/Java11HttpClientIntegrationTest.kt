@@ -43,7 +43,7 @@ class Java11HttpClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Java 11 HttpClient to external host`() {
+    fun `blocks Java 11 HttpClient to external host`() {
         assertNetworkBlocked("Java 11 HttpClient should be blocked") {
             val client =
                 HttpClient
@@ -65,7 +65,7 @@ class Java11HttpClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
-    fun `should allow Java 11 HttpClient to localhost`() {
+    fun `allows Java 11 HttpClient to localhost`() {
         assertNetworkNotBlocked("Java 11 HttpClient to localhost should work") {
             val client =
                 HttpClient
@@ -87,7 +87,7 @@ class Java11HttpClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Java 11 HttpClient HTTPS requests`() {
+    fun `blocks Java 11 HttpClient HTTPS requests`() {
         assertNetworkBlocked("Java 11 HttpClient HTTPS should be blocked") {
             val client =
                 HttpClient
@@ -108,7 +108,7 @@ class Java11HttpClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Java 11 HttpClient POST requests`() {
+    fun `blocks Java 11 HttpClient POST requests`() {
         assertNetworkBlocked("Java 11 HttpClient POST should be blocked") {
             val client = HttpClient.newHttpClient()
 
@@ -127,7 +127,7 @@ class Java11HttpClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
-    fun `should allow Java 11 HttpClient when wildcard is configured`() {
+    fun `allows Java 11 HttpClient when wildcard is configured`() {
         assertNetworkNotBlocked("Java 11 HttpClient should work with wildcard") {
             val client = HttpClient.newHttpClient()
 
@@ -146,7 +146,7 @@ class Java11HttpClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
-    fun `should allow Java 11 HttpClient to allowed IP address`() {
+    fun `allows Java 11 HttpClient to allowed IP address`() {
         assertNetworkNotBlocked("Java 11 HttpClient to 127.0.0.1 should work") {
             val client = HttpClient.newHttpClient()
 

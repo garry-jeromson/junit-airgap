@@ -13,11 +13,14 @@ import kotlin.test.fail
  * with the plugin auto-configuration (JUnit 5).
  */
 class AsyncHttpClientTest {
-
     private fun makeAsyncRequest(): String {
         val client = Dsl.asyncHttpClient()
         return try {
-            client.prepareGet("https://example.com/").execute().get().responseBody
+            client
+                .prepareGet("https://example.com/")
+                .execute()
+                .get()
+                .responseBody
         } finally {
             client.close()
         }

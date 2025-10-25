@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
 import reactor.netty.http.client.HttpClient
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -95,7 +94,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty GET to external host`() {
+    fun `blocks Reactor Netty GET to external host`() {
         assertReactorNettyBlocked("Reactor Netty GET should be blocked") {
             val client = HttpClient.create()
             client
@@ -108,7 +107,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty POST to external host`() {
+    fun `blocks Reactor Netty POST to external host`() {
         assertReactorNettyBlocked("Reactor Netty POST should be blocked") {
             val client = HttpClient.create()
             client
@@ -122,7 +121,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty HTTPS requests`() {
+    fun `blocks Reactor Netty HTTPS requests`() {
         assertReactorNettyBlocked("Reactor Netty HTTPS should be blocked") {
             val client = HttpClient.create()
             client
@@ -138,7 +137,7 @@ class ReactorNettyClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
-    fun `should allow Reactor Netty to localhost`() {
+    fun `allows Reactor Netty to localhost`() {
         try {
             val client = HttpClient.create()
             val response =
@@ -160,7 +159,7 @@ class ReactorNettyClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
-    fun `should allow Reactor Netty to 127_0_0_1`() {
+    fun `allows Reactor Netty to 127_0_0_1`() {
         try {
             val client = HttpClient.create()
             val response =
@@ -183,7 +182,7 @@ class ReactorNettyClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
-    fun `should allow Reactor Netty with wildcard configuration`() {
+    fun `allows Reactor Netty with wildcard configuration`() {
         try {
             val client = HttpClient.create()
             val response =
@@ -205,7 +204,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty PUT requests`() {
+    fun `blocks Reactor Netty PUT requests`() {
         assertReactorNettyBlocked("Reactor Netty PUT should be blocked") {
             val client = HttpClient.create()
             client
@@ -219,7 +218,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty DELETE requests`() {
+    fun `blocks Reactor Netty DELETE requests`() {
         assertReactorNettyBlocked("Reactor Netty DELETE should be blocked") {
             val client = HttpClient.create()
             client
@@ -234,7 +233,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty to different ports`() {
+    fun `blocks Reactor Netty to different ports`() {
         assertReactorNettyBlocked("Reactor Netty to port 8080 should be blocked") {
             val client = HttpClient.create()
             client
@@ -248,7 +247,7 @@ class ReactorNettyClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["example.com"])
-    fun `should allow Reactor Netty to specifically allowed host`() {
+    fun `allows Reactor Netty to specifically allowed host`() {
         // This will fail to connect since example.com is not our mock server,
         // but it should NOT throw NetworkRequestAttemptedException
         try {
@@ -270,7 +269,7 @@ class ReactorNettyClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost"])
-    fun `should allow Reactor Netty to read response content from localhost`() {
+    fun `allows Reactor Netty to read response content from localhost`() {
         try {
             val client = HttpClient.create()
             val response =
@@ -292,7 +291,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty with custom base URL configuration`() {
+    fun `blocks Reactor Netty with custom base URL configuration`() {
         assertReactorNettyBlocked("Reactor Netty with base URL should be blocked") {
             val client =
                 HttpClient
@@ -309,7 +308,7 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Reactor Netty with host and port configuration`() {
+    fun `blocks Reactor Netty with host and port configuration`() {
         assertReactorNettyBlocked("Reactor Netty with host/port should be blocked") {
             val client =
                 HttpClient

@@ -11,32 +11,32 @@ import kotlin.test.assertFailsWith
  */
 class NetworkBlockerImplementationTest {
     @Test
-    fun `should have BYTE_BUDDY implementation`() {
+    fun `has BYTE_BUDDY implementation`() {
         val impl = NetworkBlockerImplementation.BYTE_BUDDY
         assertEquals("BYTE_BUDDY", impl.name)
     }
 
     @Test
-    fun `should have SECURITY_MANAGER implementation`() {
+    fun `has SECURITY_MANAGER implementation`() {
         val impl = NetworkBlockerImplementation.SECURITY_MANAGER
         assertEquals("SECURITY_MANAGER", impl.name)
     }
 
     @Test
-    fun `should have AUTO implementation`() {
+    fun `has AUTO implementation`() {
         val impl = NetworkBlockerImplementation.AUTO
         assertEquals("AUTO", impl.name)
     }
 
     @Test
-    fun `should parse bytebuddy string to BYTE_BUDDY`() {
+    fun `parses bytebuddy string to BYTE_BUDDY`() {
         assertEquals(NetworkBlockerImplementation.BYTE_BUDDY, NetworkBlockerImplementation.fromString("bytebuddy"))
         assertEquals(NetworkBlockerImplementation.BYTE_BUDDY, NetworkBlockerImplementation.fromString("byte-buddy"))
         assertEquals(NetworkBlockerImplementation.BYTE_BUDDY, NetworkBlockerImplementation.fromString("BYTEBUDDY"))
     }
 
     @Test
-    fun `should parse securitymanager string to SECURITY_MANAGER`() {
+    fun `parses securitymanager string to SECURITY_MANAGER`() {
         assertEquals(
             NetworkBlockerImplementation.SECURITY_MANAGER,
             NetworkBlockerImplementation.fromString("securitymanager"),
@@ -52,18 +52,18 @@ class NetworkBlockerImplementationTest {
     }
 
     @Test
-    fun `should parse auto string to AUTO`() {
+    fun `parses auto string to AUTO`() {
         assertEquals(NetworkBlockerImplementation.AUTO, NetworkBlockerImplementation.fromString("auto"))
         assertEquals(NetworkBlockerImplementation.AUTO, NetworkBlockerImplementation.fromString("AUTO"))
     }
 
     @Test
-    fun `should return default for null string`() {
+    fun `returns default for null string`() {
         assertEquals(NetworkBlockerImplementation.SECURITY_MANAGER, NetworkBlockerImplementation.fromString(null))
     }
 
     @Test
-    fun `should throw exception for invalid string`() {
+    fun `throws exception for invalid string`() {
         assertFailsWith<IllegalArgumentException> {
             NetworkBlockerImplementation.fromString("invalid")
         }

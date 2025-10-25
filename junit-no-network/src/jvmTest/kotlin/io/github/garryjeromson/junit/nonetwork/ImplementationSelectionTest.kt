@@ -18,7 +18,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should use SECURITY_MANAGER by default`() {
+    fun `uses SECURITY_MANAGER by default`() {
         val config = NetworkConfiguration() // Empty allowedHosts = block all
         val blocker = NetworkBlocker(config)
 
@@ -35,7 +35,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should use SECURITY_MANAGER when specified via system property`() {
+    fun `uses SECURITY_MANAGER when specified via system property`() {
         System.setProperty("junit.nonetwork.implementation", "securitymanager")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -52,7 +52,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should use BYTE_BUDDY when specified via system property`() {
+    fun `uses BYTE_BUDDY when specified via system property`() {
         System.setProperty("junit.nonetwork.implementation", "bytebuddy")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -66,7 +66,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should use AUTO mode and select best implementation`() {
+    fun `uses AUTO mode and select best implementation`() {
         System.setProperty("junit.nonetwork.implementation", "auto")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -83,7 +83,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should throw exception for invalid implementation string`() {
+    fun `throws exception for invalid implementation string`() {
         System.setProperty("junit.nonetwork.implementation", "invalid")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -125,7 +125,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should block network requests with SecurityManager implementation`() {
+    fun `blocks network requests with SecurityManager implementation`() {
         System.setProperty("junit.nonetwork.implementation", "securitymanager")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -192,7 +192,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should use SECURITY_POLICY when specified via system property`() {
+    fun `uses SECURITY_POLICY when specified via system property`() {
         System.setProperty("junit.nonetwork.implementation", "securitypolicy")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all
@@ -209,7 +209,7 @@ class ImplementationSelectionTest {
     }
 
     @Test
-    fun `should block network requests with SECURITY_POLICY implementation`() {
+    fun `blocks network requests with SECURITY_POLICY implementation`() {
         System.setProperty("junit.nonetwork.implementation", "securitypolicy")
 
         val config = NetworkConfiguration() // Empty allowedHosts = block all

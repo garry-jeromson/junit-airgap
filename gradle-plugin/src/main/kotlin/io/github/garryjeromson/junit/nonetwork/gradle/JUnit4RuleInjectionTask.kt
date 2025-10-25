@@ -101,7 +101,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                     urls.add(file.toURI().toURL())
                 }
                 if (debugMode) {
-                    logger.lifecycle("Added ${testTask.classpath.files.size} files from test task '$taskName' classpath")
+                    logger.lifecycle(
+                        "Added ${testTask.classpath.files.size} files from test task '$taskName' classpath",
+                    )
                 }
             } else {
                 logger.warn("Test task '$taskName' not found or not a Test task")

@@ -16,17 +16,18 @@ import kotlin.test.fail
  * with the plugin auto-configuration (JUnit 5).
  */
 class RetrofitClientTest {
-
     interface TestApi {
         @GET("/")
         fun getData(): Call<String>
     }
 
     private fun makeRetrofitRequest(): String {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://example.com/")
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .build()
+        val retrofit =
+            Retrofit
+                .Builder()
+                .baseUrl("https://example.com/")
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build()
 
         val api = retrofit.create(TestApi::class.java)
         val response = api.getData().execute()

@@ -58,7 +58,7 @@ class RetrofitClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Retrofit calls to external host on Android`() {
+    fun `blocks Retrofit calls to external host on Android`() {
         assertNetworkBlocked("Retrofit should be blocked on Android") {
             val retrofit =
                 Retrofit
@@ -75,7 +75,7 @@ class RetrofitClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
-    fun `should allow Retrofit calls to localhost on Android`() {
+    fun `allows Retrofit calls to localhost on Android`() {
         assertNetworkNotBlocked("Retrofit to localhost should work on Android") {
             val retrofit =
                 Retrofit
@@ -92,7 +92,7 @@ class RetrofitClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Retrofit HTTPS calls on Android`() {
+    fun `blocks Retrofit HTTPS calls on Android`() {
         assertNetworkBlocked("Retrofit HTTPS should be blocked on Android") {
             val retrofit =
                 Retrofit
@@ -108,7 +108,7 @@ class RetrofitClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Retrofit POST requests on Android`() {
+    fun `blocks Retrofit POST requests on Android`() {
         assertNetworkBlocked("Retrofit POST should be blocked on Android") {
             val retrofit =
                 Retrofit
@@ -125,7 +125,7 @@ class RetrofitClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
-    fun `should allow Retrofit when wildcard is configured on Android`() {
+    fun `allows Retrofit when wildcard is configured on Android`() {
         assertNetworkNotBlocked("Retrofit should work with wildcard on Android") {
             val retrofit =
                 Retrofit
@@ -143,7 +143,7 @@ class RetrofitClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
-    fun `should allow Retrofit to allowed IP address on Android`() {
+    fun `allows Retrofit to allowed IP address on Android`() {
         assertNetworkNotBlocked("Retrofit to 127.0.0.1 should work on Android") {
             val retrofit =
                 Retrofit

@@ -26,7 +26,7 @@ class DefaultBlockingConfigurationTest {
         val extension = NoNetworkExtension(applyToAllTests = true)
 
         @Test
-        fun `should block network when applyToAllTests is true without annotation`() {
+        fun `blocks network when applyToAllTests is true without annotation`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
             }
@@ -34,7 +34,7 @@ class DefaultBlockingConfigurationTest {
 
         @Test
         @AllowNetworkRequests
-        fun `should allow network when AllowNetwork annotation is present`() {
+        fun `allows network when AllowNetwork annotation is present`() {
             // This should NOT throw NetworkRequestAttemptedException
             try {
                 Socket("example.com", 80)
@@ -48,7 +48,7 @@ class DefaultBlockingConfigurationTest {
 
         @Test
         @AllowRequestsToHosts(hosts = ["localhost"])
-        fun `should respect AllowedHosts configuration when applyToAllTests is true`() {
+        fun `respects AllowedHosts configuration when applyToAllTests is true`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
             }
@@ -67,7 +67,7 @@ class DefaultBlockingConfigurationTest {
         val extension = NoNetworkExtension()
 
         @Test
-        fun `should block network when NoNetworkByDefault is on class`() {
+        fun `blocks network when NoNetworkByDefault is on class`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
             }
@@ -75,7 +75,7 @@ class DefaultBlockingConfigurationTest {
 
         @Test
         @AllowNetworkRequests
-        fun `should allow network with AllowNetwork even when NoNetworkByDefault is set`() {
+        fun `allows network with AllowNetwork even when NoNetworkByDefault is set`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
@@ -121,7 +121,7 @@ class DefaultBlockingConfigurationTest {
         val extension = NoNetworkExtension()
 
         @Test
-        fun `should NOT block network without any annotation when applyToAllTests is false`() {
+        fun `does not block network without any annotation when applyToAllTests is false`() {
             // This should work as before - no blocking without @BlockNetworkRequests
             try {
                 Socket("example.com", 80)
@@ -134,7 +134,7 @@ class DefaultBlockingConfigurationTest {
 
         @Test
         @BlockNetworkRequests
-        fun `should block network with NoNetworkTest annotation (existing behavior)`() {
+        fun `blocks network with NoNetworkTest annotation (existing behavior)`() {
             // Existing behavior should still work
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
@@ -155,7 +155,7 @@ class DefaultBlockingConfigurationTest {
         val extension = NoNetworkExtension()
 
         @Test
-        fun `should allow network when AllowNetwork is at class level`() {
+        fun `allows network when AllowNetwork is at class level`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {

@@ -57,7 +57,7 @@ class SystemPropertyConfigurationTest {
         }
 
         @Test
-        fun `should block network when system property is true`() {
+        fun `blocks network when system property is true`() {
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)
             }
@@ -65,7 +65,7 @@ class SystemPropertyConfigurationTest {
 
         @Test
         @AllowNetworkRequests
-        fun `should allow network with AllowNetwork even when system property is true`() {
+        fun `allows network with AllowNetwork even when system property is true`() {
             try {
                 Socket("example.com", 80)
             } catch (e: NetworkRequestAttemptedException) {
@@ -94,7 +94,7 @@ class SystemPropertyConfigurationTest {
         }
 
         @Test
-        fun `should NOT block network when system property is not set`() {
+        fun `does not block network when system property is not set`() {
             // Existing behavior - no blocking without annotation
             try {
                 Socket("example.com", 80)
@@ -107,7 +107,7 @@ class SystemPropertyConfigurationTest {
 
         @Test
         @BlockNetworkRequests
-        fun `should still block with NoNetworkTest when system property is not set`() {
+        fun `still block with NoNetworkTest when system property is not set`() {
             // Existing @BlockNetworkRequests behavior should still work
             assertFailsWith<NetworkRequestAttemptedException> {
                 Socket("example.com", 80)

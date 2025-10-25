@@ -133,7 +133,8 @@ class NoNetworkRule(
         }
 
         // Priority 3: @BlockNetworkRequests annotation
-        val hasBlockNetworkRequestsOnClass = description.testClass?.getAnnotation(BlockNetworkRequests::class.java) != null
+        val hasBlockNetworkRequestsOnClass =
+            description.testClass?.getAnnotation(BlockNetworkRequests::class.java) != null
 
         if (hasBlockNetworkRequestsOnClass) {
             return true

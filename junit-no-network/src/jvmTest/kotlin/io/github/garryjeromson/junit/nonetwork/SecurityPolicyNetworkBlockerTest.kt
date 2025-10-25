@@ -31,7 +31,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should block all network requests with empty allowed hosts`() {
+    fun `blocks all network requests with empty allowed hosts`() {
         val config = NetworkConfiguration() // Empty allowedHosts = block all
         val blocker = SecurityPolicyNetworkBlocker(config)
 
@@ -46,7 +46,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should block HTTPS connections`() {
+    fun `blocks HTTPS connections`() {
         val config = NetworkConfiguration()
         val blocker = SecurityPolicyNetworkBlocker(config)
 
@@ -62,7 +62,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should allow localhost connections by default`() {
+    fun `allows localhost connections by default`() {
         val config = NetworkConfiguration()
         val blocker = SecurityPolicyNetworkBlocker(config)
 
@@ -83,7 +83,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should allow 127_0_0_1 connections by default`() {
+    fun `allows 127_0_0_1 connections by default`() {
         val config = NetworkConfiguration()
         val blocker = SecurityPolicyNetworkBlocker(config)
 
@@ -101,7 +101,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should allow connections to hosts in allowedHosts`() {
+    fun `allows connections to hosts in allowedHosts`() {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("allowed.example.com"),
@@ -123,7 +123,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should block connections to hosts not in allowedHosts`() {
+    fun `blocks connections to hosts not in allowedHosts`() {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("allowed.example.com"),
@@ -141,7 +141,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should block hosts in blockedHosts even if allowedHosts contains wildcard`() {
+    fun `blocks hosts in blockedHosts even if allowedHosts contains wildcard`() {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("*"),
@@ -160,7 +160,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should allow wildcard patterns in allowedHosts`() {
+    fun `allows wildcard patterns in allowedHosts`() {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("*.example.com"),
@@ -181,7 +181,7 @@ class SecurityPolicyNetworkBlockerTest {
     }
 
     @Test
-    fun `should block root domain when wildcard pattern is used`() {
+    fun `blocks root domain when wildcard pattern is used`() {
         val config =
             NetworkConfiguration(
                 allowedHosts = setOf("*.example.com"),

@@ -22,15 +22,15 @@ import kotlin.test.fail
  */
 @RunWith(RobolectricTestRunner::class)
 class KtorClientRobolectricTest {
-
-    private fun makeKtorRequest(): String = runBlocking {
-        val client = HttpClient(OkHttp)
-        try {
-            client.get("https://example.com").toString()
-        } finally {
-            client.close()
+    private fun makeKtorRequest(): String =
+        runBlocking {
+            val client = HttpClient(OkHttp)
+            try {
+                client.get("https://example.com").toString()
+            } finally {
+                client.close()
+            }
         }
-    }
 
     @Test
     @BlockNetworkRequests
@@ -47,9 +47,9 @@ class KtorClientRobolectricTest {
             // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
             assertTrue(
                 e is NetworkRequestAttemptedException ||
-                e.cause is NetworkRequestAttemptedException ||
-                e.message?.contains("NetworkRequestAttemptedException") == true,
-                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}"
+                    e.cause is NetworkRequestAttemptedException ||
+                    e.message?.contains("NetworkRequestAttemptedException") == true,
+                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}",
             )
         }
     }
@@ -85,9 +85,9 @@ class KtorClientRobolectricTest {
         } catch (e: Exception) {
             assertTrue(
                 e is NetworkRequestAttemptedException ||
-                e.cause is NetworkRequestAttemptedException ||
-                e.message?.contains("NetworkRequestAttemptedException") == true,
-                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}"
+                    e.cause is NetworkRequestAttemptedException ||
+                    e.message?.contains("NetworkRequestAttemptedException") == true,
+                "Expected NetworkRequestAttemptedException but got: ${e::class.simpleName}: ${e.message}",
             )
         }
     }

@@ -193,7 +193,7 @@ class MyTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should not make network requests`() {
+    fun `does not make network requests`() {
         // This will throw NetworkRequestAttemptedException
         val connection = URL("http://example.com").openConnection()
         connection.connect()  // FAILS HERE

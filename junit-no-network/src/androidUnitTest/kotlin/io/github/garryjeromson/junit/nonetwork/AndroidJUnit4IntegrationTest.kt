@@ -45,7 +45,7 @@ class AndroidJUnit4IntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block network requests with JUnit 4 Rule on Android`() {
+    fun `blocks network requests with JUnit 4 Rule on Android`() {
         assertNetworkBlocked("JUnit 4 Rule should block network on Android") {
             Socket("example.com", 80)
         }
@@ -54,7 +54,7 @@ class AndroidJUnit4IntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
-    fun `should allow configured hosts with Rule on Android`() {
+    fun `allows configured hosts with Rule on Android`() {
         assertNetworkNotBlocked("JUnit 4 Rule should allow configured hosts on Android") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
         }
@@ -64,14 +64,14 @@ class AndroidJUnit4IntegrationTest {
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
     @BlockRequestsToHosts(hosts = ["evil.com"])
-    fun `should respect blocked hosts with Rule on Android`() {
+    fun `respects blocked hosts with Rule on Android`() {
         assertNetworkBlocked("JUnit 4 Rule should respect blocked hosts on Android") {
             Socket("evil.com", 80)
         }
     }
 
     @Test
-    fun `should not block without annotation on Android`() {
+    fun `does not block without annotation on Android`() {
         // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("JUnit 4 should not block without annotation on Android") {
             try {
@@ -84,7 +84,7 @@ class AndroidJUnit4IntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should work across multiple tests in same class on Android`() {
+    fun `works across multiple tests in same class on Android`() {
         // Verify that the rule properly installs/uninstalls between tests
         assertNetworkBlocked("Multiple JUnit 4 tests should work on Android") {
             Socket("example.com", 80)
@@ -94,7 +94,7 @@ class AndroidJUnit4IntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
-    fun `should support IP addresses with Rule on Android`() {
+    fun `supports IP addresses with Rule on Android`() {
         assertNetworkNotBlocked("JUnit 4 Rule should support IP addresses on Android") {
             Socket("127.0.0.1", MockHttpServer.DEFAULT_PORT)
         }
@@ -103,7 +103,7 @@ class AndroidJUnit4IntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*.trusted.com", "localhost", "127.0.0.1"])
-    fun `should support multiple allowed hosts with wildcards on Android`() {
+    fun `supports multiple allowed hosts with wildcards on Android`() {
         assertNetworkNotBlocked("Multiple allowed hosts should work on Android") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
         }
@@ -115,7 +115,7 @@ class AndroidJUnit4IntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block HTTPS connections with Rule on Android`() {
+    fun `blocks HTTPS connections with Rule on Android`() {
         assertNetworkBlocked("HTTPS should be blocked with JUnit 4 Rule on Android") {
             try {
                 URL("https://example.com").openConnection().connect()

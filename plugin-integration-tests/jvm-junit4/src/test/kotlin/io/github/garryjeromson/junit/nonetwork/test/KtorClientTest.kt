@@ -16,15 +16,15 @@ import kotlin.test.fail
  * with both @BlockNetworkRequests and @AllowNetworkRequests annotations.
  */
 class KtorClientTest {
-
-    private fun makeKtorRequest(): String = runBlocking {
-        val client = HttpClient(CIO)
-        try {
-            client.get("https://example.com").toString()
-        } finally {
-            client.close()
+    private fun makeKtorRequest(): String =
+        runBlocking {
+            val client = HttpClient(CIO)
+            try {
+                client.get("https://example.com").toString()
+            } finally {
+                client.close()
+            }
         }
-    }
 
     @Test
     @BlockNetworkRequests

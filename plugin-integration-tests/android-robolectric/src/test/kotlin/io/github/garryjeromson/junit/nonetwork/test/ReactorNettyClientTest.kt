@@ -25,7 +25,6 @@ import kotlin.test.fail
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [26])
 class ReactorNettyClientTest {
-
     /**
      * Creates an HttpClient with minimal DNS caching.
      * This is necessary to ensure test isolation and proper network blocking.
@@ -34,14 +33,14 @@ class ReactorNettyClientTest {
      * @AllowNetworkRequests tests, causing subsequent @BlockNetworkRequests tests
      * to use the cached results and bypass socket creation (and thus bypass blocking).
      */
-    private fun createReactorNettyClient(): HttpClient {
-        return HttpClient.create()
+    private fun createReactorNettyClient(): HttpClient =
+        HttpClient
+            .create()
             .resolver { spec ->
                 // Use minimal DNS cache TTL (1 second) to ensure test isolation
                 // Netty's TTL resolution is in seconds, so 1 second is the minimum
                 spec.cacheMaxTimeToLive(Duration.ofSeconds(1))
             }
-    }
 
     private fun makeReactorNettyRequest(): String? {
         val client = createReactorNettyClient()

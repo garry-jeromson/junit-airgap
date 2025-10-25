@@ -21,29 +21,30 @@ import kotlin.test.fail
  */
 @RunWith(RobolectricTestRunner::class)
 class KtorClientTest {
-
-    private fun makeKtorRequest(): String = runBlocking {
-        val client = HttpClient(OkHttp)
-        try {
-            client.get("https://example.com").toString()
-        } finally {
-            client.close()
+    private fun makeKtorRequest(): String =
+        runBlocking {
+            val client = HttpClient(OkHttp)
+            try {
+                client.get("https://example.com").toString()
+            } finally {
+                client.close()
+            }
         }
-    }
 
     @Test
     @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTest() {
-        val exception = assertFailsWith<Exception> {
-            makeKtorRequest()
-        }
+        val exception =
+            assertFailsWith<Exception> {
+                makeKtorRequest()
+            }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
         // Check if it's either the exception itself or in the cause chain
         assertTrue(
             exception is NetworkRequestAttemptedException ||
-            exception.cause is NetworkRequestAttemptedException ||
-            exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}"
+                exception.cause is NetworkRequestAttemptedException ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true,
+            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
         )
     }
 
@@ -63,16 +64,17 @@ class KtorClientTest {
     @Test
     @BlockNetworkRequests
     fun `ktor client with spaces in test name is blocked on Android`() {
-        val exception = assertFailsWith<Exception> {
-            makeKtorRequest()
-        }
+        val exception =
+            assertFailsWith<Exception> {
+                makeKtorRequest()
+            }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException
         // Check if it's either the exception itself or in the cause chain
         assertTrue(
             exception is NetworkRequestAttemptedException ||
-            exception.cause is NetworkRequestAttemptedException ||
-            exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}"
+                exception.cause is NetworkRequestAttemptedException ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true,
+            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
         )
     }
 }

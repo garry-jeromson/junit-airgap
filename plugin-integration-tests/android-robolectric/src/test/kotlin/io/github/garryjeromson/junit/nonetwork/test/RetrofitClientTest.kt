@@ -23,10 +23,12 @@ class RetrofitClientTest {
     }
 
     private fun makeRetrofitRequest(): String {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://example.com/")
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .build()
+        val retrofit =
+            Retrofit
+                .Builder()
+                .baseUrl("https://example.com/")
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build()
         val api = retrofit.create(TestApi::class.java)
         val response = api.getData().execute()
         return response.body() ?: ""

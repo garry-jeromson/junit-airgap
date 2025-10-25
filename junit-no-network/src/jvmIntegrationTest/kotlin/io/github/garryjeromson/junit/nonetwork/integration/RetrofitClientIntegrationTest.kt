@@ -50,7 +50,7 @@ class RetrofitClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Retrofit calls to external host`() {
+    fun `blocks Retrofit calls to external host`() {
         assertNetworkBlocked("Retrofit should be blocked") {
             val retrofit =
                 Retrofit
@@ -67,7 +67,7 @@ class RetrofitClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
-    fun `should allow Retrofit calls to localhost`() {
+    fun `allows Retrofit calls to localhost`() {
         assertNetworkNotBlocked("Retrofit to localhost should work") {
             val retrofit =
                 Retrofit
@@ -84,7 +84,7 @@ class RetrofitClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block Retrofit calls to HTTPS endpoints`() {
+    fun `blocks Retrofit calls to HTTPS endpoints`() {
         assertNetworkBlocked("Retrofit HTTPS should be blocked") {
             val retrofit =
                 Retrofit
@@ -101,7 +101,7 @@ class RetrofitClientIntegrationTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*"])
-    fun `should allow Retrofit when wildcard is configured`() {
+    fun `allows Retrofit when wildcard is configured`() {
         assertNetworkNotBlocked("Retrofit should work with wildcard") {
             val retrofit =
                 Retrofit

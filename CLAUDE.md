@@ -230,6 +230,36 @@ Apply ktlint formatting to benchmark module
 - **Plugin integration tests** for different project types
 - **Benchmark tests** for performance tracking (informational only)
 
+### Test Naming Conventions
+
+Tests should use **declarative naming** that describes what the test IS testing, not what it "should" do.
+
+**Good (declarative):**
+```kotlin
+@Test
+fun `blocks HTTP requests to external hosts`()
+
+@Test
+fun `allows requests to localhost`()
+
+@Test
+fun `supports wildcard patterns in allowed hosts`()
+```
+
+**Bad (prescriptive):**
+```kotlin
+@Test
+fun `should block HTTP requests to external hosts`()  // ❌ Don't use "should"
+
+@Test
+fun `should allow requests to localhost`()  // ❌ Don't use "should"
+
+@Test
+fun `should support wildcard patterns in allowed hosts`()  // ❌ Don't use "should"
+```
+
+**Rationale**: Declarative names are more concise and read naturally in test reports. They describe the behavior directly rather than expressing an expectation.
+
 ## Performance Notes
 
 - JVM tests: ~10-30 seconds

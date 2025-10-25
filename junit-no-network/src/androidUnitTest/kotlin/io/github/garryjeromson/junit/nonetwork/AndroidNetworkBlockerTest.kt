@@ -27,7 +27,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should block socket connection to external host`() {
+    fun `blocks socket connection to external host`() {
         // Given: A blocker with empty allowlist (blocks all)
         val config = NetworkConfiguration(allowedHosts = emptySet())
         blocker = NetworkBlocker(config)
@@ -45,7 +45,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should allow socket connection to localhost`() {
+    fun `allows socket connection to localhost`() {
         // Given: A blocker that allows localhost
         val config =
             NetworkConfiguration(
@@ -70,7 +70,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should block HttpURLConnection to external host`() {
+    fun `blocks HttpURLConnection to external host`() {
         // Given: A blocker with empty allowlist
         val config = NetworkConfiguration(allowedHosts = emptySet())
         blocker = NetworkBlocker(config)
@@ -89,7 +89,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should respect wildcard patterns`() {
+    fun `respects wildcard patterns`() {
         // Given: A blocker that allows *.local
         val config =
             NetworkConfiguration(
@@ -111,7 +111,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should uninstall and allow connections`() {
+    fun `uninstalls and allow connections`() {
         // Given: A blocker that blocks all
         val config = NetworkConfiguration(allowedHosts = emptySet())
         blocker = NetworkBlocker(config)
@@ -133,7 +133,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should be idempotent when installing multiple times`() {
+    fun `is idempotent when installing multiple times`() {
         // Given: A blocker
         val config = NetworkConfiguration(allowedHosts = emptySet())
         blocker = NetworkBlocker(config)
@@ -153,7 +153,7 @@ class AndroidNetworkBlockerTest {
     }
 
     @Test
-    fun `should be idempotent when uninstalling multiple times`() {
+    fun `is idempotent when uninstalling multiple times`() {
         // Given: An installed blocker
         val config = NetworkConfiguration(allowedHosts = emptySet())
         blocker = NetworkBlocker(config)

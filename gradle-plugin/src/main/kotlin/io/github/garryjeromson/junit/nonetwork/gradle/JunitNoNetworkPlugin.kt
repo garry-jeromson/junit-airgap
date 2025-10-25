@@ -413,7 +413,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             }
         }
 
-        project.logger.info("Configured JUnit 4 rule injection for KMP project with automatic task wiring (Debug and Release variants)")
+        project.logger.info(
+            "Configured JUnit 4 rule injection for KMP project with automatic task wiring (Debug and Release variants)",
+        )
     }
 
     private fun configureKmpAndroidVariantInjection(

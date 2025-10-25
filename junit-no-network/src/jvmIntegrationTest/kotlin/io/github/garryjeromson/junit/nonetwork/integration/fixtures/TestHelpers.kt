@@ -28,7 +28,9 @@ fun assertNetworkBlocked(
             cause = cause.cause
         }
         if (!foundNetworkException) {
-            fail("$message - but got ${e.javaClass.simpleName} instead of NetworkRequestAttemptedException: ${e.message}")
+            fail(
+                "$message - but got ${e.javaClass.simpleName} instead of NetworkRequestAttemptedException: ${e.message}",
+            )
         }
         // If we found NetworkRequestAttemptedException in the cause chain, that's expected
     }

@@ -39,7 +39,7 @@ class ConfigurationIntegrationTest {
     }
 
     @Test
-    fun `should inherit class-level configuration`() {
+    fun `inherits class-level configuration`() {
         // Class allows localhost, so this should work
         assertNetworkNotBlocked("Should inherit class-level allowed hosts") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
@@ -53,7 +53,7 @@ class ConfigurationIntegrationTest {
 
     @Test
     @AllowRequestsToHosts(hosts = ["192.168.1.1"]) // Method specifies additional host
-    fun `should merge method-level configuration with class-level`() {
+    fun `merges method-level configuration with class-level`() {
         // NOTE: Current implementation MERGES annotations from class and method
         // So this test has both class-level (localhost, 127.0.0.1) AND method-level (192.168.1.1)
 
@@ -71,7 +71,7 @@ class ConfigurationIntegrationTest {
     @Test
     @AllowRequestsToHosts(hosts = ["*"])
     @BlockRequestsToHosts(hosts = ["evil.com", "malicious.example.com"])
-    fun `should block specific hosts even with wildcard allowed`() {
+    fun `blocks specific hosts even with wildcard allowed`() {
         // Wildcard allows most hosts
         assertNetworkNotBlocked("Wildcard should allow most hosts") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
@@ -89,7 +89,7 @@ class ConfigurationIntegrationTest {
 
     @Test
     @AllowRequestsToHosts(hosts = ["*.example.com"])
-    fun `should support wildcard subdomain patterns`() {
+    fun `supports wildcard subdomain patterns`() {
         // *.example.com should match subdomains
         assertNetworkBlocked("Root domain should not match subdomain pattern") {
             Socket("example.com", 80)
@@ -103,7 +103,7 @@ class ConfigurationIntegrationTest {
 
     @Test
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "::1"])
-    fun `should support multiple allowed hosts`() {
+    fun `supports multiple allowed hosts`() {
         // All localhost variants should work
         assertNetworkNotBlocked("localhost should be allowed") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
@@ -116,7 +116,7 @@ class ConfigurationIntegrationTest {
 
     @Test
     @BlockRequestsToHosts(hosts = ["localhost"]) // Block localhost even though class allows it
-    fun `should respect method-level blocked hosts over class-level allowed`() {
+    fun `respects method-level blocked hosts over class-level allowed`() {
         // Blocked should take precedence
         assertNetworkBlocked("Method-level blocked should override class-level allowed") {
             Socket("localhost", MockHttpServer.DEFAULT_PORT)
@@ -125,7 +125,7 @@ class ConfigurationIntegrationTest {
 
     @Test
     @AllowRequestsToHosts(hosts = ["192.168.*.*", "10.*.*.*"])
-    fun `should support IP address wildcard patterns`() {
+    fun `supports IP address wildcard patterns`() {
         // These would match if we actually resolved to those IPs
         // We're testing the pattern matching logic works
         assertNetworkBlocked("Non-matching IP should be blocked") {

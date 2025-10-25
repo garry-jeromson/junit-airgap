@@ -22,7 +22,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block API calls in unit tests`() {
+    fun `blocks API calls in unit tests`() {
         // Simulate a test that accidentally calls a real API
         assertNetworkBlocked("Real API calls should be blocked in unit tests") {
             val url = URL("https://api.github.com/users/test")
@@ -32,7 +32,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block database connections to remote hosts`() {
+    fun `blocks database connections to remote hosts`() {
         // Simulate attempt to connect to remote database
         assertNetworkBlocked("Remote database connections should be blocked") {
             Socket("db.example.com", 5432) // PostgreSQL port
@@ -42,7 +42,7 @@ class RealWorldScenariosTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"]) // Need both since DNS resolves
-    fun `should allow local database connections`() {
+    fun `allows local database connections`() {
         // Simulate connection to local database (would need actual DB running)
         assertNetworkNotBlocked("Local database should be allowed") {
             try {
@@ -55,7 +55,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should NOT block file I-O operations`() {
+    fun `does not block file I-O operations`() {
         // Verify that file operations still work
         val testFile = File(tempDir, "test.txt")
         testFile.writeText("Hello, World!")
@@ -66,7 +66,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block HTTP requests to CDNs`() {
+    fun `blocks HTTP requests to CDNs`() {
         assertNetworkBlocked("CDN requests should be blocked") {
             URL("https://cdn.jsdelivr.net/npm/package@1.0.0/file.js").openConnection().connect()
         }
@@ -74,7 +74,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should block analytics and tracking`() {
+    fun `blocks analytics and tracking`() {
         assertNetworkBlocked("Analytics should be blocked") {
             Socket("analytics.google.com", 443)
         }
@@ -87,7 +87,7 @@ class RealWorldScenariosTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1", "testcontainers.local"])
-    fun `should allow TestContainers-like scenarios`() {
+    fun `allows TestContainers-like scenarios`() {
         // Simulate testcontainers usage where we allow localhost
         assertNetworkNotBlocked("Local test containers should work") {
             try {
@@ -100,7 +100,7 @@ class RealWorldScenariosTest {
 
     @Test
     @BlockNetworkRequests
-    fun `should provide clear error messages for blocked requests`() {
+    fun `provides clear error messages for blocked requests`() {
         try {
             // Use URL.openConnection() which calls connect with actual port
             val url = URL("http://api.example.com:8080/test")
@@ -122,7 +122,7 @@ class RealWorldScenariosTest {
     }
 
     @Test
-    fun `should NOT block requests when annotation is absent`() {
+    fun `does not block requests when annotation is absent`() {
         // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("Network should not be blocked without annotation") {
             try {
@@ -139,7 +139,7 @@ class RealWorldScenariosTest {
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(hosts = ["*.internal", "*.local"])
-    fun `should support internal network patterns`() {
+    fun `supports internal network patterns`() {
         // Test that internal network patterns work
         assertNetworkBlocked("External networks should be blocked") {
             Socket("public-api.example.com", 80)

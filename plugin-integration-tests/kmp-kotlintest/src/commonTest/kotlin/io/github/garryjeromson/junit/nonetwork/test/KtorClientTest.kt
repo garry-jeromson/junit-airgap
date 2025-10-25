@@ -17,20 +17,20 @@ import kotlin.test.fail
  * - Android: OkHttp engine
  */
 class KtorClientTest {
-
     @Test
     @BlockNetworkRequests
     fun ktorClientIsBlockedWithNoNetworkTest() {
-        val exception = assertFailsWith<Exception> {
-            makeKtorRequest()
-        }
+        val exception =
+            assertFailsWith<Exception> {
+                makeKtorRequest()
+            }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
         // Check if it's either the exception itself or in the cause chain
         assertTrue(
             exception is NetworkRequestAttemptedException ||
-            exception.cause is NetworkRequestAttemptedException ||
-            exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}"
+                exception.cause is NetworkRequestAttemptedException ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true,
+            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
         )
     }
 
@@ -50,16 +50,17 @@ class KtorClientTest {
     @Test
     @BlockNetworkRequests
     fun `ktor client with spaces in test name is blocked in kotlin test`() {
-        val exception = assertFailsWith<Exception> {
-            makeKtorRequest()
-        }
+        val exception =
+            assertFailsWith<Exception> {
+                makeKtorRequest()
+            }
         // Ktor/OkHttp wraps NetworkRequestAttemptedException in IOException on Android
         // Check if it's either the exception itself or in the cause chain
         assertTrue(
             exception is NetworkRequestAttemptedException ||
-            exception.cause is NetworkRequestAttemptedException ||
-            exception.message?.contains("NetworkRequestAttemptedException") == true,
-            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}"
+                exception.cause is NetworkRequestAttemptedException ||
+                exception.message?.contains("NetworkRequestAttemptedException") == true,
+            "Expected NetworkRequestAttemptedException but got: ${exception::class.simpleName}: ${exception.message}",
         )
     }
 }
