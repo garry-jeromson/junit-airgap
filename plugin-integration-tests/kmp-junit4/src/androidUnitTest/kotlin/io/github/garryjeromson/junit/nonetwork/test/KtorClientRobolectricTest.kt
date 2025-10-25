@@ -34,10 +34,10 @@ class KtorClientRobolectricTest {
 
     @Test
     @NoNetworkTest
-    fun ktorClientShouldBeBlockedWithNoNetworkTestOnAndroid() {
+    fun ktorClientIsBlockedWithNoNetworkTestOnAndroid() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Should have Android context via Robolectric")
+        assertNotNull(context, "Has Android context via Robolectric")
 
         // Verify network blocking works
         try {
@@ -56,16 +56,16 @@ class KtorClientRobolectricTest {
 
     @Test
     @AllowNetwork
-    fun ktorClientShouldBeAllowedWithAllowNetworkOnAndroid() {
+    fun ktorClientIsAllowedWithAllowNetworkOnAndroid() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Should have Android context via Robolectric")
+        assertNotNull(context, "Has Android context via Robolectric")
 
         // Verify network is allowed
         try {
             makeKtorRequest()
         } catch (e: NetworkRequestAttemptedException) {
-            fail("Network should be allowed with @AllowNetwork, but was blocked: ${e.message}")
+            fail("Network is allowed with @AllowNetwork, but was blocked: ${e.message}")
         } catch (e: Exception) {
             // Other exceptions (like actual network errors) are fine
         }
@@ -76,7 +76,7 @@ class KtorClientRobolectricTest {
     fun `ktor client with Robolectric and spaces in test name works on Android`() {
         // Verify we're running with Robolectric
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Should have Android context via Robolectric")
+        assertNotNull(context, "Has Android context via Robolectric")
 
         // Verify network blocking works
         try {

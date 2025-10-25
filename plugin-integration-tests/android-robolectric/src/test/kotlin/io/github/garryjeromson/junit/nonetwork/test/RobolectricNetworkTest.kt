@@ -22,9 +22,9 @@ class RobolectricNetworkTest {
     fun canUseAndroidContextWithNetworkBlocking() {
         // Verify Robolectric provides Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Android context should be available")
-        assertNotNull(context.packageManager, "PackageManager should be available")
-        assertNotNull(context.packageName, "Package name should be available")
+        assertNotNull(context, "Android context is available")
+        assertNotNull(context.packageManager, "PackageManager is available")
+        assertNotNull(context.packageName, "Package name is available")
     }
 
     @Test
@@ -38,7 +38,7 @@ class RobolectricNetworkTest {
 
         // Read data back
         val value = prefs.getString("test_key", null)
-        assertEquals("test_value", value, "SharedPreferences should work with network blocking")
+        assertEquals("test_value", value, "SharedPreferences works with network blocking")
     }
 
     @Test
@@ -47,16 +47,16 @@ class RobolectricNetworkTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         // Test various Android APIs work with @AllowNetwork
-        assertNotNull(context.resources, "Resources should be available")
-        assertNotNull(context.contentResolver, "ContentResolver should be available")
-        assertNotNull(context.applicationInfo, "ApplicationInfo should be available")
+        assertNotNull(context.resources, "Resources are available")
+        assertNotNull(context.contentResolver, "ContentResolver is available")
+        assertNotNull(context.applicationInfo, "ApplicationInfo is available")
     }
 
     @Test
     @NoNetworkTest
-    fun `test names with spaces should work with bytecode injection`() {
+    fun `test names with spaces work with bytecode injection`() {
         // Verify that Kotlin backtick syntax (spaces in method names) works with ByteBuddy injection
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Context should be available even with spaces in test name")
+        assertNotNull(context, "Context is available even with spaces in test name")
     }
 }

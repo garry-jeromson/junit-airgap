@@ -20,29 +20,29 @@ import kotlin.test.assertNotNull
 class NetworkBlockingTest {
     @Test
     @NoNetworkTest
-    fun networkShouldBeBlockedWithNoNetworkTest() {
+    fun networkIsBlockedWithNoNetworkTest() {
         // Verify we can access Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Android context should be available via Robolectric")
+        assertNotNull(context, "Android context is available via Robolectric")
 
-        // Network should be blocked - expect exception
-        assertFailsWith<NetworkRequestAttemptedException>("Network should be blocked") {
+        // Network is blocked - expect exception
+        assertFailsWith<NetworkRequestAttemptedException>("Network is blocked") {
             Socket("example.com", 80).use { }
         }
     }
 
     @Test
     @AllowNetwork
-    fun networkShouldBeAllowedWithAllowNetwork() {
+    fun networkIsAllowedWithAllowNetwork() {
         // Verify we can access Android framework
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context, "Android context should be available via Robolectric")
+        assertNotNull(context, "Android context is available via Robolectric")
 
-        // Network should be allowed - may throw IOException but not NetworkRequestAttemptedException
+        // Network is allowed - may throw IOException but not NetworkRequestAttemptedException
         try {
             Socket("example.com", 80).close()
         } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network should NOT be blocked with @AllowNetwork", e)
+            throw AssertionError("Network is NOT blocked with @AllowNetwork", e)
         } catch (e: Exception) {
             // Other exceptions (no internet, DNS failure, etc.) are OK
         }

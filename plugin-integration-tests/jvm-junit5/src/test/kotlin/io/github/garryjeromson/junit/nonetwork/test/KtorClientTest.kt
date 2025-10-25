@@ -28,7 +28,7 @@ class KtorClientTest {
 
     @Test
     @NoNetworkTest
-    fun ktorClientShouldBeBlockedWithNoNetworkTest() {
+    fun ktorClientIsBlockedWithNoNetworkTest() {
         assertFailsWith<NetworkRequestAttemptedException> {
             makeKtorRequest()
         }
@@ -36,11 +36,11 @@ class KtorClientTest {
 
     @Test
     @AllowNetwork
-    fun ktorClientShouldBeAllowedWithAllowNetwork() {
+    fun ktorClientIsAllowedWithAllowNetwork() {
         try {
             makeKtorRequest()
         } catch (e: NetworkRequestAttemptedException) {
-            fail("Network should be allowed with @AllowNetwork, but was blocked: ${e.message}")
+            fail("Network is allowed with @AllowNetwork, but was blocked: ${e.message}")
         } catch (e: Exception) {
             // Other exceptions (like actual network errors) are fine - we just want to ensure
             // NetworkRequestAttemptedException is not thrown
@@ -49,7 +49,7 @@ class KtorClientTest {
 
     @Test
     @NoNetworkTest
-    fun `ktor client with spaces in test name should be blocked`() {
+    fun `ktor client with spaces in test name is blocked`() {
         assertFailsWith<NetworkRequestAttemptedException> {
             makeKtorRequest()
         }

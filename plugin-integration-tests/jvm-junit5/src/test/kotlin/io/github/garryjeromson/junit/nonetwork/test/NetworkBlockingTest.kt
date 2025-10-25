@@ -13,21 +13,21 @@ import kotlin.test.assertFailsWith
 class NetworkBlockingTest {
     @Test
     @NoNetworkTest
-    fun `network should be blocked with NoNetworkTest`() {
-        // Network should be blocked - expect exception
-        assertFailsWith<NetworkRequestAttemptedException>("Network should be blocked") {
+    fun `network is blocked with NoNetworkTest`() {
+        // Network is blocked - expect exception
+        assertFailsWith<NetworkRequestAttemptedException>("Network is blocked") {
             Socket("example.com", 80).use { }
         }
     }
 
     @Test
     @AllowNetwork
-    fun `network should be allowed with AllowNetwork`() {
-        // Network should be allowed - may throw IOException but not NetworkRequestAttemptedException
+    fun `network is allowed with AllowNetwork`() {
+        // Network is allowed - may throw IOException but not NetworkRequestAttemptedException
         try {
             Socket("example.com", 80).close()
         } catch (e: NetworkRequestAttemptedException) {
-            throw AssertionError("Network should NOT be blocked with @AllowNetwork", e)
+            throw AssertionError("Network is NOT blocked with @AllowNetwork", e)
         } catch (e: Exception) {
             // Other exceptions (no internet, DNS failure, etc.) are OK
         }
