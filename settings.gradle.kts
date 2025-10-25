@@ -17,5 +17,6 @@ dependencyResolutionManagement {
 }
 
 include(":junit-no-network")
+include(":gradle-plugin")
 include(":integration-test-app")
 include(":benchmark")

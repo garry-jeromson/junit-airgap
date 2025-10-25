@@ -110,6 +110,61 @@ class MyTest {
 
 ## Installation
 
+### 🚀 Gradle Plugin (Recommended - Simplest Setup)
+
+The easiest way to use this library is via the Gradle plugin. It automatically handles dependency management and configuration:
+
+```kotlin
+plugins {
+    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+}
+
+junitNoNetwork {
+    enabled = true
+    applyToAllTests = true  // Block network by default, opt-out with @AllowNetwork
+}
+```
+
+**That's it!** The plugin automatically:
+- ✅ Adds the library dependency to your test classpath
+- ✅ Creates `junit-platform.properties` for JUnit 5 auto-detection
+- ✅ Configures test tasks with appropriate system properties
+- ✅ Works with JVM, Android, and Kotlin Multiplatform projects
+
+**Next steps:** See the [Usage](#usage) section to learn about `@NoNetworkTest` and `@AllowNetwork` annotations.
+
+#### Plugin Configuration Reference
+
+```kotlin
+junitNoNetwork {
+    // Whether the plugin is enabled (default: true)
+    enabled = true
+
+    // Apply network blocking to all tests by default (default: false)
+    // When true: tests block network unless annotated with @AllowNetwork
+    // When false: tests only block when annotated with @NoNetworkTest
+    applyToAllTests = false
+
+    // Library version to use (default: matches plugin version)
+    libraryVersion = "0.1.0-SNAPSHOT"
+
+    // List of allowed host patterns (optional)
+    allowedHosts = listOf("localhost", "*.test.local")
+
+    // List of blocked host patterns (optional)
+    blockedHosts = listOf("evil.com", "*.tracking.com")
+
+    // Enable debug logging (default: false)
+    debug = false
+}
+```
+
+---
+
+### Manual Installation
+
+If you prefer not to use the Gradle plugin, you can manually configure the library:
+
 **Quick Reference:**
 
 | Project Type | Dependency Configuration | Configuration Function |
@@ -126,7 +181,7 @@ See the [Usage](#usage) section for detailed setup instructions.
 
 ---
 
-### Kotlin Multiplatform Projects
+### Kotlin Multiplatform Projects (Manual)
 
 For Kotlin Multiplatform (KMP) projects, you can use a **single artifact ID** without platform suffixes. Gradle's variant-aware dependency resolution automatically selects the correct platform variant (`-jvm`, `-android`, `-ios`) based on your target.
 
@@ -345,15 +400,27 @@ When you use the root artifact (`junit-no-network`), Gradle automatically select
 
 ## Zero-Configuration Setup (JUnit 5 Only)
 
-For the ultimate convenience, you can enable network blocking for **all tests globally** without modifying any test source code. This approach uses JUnit 5's automatic extension registration via ServiceLoader.
+For the ultimate convenience, you can enable network blocking for **all tests globally** without modifying test source code.
 
-### How It Works
+### 🎯 Best Option: Use the Gradle Plugin
 
-1. **Add the dependency** (as shown in [Installation](#installation))
-2. **Enable automatic extension detection** via configuration file or system property
-3. **Enable network blocking** for all tests by default
+The **Gradle plugin** provides true zero-configuration:
 
-That's it! No `@ExtendWith`, no `@Rule`, no code changes needed in your tests.
+```kotlin
+plugins {
+    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+}
+
+junitNoNetwork {
+    applyToAllTests = true
+}
+```
+
+That's it! The plugin automatically handles everything. See [Gradle Plugin](#-gradle-plugin-recommended---simplest-setup) for details.
+
+### Alternative: Manual Configuration
+
+If you can't use the Gradle plugin, you can manually configure zero-configuration setup using JUnit 5's ServiceLoader mechanism.
 
 ### Setup Steps
 
@@ -361,25 +428,60 @@ That's it! No `@ExtendWith`, no `@Rule`, no code changes needed in your tests.
 
 Add the library dependency as described in the [Installation](#installation) section above. The extension will be automatically discovered via Java's ServiceLoader mechanism.
 
-#### Step 2: Create Configuration File
+#### Step 2: Enable Auto-Detection
 
-Create `src/test/resources/junit-platform.properties` with the following content:
+Create `src/test/resources/junit-platform.properties`:
 
 ```properties
 # Enable JUnit 5's automatic extension discovery
 junit.jupiter.extensions.autodetection.enabled=true
-
-# Enable network blocking for all tests by default
-junit.nonetwork.applyToAllTests=true
 ```
 
-**For KMP projects**, create this file in your platform-specific test resources:
-- JVM: `src/jvmTest/resources/junit-platform.properties`
-- Android: `src/androidUnitTest/resources/junit-platform.properties`
+**For KMP projects**: `src/jvmTest/resources/junit-platform.properties` or `src/androidUnitTest/resources/junit-platform.properties`
 
-#### Step 3: Run Your Tests
+#### Step 3: Choose Global or Per-Class Configuration
 
-All tests now automatically block network requests without any code changes:
+**Option A: Per-Class (Recommended for Mixed Projects)**
+
+Use `@RegisterExtension` in test classes that need network blocking by default:
+
+```kotlin
+class MyTest {
+    @JvmField
+    @RegisterExtension
+    val extension = NoNetworkExtension(applyToAllTests = true)
+
+    @Test
+    fun `all tests block network by default`() { }
+
+    @Test
+    @AllowNetwork
+    fun `except this one`() { }
+}
+```
+
+**Benefits:**
+- ✅ No interference with other tests
+- ✅ Clear which tests have blocking enabled
+- ✅ Works well in projects with mixed test types
+
+**Option B: Global (For Projects Where 90%+ Tests Should Block)**
+
+Add to `junit-platform.properties`:
+
+```properties
+junit.jupiter.extensions.autodetection.enabled=true
+junit.nonetwork.applyToAllTests=true  # ⚠️ Affects ALL tests!
+```
+
+⚠️ **Warning**: This affects ALL tests in the module, including:
+- Tests using `@ExtendWith` that only annotate specific methods with `@NoNetworkTest`
+- Integration tests that may need network access
+- Tests with custom `@RegisterExtension` configurations (unless they explicitly set `applyToAllTests = false`)
+
+Only use this approach if you're starting a new project or can ensure all tests are compatible with default network blocking.
+
+Then all tests automatically block without code changes:
 
 ```kotlin
 class MyTest {
