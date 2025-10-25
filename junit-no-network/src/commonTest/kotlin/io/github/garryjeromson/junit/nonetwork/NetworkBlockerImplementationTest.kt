@@ -52,6 +52,40 @@ class NetworkBlockerImplementationTest {
     }
 
     @Test
+    fun `has SOCKET_IMPL_FACTORY implementation`() {
+        val impl = NetworkBlockerImplementation.SOCKET_IMPL_FACTORY
+        assertEquals("SOCKET_IMPL_FACTORY", impl.name)
+    }
+
+    @Test
+    fun `has JVMTI implementation`() {
+        val impl = NetworkBlockerImplementation.JVMTI
+        assertEquals("JVMTI", impl.name)
+    }
+
+    @Test
+    fun `parses socketimplfactory string to SOCKET_IMPL_FACTORY`() {
+        assertEquals(
+            NetworkBlockerImplementation.SOCKET_IMPL_FACTORY,
+            NetworkBlockerImplementation.fromString("socketimplfactory"),
+        )
+        assertEquals(
+            NetworkBlockerImplementation.SOCKET_IMPL_FACTORY,
+            NetworkBlockerImplementation.fromString("socket-impl-factory"),
+        )
+        assertEquals(
+            NetworkBlockerImplementation.SOCKET_IMPL_FACTORY,
+            NetworkBlockerImplementation.fromString("SOCKETIMPLFACTORY"),
+        )
+    }
+
+    @Test
+    fun `parses jvmti string to JVMTI`() {
+        assertEquals(NetworkBlockerImplementation.JVMTI, NetworkBlockerImplementation.fromString("jvmti"))
+        assertEquals(NetworkBlockerImplementation.JVMTI, NetworkBlockerImplementation.fromString("JVMTI"))
+    }
+
+    @Test
     fun `parses auto string to AUTO`() {
         assertEquals(NetworkBlockerImplementation.AUTO, NetworkBlockerImplementation.fromString("auto"))
         assertEquals(NetworkBlockerImplementation.AUTO, NetworkBlockerImplementation.fromString("AUTO"))

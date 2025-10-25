@@ -48,4 +48,22 @@ void StoreOriginalFunction(const std::string& key, void* address);
 // Socket interception functions
 void* InstallNetConnect0Wrapper(void* original_address);
 
+// Cached NetworkBlockerContext class and method references
+// These are set by registerWithAgent() called from Java
+extern jclass g_network_blocker_context_class;
+extern jmethodID g_check_connection_method;
+extern std::mutex g_context_mutex;
+
+// Get cached context class and method (thread-safe)
+jclass GetNetworkBlockerContextClass();
+jmethodID GetCheckConnectionMethod();
+
+// Registration function called from Java to cache class/method references
+extern "C" {
+    JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_NetworkBlockerContext_registerWithAgent(
+        JNIEnv* env,
+        jclass clazz
+    );
+}
+
 #endif // JUNIT_NO_NETWORK_AGENT_H

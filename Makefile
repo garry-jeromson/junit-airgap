@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-jvm test-android test-integration test-socketimpl test-jvm-socketimpl test-integration-socketimpl test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
+.PHONY: help build clean test test-jvm test-android test-integration test-socketimpl test-jvm-socketimpl test-integration-socketimpl test-integration-jvmti test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
 
 # Default Java version for the project (uses Java 17 toolchain internally)
 JAVA_VERSION ?= 21
@@ -41,10 +41,11 @@ help:
 	@echo "  test-integration-socketimpl Run integration tests using SocketImplFactory"
 	@echo ""
 	@echo "Native Agent Commands (JVMTI Implementation):"
-	@echo "  setup-native       Install native build dependencies (CMake)"
-	@echo "  build-native       Build JVMTI native agent (.dylib/.so/.dll)"
-	@echo "  test-native        Run native agent tests (AgentLoadTest, SocketInterceptTest)"
-	@echo "  clean-native       Clean native build artifacts"
+	@echo "  setup-native            Install native build dependencies (CMake)"
+	@echo "  build-native            Build JVMTI native agent (.dylib/.so/.dll)"
+	@echo "  test-native             Run native agent tests (AgentLoadTest, SocketInterceptTest)"
+	@echo "  test-integration-jvmti  Run integration tests using ONLY JVMTI (no SecurityManager)"
+	@echo "  clean-native            Clean native build artifacts"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark          Run all performance benchmarks (JVM + Android)"
@@ -277,6 +278,11 @@ test-native: build-native
 		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-no-network-agent.dylib SocketInterceptTest
 	@echo ""
 	@echo "✅ All native tests passed!"
+
+## test-integration-jvmti: Run integration tests using ONLY JVMTI (disables SecurityManager)
+test-integration-jvmti: build-native
+	@echo "Running integration tests with JVMTI agent (SecurityManager disabled)..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-no-network:integrationTestJvmti
 
 ## clean-native: Clean native build artifacts
 clean-native:

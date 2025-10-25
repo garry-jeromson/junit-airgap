@@ -126,7 +126,7 @@ actual class NetworkBlocker actual constructor(
                                 "Ensure the agent is loaded at JVM startup via -agentpath:/path/to/libjunit-no-network-agent.dylib",
                         )
                     }
-                    if (debug) println("NetworkBlocker: Using JVMTI implementation (95%+ coverage, native agent)")
+                    if (debug) println("NetworkBlocker: Using JVMTI implementation")
                     strategy
                 }
 

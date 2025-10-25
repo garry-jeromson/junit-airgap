@@ -213,6 +213,60 @@ tasks.register<Test>("integrationTest") {
     }
 }
 
+// Create JVMTI-specific integration test task
+tasks.register<Test>("integrationTestJvmti") {
+    description = "Runs integration tests using ONLY the JVMTI native agent (no SecurityManager)"
+    group = "verification"
+
+    val integrationCompilation = kotlin.jvm().compilations.getByName("integrationTest")
+    testClassesDirs = integrationCompilation.output.classesDirs
+    classpath = integrationCompilation.output.classesDirs + integrationCompilation.runtimeDependencyFiles
+
+    shouldRunAfter(tasks.named("integrationTest"))
+    useJUnitPlatform()
+
+    // Exclude Kotlin companion objects from test discovery
+    exclude("**/*\$Companion.class")
+
+    // CRITICAL: Use Java 21 toolchain (native agent built with Java 21)
+    // Project default is Java 17, but JVMTI agent is dynamically linked against Java 21 JVM
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    })
+
+    // CRITICAL: Force JVMTI implementation and disable SecurityManager
+    systemProperty("junit.nonetwork.implementation", "jvmti")
+    systemProperty("junit.nonetwork.debug", "true")
+
+    // Load JVMTI agent
+    val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
+    val agentPathWithDebug = "$agentPath=debug"
+
+    doFirst {
+        val agentFile = file(agentPath)
+        if (!agentFile.exists()) {
+            throw GradleException(
+                "JVMTI agent not found at: $agentPath\n" +
+                "Run 'make build-native' to build the native agent first."
+            )
+        }
+        println("Loading JVMTI agent from: $agentPath")
+        println("Using Java: ${javaLauncher.get().metadata.installationPath}")
+    }
+
+    jvmArgs("-agentpath:$agentPathWithDebug")
+
+    // Disable SecurityManager to ensure we're testing JVMTI only
+    // (SecurityManager would be the fallback if JVMTI doesn't work)
+    jvmArgs("-Djava.security.manager=disallow")
+
+    testLogging {
+        events("passed", "skipped", "failed", "standardOut", "standardError")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
 // ============================================================================
 // Maven Central Publishing Configuration
 // ============================================================================

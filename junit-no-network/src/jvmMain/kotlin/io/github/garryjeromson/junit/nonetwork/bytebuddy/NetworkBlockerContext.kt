@@ -24,8 +24,35 @@ import io.github.garryjeromson.junit.nonetwork.NetworkRequestDetails
  *     NetworkBlockerContext.checkConnection(host, port)
  * }
  * ```
+ *
+ * ## JVMTI Integration
+ * This class also serves as the configuration source for the JVMTI native agent.
+ * The static initializer registers this class with the agent (if loaded) to cache
+ * class and method references, avoiding FindClass issues from native contexts.
  */
 object NetworkBlockerContext {
+    init {
+        // Register with JVMTI agent (if loaded) to cache class/method references.
+        // This avoids FindClass issues when the native agent tries to look us up
+        // from a native method context (which uses bootstrap class loader).
+        //
+        // If the JVMTI agent is not loaded, this will throw UnsatisfiedLinkError,
+        // which we catch and ignore (graceful degradation).
+        try {
+            registerWithAgent()
+        } catch (e: UnsatisfiedLinkError) {
+            // Agent not loaded - this is fine, JVMTI is optional
+            // Only ByteBuddy or SecurityManager will be used
+        }
+    }
+
+    /**
+     * Native method to register this class with the JVMTI agent.
+     * Called from static initializer to cache class/method references.
+     * Only works if JVMTI agent is loaded via -agentpath at JVM startup.
+     */
+    @JvmStatic
+    private external fun registerWithAgent()
     /**
      * Thread-local storage for network configuration.
      * Each test thread has its own configuration.

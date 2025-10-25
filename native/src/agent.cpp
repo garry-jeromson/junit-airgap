@@ -52,6 +52,11 @@ bool g_debug_mode = false;
 std::map<std::string, void*> g_original_functions;
 std::mutex g_functions_mutex;
 
+// Cached NetworkBlockerContext class and method references
+jclass g_network_blocker_context_class = nullptr;
+jmethodID g_check_connection_method = nullptr;
+std::mutex g_context_mutex;
+
 /**
  * Store original function pointer for later use.
  *
@@ -311,6 +316,84 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
  */
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm) {
     DEBUG_LOG("JVMTI Agent unloading...");
+
+    // Clean up global references
+    if (g_network_blocker_context_class != nullptr) {
+        JNIEnv* env = GetJNIEnv();
+        if (env != nullptr) {
+            env->DeleteGlobalRef(g_network_blocker_context_class);
+            g_network_blocker_context_class = nullptr;
+        }
+    }
+
     g_jvmti = nullptr;
     g_jvm = nullptr;
+}
+
+/**
+ * Get cached NetworkBlockerContext class reference.
+ *
+ * @return Cached class reference, or nullptr if not registered
+ */
+jclass GetNetworkBlockerContextClass() {
+    std::lock_guard<std::mutex> lock(g_context_mutex);
+    return g_network_blocker_context_class;
+}
+
+/**
+ * Get cached checkConnection method ID.
+ *
+ * @return Cached method ID, or nullptr if not registered
+ */
+jmethodID GetCheckConnectionMethod() {
+    std::lock_guard<std::mutex> lock(g_context_mutex);
+    return g_check_connection_method;
+}
+
+/**
+ * Registration function called from Java to cache class and method references.
+ *
+ * This is called from NetworkBlockerContext's static initializer to register
+ * itself with the JVMTI agent. We cache global references to avoid FindClass
+ * issues from native method contexts.
+ *
+ * Java signature: private external fun registerWithAgent()
+ * JNI signature: ()V
+ *
+ * @param env JNI environment
+ * @param clazz NetworkBlockerContext class
+ */
+JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_NetworkBlockerContext_registerWithAgent(
+    JNIEnv* env,
+    jclass clazz
+) {
+    std::lock_guard<std::mutex> lock(g_context_mutex);
+
+    DEBUG_LOG("Registering NetworkBlockerContext with JVMTI agent...");
+
+    // Create global reference to the class
+    // (local reference will be invalid after this function returns)
+    g_network_blocker_context_class = (jclass)env->NewGlobalRef(clazz);
+
+    if (g_network_blocker_context_class == nullptr) {
+        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create global reference to NetworkBlockerContext\n");
+        return;
+    }
+
+    // Get checkConnection method
+    g_check_connection_method = env->GetStaticMethodID(
+        g_network_blocker_context_class,
+        "checkConnection",
+        "(Ljava/lang/String;ILjava/lang/String;)V"
+    );
+
+    if (g_check_connection_method == nullptr) {
+        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find checkConnection method\n");
+        env->DeleteGlobalRef(g_network_blocker_context_class);
+        g_network_blocker_context_class = nullptr;
+        return;
+    }
+
+    DEBUG_LOG("NetworkBlockerContext registered successfully");
+    fprintf(stderr, "[JVMTI-Agent] NetworkBlockerContext registered - network blocking enabled\n");
 }

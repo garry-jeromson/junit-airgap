@@ -80,50 +80,31 @@ jint JNICALL wrapped_Net_connect0(
 
     // Check NetworkConfiguration via JNI call to Kotlin
     if (hostString != nullptr && hostCStr != nullptr) {
-        // Find NetworkBlockerContext class
-        jclass contextClass = env->FindClass("io/github/garryjeromson/junit/nonetwork/bytebuddy/NetworkBlockerContext");
+        // Get cached class and method references
+        jclass contextClass = GetNetworkBlockerContextClass();
+        jmethodID checkConnectionMethod = GetCheckConnectionMethod();
 
-        // Check for NoClassDefFoundError and clear it if found
-        if (env->ExceptionCheck()) {
-            DEBUG_LOG("NetworkBlockerContext class not found - clearing exception and allowing connection");
-            env->ExceptionClear(); // Clear the NoClassDefFoundError
-            contextClass = nullptr;
-        }
+        if (contextClass != nullptr && checkConnectionMethod != nullptr) {
+            DEBUG_LOG("Calling NetworkBlockerContext.checkConnection()");
 
-        if (contextClass != nullptr) {
-            // Get checkConnection method
-            jmethodID checkConnectionMethod = env->GetStaticMethodID(
-                contextClass,
-                "checkConnection",
-                "(Ljava/lang/String;ILjava/lang/String;)V"
-            );
+            // Create caller string
+            jstring callerString = env->NewStringUTF("JVMTI-Agent");
 
-            if (checkConnectionMethod != nullptr) {
-                DEBUG_LOG("Calling NetworkBlockerContext.checkConnection()");
+            // Call checkConnection - this will throw exception if blocked
+            env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostString, remotePort, callerString);
 
-                // Create caller string
-                jstring callerString = env->NewStringUTF("JVMTI-Agent");
-
-                // Call checkConnection - this will throw exception if blocked
-                env->CallStaticVoidMethod(contextClass, checkConnectionMethod, hostString, remotePort, callerString);
-
-                // Check if exception was thrown
-                if (env->ExceptionCheck()) {
-                    DEBUG_LOG("Connection blocked - NetworkRequestAttemptedException thrown");
-                    // Release resources before returning
-                    env->ReleaseStringUTFChars(hostString, hostCStr);
-                    // Exception will propagate to Java
-                    return -2; // Error code
-                }
-
-                DEBUG_LOG("Connection allowed by NetworkBlockerContext");
-            } else {
-                DEBUG_LOG("checkConnection method not found - allowing connection");
-                // Clear any exception from GetStaticMethodID
-                if (env->ExceptionCheck()) {
-                    env->ExceptionClear();
-                }
+            // Check if exception was thrown
+            if (env->ExceptionCheck()) {
+                DEBUG_LOG("Connection blocked - NetworkRequestAttemptedException thrown");
+                // Release resources before returning
+                env->ReleaseStringUTFChars(hostString, hostCStr);
+                // Exception will propagate to Java
+                return -2; // Error code
             }
+
+            DEBUG_LOG("Connection allowed by NetworkBlockerContext");
+        } else {
+            DEBUG_LOG("NetworkBlockerContext not registered - allowing connection (agent may not be loaded or class not initialized yet)");
         }
     }
 
