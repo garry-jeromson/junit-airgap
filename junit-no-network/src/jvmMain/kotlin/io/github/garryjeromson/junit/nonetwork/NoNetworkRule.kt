@@ -157,6 +157,17 @@ class NoNetworkRule(
         val allAnnotations = classAnnotations + methodAnnotations
 
         // Build configuration from annotations
-        return NetworkConfiguration.fromAnnotations(allAnnotations)
+        val annotationConfig = NetworkConfiguration.fromAnnotations(allAnnotations)
+
+        // Read global configuration from system properties
+        val globalConfig =
+            NetworkConfiguration(
+                allowedHosts = ExtensionConfiguration.getAllowedHosts(),
+                blockedHosts = ExtensionConfiguration.getBlockedHosts(),
+            )
+
+        // Merge configurations - annotation-level takes precedence for blocked hosts,
+        // but allowed hosts are combined
+        return globalConfig.merge(annotationConfig)
     }
 }
