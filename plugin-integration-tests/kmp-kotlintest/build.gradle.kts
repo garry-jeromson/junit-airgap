@@ -12,6 +12,7 @@ junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @NoNetworkTest annotation
     debug = false
+    injectJUnit4Rule = true // Enable automatic @Rule injection (kotlin.test uses JUnit 4 on Android)
 }
 
 kotlin {
