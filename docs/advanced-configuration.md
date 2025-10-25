@@ -1,0 +1,582 @@
+# Advanced Configuration Guide
+
+This guide covers advanced configuration options and patterns for the JUnit No-Network Extension.
+
+## Table of Contents
+
+- [Configuration Methods](#configuration-methods)
+- [Priority Order](#priority-order)
+- [Host Filtering](#host-filtering)
+- [Default Blocking Mode](#default-blocking-mode)
+- [Implementation Selection](#implementation-selection)
+- [Debug Mode](#debug-mode)
+- [Per-Test Configuration](#per-test-configuration)
+- [Class-Level Configuration](#class-level-configuration)
+- [System Properties](#system-properties)
+- [Gradle Plugin Configuration](#gradle-plugin-configuration)
+
+## Configuration Methods
+
+The library supports multiple configuration methods that can be combined:
+
+1. **Annotations** (method or class level)
+2. **Constructor parameters** (JUnit 5 `@RegisterExtension` or JUnit 4 `@Rule`)
+3. **System properties** (JVM arguments or Gradle configuration)
+4. **Gradle plugin** (project-wide defaults)
+
+## Priority Order
+
+When multiple configuration options are present, they are evaluated in priority order (highest to lowest):
+
+1. **@AllowNetworkRequests** - Always allows network (highest priority)
+2. **Constructor parameter** - `applyToAllTests = true/false` in `NoNetworkExtension` or `NoNetworkRule`
+3. **System property** - `-Djunit.nonetwork.applyToAllTests=true`
+4. **@NoNetworkByDefault** - Class-level default blocking
+5. **@BlockNetworkRequests** - Method/class-level explicit blocking
+6. **Default** - No blocking (lowest priority)
+
+### Example: Priority Demonstration
+
+```kotlin
+class MyTest {
+    @JvmField
+    @RegisterExtension
+    val extension = NoNetworkExtension(applyToAllTests = true) // Priority 2
+
+    @Test
+    fun test1() {
+        // Network BLOCKED (applyToAllTests = true)
+    }
+
+    @Test
+    @AllowNetworkRequests // Priority 1 (highest)
+    fun test2() {
+        // Network ALLOWED (@AllowNetworkRequests overrides applyToAllTests)
+    }
+
+    @Test
+    @BlockNetworkRequests // Priority 5
+    @AllowNetworkRequests // Priority 1 (highest)
+    fun test3() {
+        // Network ALLOWED (@AllowNetworkRequests wins)
+    }
+}
+```
+
+## Host Filtering
+
+### Allow Specific Hosts
+
+```kotlin
+@Test
+@BlockNetworkRequests
+@AllowRequestsToHosts(["localhost", "127.0.0.1", "*.test.local"])
+fun testLocalServers() {
+    // ✅ localhost - allowed
+    // ✅ 127.0.0.1 - allowed
+    // ✅ api.test.local - allowed (matches *.test.local)
+    // ❌ example.com - blocked
+}
+```
+
+### Wildcard Patterns
+
+Wildcards support subdomain matching:
+
+```kotlin
+@AllowRequestsToHosts(["*.example.com", "*.staging.mycompany.com"])
+```
+
+**Matches**:
+- ✅ `api.example.com`
+- ✅ `www.example.com`
+- ✅ `auth.staging.mycompany.com`
+
+**Does NOT match**:
+- ❌ `example.com` (root domain, doesn't match `*.example.com`)
+- ❌ `api.production.mycompany.com`
+
+### Block Specific Hosts
+
+```kotlin
+@Test
+@BlockNetworkRequests
+@AllowRequestsToHosts(["*"]) // Allow all
+@BlockRequestsToHosts(["evil.com", "*.tracking.com"]) // Except these
+fun testBlockList() {
+    // ✅ Most hosts - allowed
+    // ❌ evil.com - blocked
+    // ❌ analytics.tracking.com - blocked (matches *.tracking.com)
+}
+```
+
+**Important**: Blocked hosts ALWAYS take precedence over allowed hosts.
+
+### IPv6 Support
+
+```kotlin
+@AllowRequestsToHosts(["::1", "[0:0:0:0:0:0:0:1]"])
+```
+
+### Android Emulator Localhost
+
+The Android emulator uses `10.0.2.2` to access the host machine:
+
+```kotlin
+@AllowRequestsToHosts(["localhost", "127.0.0.1", "10.0.2.2"])
+```
+
+## Default Blocking Mode
+
+### Method 1: Constructor Parameter
+
+**JUnit 5:**
+
+```kotlin
+import org.junit.jupiter.api.extension.RegisterExtension
+
+class MyTest {
+    @JvmField
+    @RegisterExtension
+    val extension = NoNetworkExtension(applyToAllTests = true)
+
+    @Test
+    fun test1() {
+        // Network BLOCKED by default
+    }
+
+    @Test
+    @AllowNetworkRequests
+    fun test2() {
+        // Network ALLOWED (opt-out)
+    }
+}
+```
+
+**JUnit 4:**
+
+```kotlin
+import org.junit.Rule
+
+class MyTest {
+    @get:Rule
+    val noNetworkRule = NoNetworkRule(applyToAllTests = true)
+
+    @Test
+    fun test1() {
+        // Network BLOCKED by default
+    }
+
+    @Test
+    @AllowNetworkRequests
+    fun test2() {
+        // Network ALLOWED (opt-out)
+    }
+}
+```
+
+### Method 2: Class-Level Annotation
+
+```kotlin
+@ExtendWith(NoNetworkExtension::class)
+@NoNetworkByDefault
+class MyTest {
+    @Test
+    fun test1() {
+        // Network BLOCKED by default
+    }
+
+    @Test
+    @AllowNetworkRequests
+    fun test2() {
+        // Network ALLOWED (opt-out)
+    }
+}
+```
+
+### Method 3: System Property
+
+```bash
+# Gradle
+./gradlew test -Djunit.nonetwork.applyToAllTests=true
+
+# Maven
+mvn test -Djunit.nonetwork.applyToAllTests=true
+```
+
+**Gradle configuration:**
+
+```kotlin
+tasks.test {
+    systemProperty("junit.nonetwork.applyToAllTests", "true")
+}
+```
+
+### Method 4: Gradle Plugin
+
+```kotlin
+junitNoNetwork {
+    applyToAllTests = true
+}
+```
+
+## Implementation Selection
+
+⚠️ **IMPORTANT**: Only `SECURITY_MANAGER` and `SECURITY_POLICY` actually work. `BYTE_BUDDY` is a non-functional stub.
+
+### Available Implementations
+
+| Implementation | Status | Notes |
+|----------------|--------|-------|
+| SECURITY_MANAGER | ✅ Works | Default, recommended |
+| SECURITY_POLICY | ✅ Works | Alternative declarative approach |
+| BYTE_BUDDY | ❌ Non-functional | Stub only, cannot intercept native Socket calls |
+| AUTO | ✅ Works | Selects best available (currently always SECURITY_MANAGER) |
+
+### Select via System Property
+
+```bash
+# Use SecurityManager (default, recommended)
+./gradlew test -Djunit.nonetwork.implementation=securitymanager
+
+# Use SecurityPolicy (alternative)
+./gradlew test -Djunit.nonetwork.implementation=securitypolicy
+
+# Use ByteBuddy (does NOT work)
+./gradlew test -Djunit.nonetwork.implementation=bytebuddy
+
+# Auto-detect (currently always selects SecurityManager)
+./gradlew test -Djunit.nonetwork.implementation=auto
+```
+
+### Select via Environment Variable
+
+```bash
+export JUNIT_NONETWORK_IMPLEMENTATION=securitymanager
+./gradlew test
+```
+
+### Valid Values
+
+- `securitymanager`, `security-manager`, `SECURITY_MANAGER`
+- `securitypolicy`, `security-policy`, `SECURITY_POLICY`
+- `bytebuddy`, `byte-buddy`, `BYTE_BUDDY`
+- `auto`, `AUTO`
+
+(Case-insensitive, accepts hyphenated and underscore forms)
+
+## Debug Mode
+
+Enable debug logging to troubleshoot configuration issues.
+
+### Method 1: System Property
+
+```bash
+./gradlew test -Djunit.nonetwork.debug=true
+```
+
+### Method 2: Gradle Plugin
+
+```kotlin
+junitNoNetwork {
+    debug = true
+}
+```
+
+### Method 3: Environment Variable
+
+```bash
+export JUNIT_NONETWORK_DEBUG=true
+./gradlew test
+```
+
+### Debug Output Examples
+
+```
+NetworkBlocker: Using SECURITY_MANAGER implementation
+NetworkBlocker: Installing network blocker
+NetworkBlocker: Configuration: allowedHosts=[localhost], blockedHosts=[]
+NetworkBlocker: Checking connection to example.com:443
+NetworkBlocker: Blocked connection to example.com:443
+NetworkBlocker: Uninstalling network blocker
+```
+
+## Per-Test Configuration
+
+### Override Global Configuration
+
+```kotlin
+junitNoNetwork {
+    applyToAllTests = true // Global default: block all
+    allowedHosts = listOf("localhost")
+}
+```
+
+```kotlin
+@Test
+@AllowNetworkRequests // Override: allow for this test only
+fun testNeedsNetwork() {
+    // Network allowed
+}
+
+@Test
+@AllowRequestsToHosts(["*.example.com"]) // Override: allow specific hosts
+fun testSpecificHosts() {
+    // ✅ api.example.com - allowed
+    // ❌ other.com - blocked
+}
+```
+
+### Combine Annotations
+
+```kotlin
+@Test
+@BlockNetworkRequests
+@AllowRequestsToHosts(["localhost", "127.0.0.1"])
+@BlockRequestsToHosts(["evil.com"])
+fun testComplexRules() {
+    // ✅ localhost - allowed
+    // ❌ evil.com - blocked (even if in allowedHosts)
+    // ❌ example.com - blocked (not in allowedHosts)
+}
+```
+
+## Class-Level Configuration
+
+Apply annotations at class level to affect all tests:
+
+```kotlin
+@ExtendWith(NoNetworkExtension::class)
+@BlockNetworkRequests
+@AllowRequestsToHosts(["localhost", "*.test.local"])
+class MyTest {
+    @Test
+    fun test1() {
+        // Network blocked except localhost and *.test.local
+    }
+
+    @Test
+    fun test2() {
+        // Same configuration
+    }
+
+    @Test
+    @AllowNetworkRequests // Override class-level configuration
+    fun test3() {
+        // Network fully allowed
+    }
+}
+```
+
+### JUnit 4 Class-Level Configuration
+
+```kotlin
+@RunWith(JUnit4::class)
+class MyTest {
+    companion object {
+        @JvmField
+        @ClassRule
+        val classRule = NoNetworkRule(applyToAllTests = true)
+    }
+
+    @Test
+    fun test1() {
+        // Network blocked for all tests
+    }
+}
+```
+
+## System Properties
+
+All system properties can be set via:
+
+1. **Command line**: `-Dproperty=value`
+2. **Gradle configuration**: `systemProperty("property", "value")`
+3. **Environment variables**: Some properties support env vars
+
+### Available Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `junit.nonetwork.applyToAllTests` | boolean | false | Block all tests by default |
+| `junit.nonetwork.implementation` | string | securitymanager | Implementation to use |
+| `junit.nonetwork.debug` | boolean | false | Enable debug logging |
+
+### Gradle Configuration
+
+```kotlin
+tasks.withType<Test> {
+    // Java 21+ requirement
+    jvmArgs("-Djava.security.manager=allow")
+
+    // Library configuration
+    systemProperty("junit.nonetwork.applyToAllTests", "true")
+    systemProperty("junit.nonetwork.implementation", "securitymanager")
+    systemProperty("junit.nonetwork.debug", "false")
+}
+```
+
+## Gradle Plugin Configuration
+
+Complete plugin configuration reference:
+
+```kotlin
+junitNoNetwork {
+    // Enable/disable plugin (default: true)
+    enabled = true
+
+    // Block all tests by default (default: false)
+    applyToAllTests = false
+
+    // Library version (default: matches plugin version)
+    libraryVersion = "0.1.0-SNAPSHOT"
+
+    // Global allowed hosts (default: empty)
+    allowedHosts = listOf(
+        "localhost",
+        "127.0.0.1",
+        "*.test.local",
+        "*.staging.mycompany.com"
+    )
+
+    // Global blocked hosts (default: empty)
+    blockedHosts = listOf(
+        "evil.com",
+        "*.tracking.com"
+    )
+
+    // Debug logging (default: false)
+    debug = false
+
+    // JUnit 4 automatic @Rule injection (default: false, experimental)
+    injectJUnit4Rule = false
+}
+```
+
+### Conditional Configuration
+
+```kotlin
+junitNoNetwork {
+    enabled = !project.hasProperty("skipNoNetwork")
+    debug = project.hasProperty("debugNoNetwork")
+
+    allowedHosts = when {
+        project.hasProperty("ci") -> listOf("localhost") // CI: strict
+        else -> listOf("localhost", "*.staging.mycompany.com") // Local: relaxed
+    }
+}
+```
+
+### Per-Module Configuration
+
+```kotlin
+// Root build.gradle.kts
+allprojects {
+    pluginManager.withPlugin("io.github.garryjeromson.junit-no-network") {
+        configure<JunitNoNetworkExtension> {
+            enabled = true
+            allowedHosts = listOf("localhost")
+        }
+    }
+}
+
+// Specific module build.gradle.kts
+junitNoNetwork {
+    enabled = false // Disable for this module
+}
+```
+
+## Configuration Patterns
+
+### Pattern 1: Strict Unit Tests
+
+Block everything except localhost:
+
+```kotlin
+junitNoNetwork {
+    applyToAllTests = true
+    allowedHosts = listOf("localhost", "127.0.0.1")
+}
+```
+
+### Pattern 2: Integration Tests
+
+Allow specific staging environments:
+
+```kotlin
+junitNoNetwork {
+    applyToAllTests = false
+    allowedHosts = listOf(
+        "localhost",
+        "*.staging.mycompany.com",
+        "*.test.mycompany.com"
+    )
+}
+```
+
+### Pattern 3: Development vs CI
+
+```kotlin
+junitNoNetwork {
+    val isCi = System.getenv("CI") == "true"
+
+    applyToAllTests = isCi // Strict on CI, relaxed locally
+    debug = !isCi // Debug locally, quiet on CI
+
+    allowedHosts = if (isCi) {
+        listOf("localhost") // CI: strict
+    } else {
+        listOf("localhost", "*.staging.mycompany.com") // Local: relaxed
+    }
+}
+```
+
+### Pattern 4: Feature Flags
+
+```kotlin
+junitNoNetwork {
+    enabled = project.findProperty("enableNoNetwork") == "true"
+}
+```
+
+Run with: `./gradlew test -PenableNoNetwork=true`
+
+## Troubleshooting
+
+### Configuration Not Applied
+
+**Checklist**:
+1. Is plugin applied? Check `plugins { }`
+2. Is configuration block present? Check `junitNoNetwork { }`
+3. Is annotation present? Check `@BlockNetworkRequests`
+4. Check priority order (maybe another config is overriding)
+5. Enable debug mode: `debug = true`
+
+### Unexpected Blocking Behavior
+
+**Solution**: Check priority order. Higher priority configs override lower ones.
+
+```kotlin
+// Example: @AllowNetworkRequests always wins
+@Test
+@BlockNetworkRequests // Lower priority
+@AllowNetworkRequests // Higher priority - WINS
+fun test() {
+    // Network is ALLOWED
+}
+```
+
+### Host Filtering Not Working
+
+**Checklist**:
+1. Check wildcard syntax: `*.example.com` (not `*.example.*`)
+2. Check blocked hosts (they take precedence)
+3. Enable debug to see which hosts are checked
+4. Remember: `*.example.com` does NOT match `example.com`
+
+## See Also
+
+- [Compatibility Matrix](compatibility-matrix.md)
+- [Setup Guides](setup-guides/)
+- [Gradle Plugin Guide](setup-guides/gradle-plugin.md)
+- [Migration Guide: Java 24+](migration-java24.md)
