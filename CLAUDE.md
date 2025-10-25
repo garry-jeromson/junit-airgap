@@ -42,7 +42,8 @@ Located in `plugin-integration-tests/`:
 - `android-robolectric` - Android library with JUnit 4 + Robolectric
 - `kmp-junit4` - KMP (JVM + Android) with JUnit 4
 - `kmp-junit5` - KMP (JVM + Android) with JUnit 5
-- `kmp-kotlintest` - KMP (JVM + Android) with kotlin.test
+- `kmp-kotlintest` - KMP (JVM + Android) with kotlin.test + JUnit 4 runtime
+- `kmp-kotlintest-junit5` - KMP (JVM + Android) with kotlin.test + JUnit 5 runtime
 
 ## Running Tests
 

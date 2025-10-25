@@ -102,6 +102,7 @@ test-plugin-integration:
 		:plugin-integration-tests:kmp-junit5:test \
 		:plugin-integration-tests:kmp-junit4:test \
 		:plugin-integration-tests:kmp-kotlintest:test \
+		:plugin-integration-tests:kmp-kotlintest-junit5:test \
 		:plugin-integration-tests:android-robolectric:testDebugUnitTest \
 		:plugin-integration-tests:jvm-junit5:test \
 		:plugin-integration-tests:jvm-junit4:test
