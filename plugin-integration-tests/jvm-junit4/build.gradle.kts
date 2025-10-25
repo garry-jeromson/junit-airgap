@@ -11,6 +11,7 @@ junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @NoNetworkTest annotation
     debug = true // Enable debug logging
+    injectJUnit4Rule = true // Enable automatic @Rule injection for JUnit 4
 }
 
 kotlin {

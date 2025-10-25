@@ -11,7 +11,6 @@ junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @NoNetworkTest annotation
     debug = false
-    injectJUnit4Rule = false // This project uses JUnit 5 only
 }
 
 kotlin {

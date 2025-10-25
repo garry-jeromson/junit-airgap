@@ -58,7 +58,7 @@ abstract class JunitNoNetworkExtension {
      * Enable automatic @Rule injection for JUnit 4 test classes via bytecode enhancement.
      * When true, the plugin will automatically inject a NoNetworkRule field into JUnit 4 test classes,
      * providing zero-configuration network blocking without requiring manual @Rule setup.
-     * Default: true
+     * Default: false (requires explicit opt-in for JUnit 4 projects)
      */
     abstract val injectJUnit4Rule: Property<Boolean>
 
@@ -68,6 +68,6 @@ abstract class JunitNoNetworkExtension {
         applyToAllTests.convention(false)
         libraryVersion.convention("0.1.0-SNAPSHOT") // Will be updated to match plugin version
         debug.convention(false)
-        injectJUnit4Rule.convention(true)
+        injectJUnit4Rule.convention(false)
     }
 }
