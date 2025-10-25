@@ -111,7 +111,10 @@ test-plugin-integration:
 		:plugin-integration-tests:kmp-kotlintest-junit5:test \
 		:plugin-integration-tests:android-robolectric:testDebugUnitTest \
 		:plugin-integration-tests:jvm-junit5:test \
-		:plugin-integration-tests:jvm-junit4:test
+		:plugin-integration-tests:jvm-junit4:test \
+		:plugin-integration-tests:jvm-junit5-apply-all:test \
+		:plugin-integration-tests:jvm-junit5-allowed-hosts:test \
+		:plugin-integration-tests:jvm-junit5-blocked-hosts:test
 
 ## benchmark: Run all performance benchmarks (JVM + Android)
 benchmark:

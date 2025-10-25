@@ -30,3 +30,8 @@ include(":plugin-integration-tests:kmp-kotlintest-junit5")
 include(":plugin-integration-tests:android-robolectric")
 include(":plugin-integration-tests:jvm-junit5")
 include(":plugin-integration-tests:jvm-junit4")
+
+// Plugin configuration option tests
+include(":plugin-integration-tests:jvm-junit5-apply-all")
+include(":plugin-integration-tests:jvm-junit5-allowed-hosts")
+include(":plugin-integration-tests:jvm-junit5-blocked-hosts")
