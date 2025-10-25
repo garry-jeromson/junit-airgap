@@ -86,9 +86,9 @@ class JunitNoNetworkPluginTest {
             .withPluginClasspath()
             .build()
 
-        // Check that junit-platform.properties was created
-        val propsFile = File(testProjectDir, "src/test/resources/junit-platform.properties")
-        assertTrue(propsFile.exists(), "junit-platform.properties should be created")
+        // Check that junit-platform.properties was created in build directory (not src/)
+        val propsFile = File(testProjectDir, "build/generated/junit-platform/test/resources/junit-platform.properties")
+        assertTrue(propsFile.exists(), "junit-platform.properties should be created in build directory")
 
         val content = propsFile.readText()
         assertTrue(
@@ -128,7 +128,7 @@ class JunitNoNetworkPluginTest {
             .build()
 
         // Check that junit-platform.properties was NOT created when disabled
-        val propsFile = File(testProjectDir, "src/test/resources/junit-platform.properties")
+        val propsFile = File(testProjectDir, "build/generated/junit-platform/test/resources/junit-platform.properties")
         assertTrue(!propsFile.exists(), "junit-platform.properties should not be created when disabled")
     }
 
@@ -244,8 +244,8 @@ class JunitNoNetworkPluginTest {
             .withPluginClasspath()
             .build()
 
-        val propsFile = File(testProjectDir, "src/test/resources/junit-platform.properties")
-        assertTrue(propsFile.exists())
+        val propsFile = File(testProjectDir, "build/generated/junit-platform/test/resources/junit-platform.properties")
+        assertTrue(propsFile.exists(), "junit-platform.properties should be created in build directory")
 
         val content = propsFile.readText()
         assertTrue(

@@ -53,15 +53,15 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // 1. Add library dependency
         addDependencies(project, extension)
 
-        // 2. Configure JUnit Platform properties
-        configureJunitPlatform(project, extension)
-
-        // 3. Configure Test tasks
+        // 2. Configure Test tasks (system properties work for all project types)
         configureTestTasks(project, extension)
 
-        // 4. Handle Kotlin Multiplatform projects
+        // 3. Handle Kotlin Multiplatform projects
         if (project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")) {
             configureKmpProject(project, extension)
+        } else {
+            // 4. For non-KMP projects, configure JUnit Platform properties
+            configureJunitPlatform(project, extension)
         }
     }
 
@@ -107,12 +107,12 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project: Project,
         extension: JunitNoNetworkExtension,
     ) {
-        // Create junit-platform.properties file
-        val resourcesDir = project.file("src/test/resources")
-        val propsFile = File(resourcesDir, "junit-platform.properties")
+        // Generate junit-platform.properties in build directory (not src/)
+        val generatedResourcesDir = project.layout.buildDirectory.dir("generated/junit-platform/test/resources").get().asFile
+        val propsFile = File(generatedResourcesDir, "junit-platform.properties")
 
         // Create directory if it doesn't exist
-        resourcesDir.mkdirs()
+        generatedResourcesDir.mkdirs()
 
         // Generate properties content
         val properties =
@@ -131,7 +131,32 @@ class JunitNoNetworkPlugin : Plugin<Project> {
 
         // Write properties file
         propsFile.writeText(properties)
-        project.logger.lifecycle("Created junit-platform.properties at: ${propsFile.absolutePath}")
+        project.logger.lifecycle("Generated junit-platform.properties at: ${propsFile.absolutePath}")
+
+        // Add generated resources to test source set
+        addGeneratedResourcesToSourceSet(project, generatedResourcesDir, "test")
+    }
+
+    private fun addGeneratedResourcesToSourceSet(
+        project: Project,
+        resourcesDir: File,
+        sourceSetName: String,
+    ) {
+        try {
+            // Access source sets using reflection to avoid compile-time dependency
+            val sourceSets = project.extensions.findByName("sourceSets")
+            if (sourceSets != null) {
+                val getByName = sourceSets.javaClass.getMethod("getByName", String::class.java)
+                val sourceSet = getByName.invoke(sourceSets, sourceSetName)
+                val resources = sourceSet.javaClass.getMethod("getResources").invoke(sourceSet)
+                val srcDir = resources.javaClass.getMethod("srcDir", Any::class.java)
+                srcDir.invoke(resources, resourcesDir)
+                project.logger.info("Added generated resources to $sourceSetName source set")
+            }
+        } catch (e: Exception) {
+            // Source sets might not exist in all project types - that's okay, system properties will still work
+            project.logger.debug("Could not add generated resources to source set: ${e.message}")
+        }
     }
 
     private fun configureTestTasks(
@@ -159,59 +184,75 @@ class JunitNoNetworkPlugin : Plugin<Project> {
 
         project.logger.info("Configuring KMP project for JUnit No-Network")
 
-        // Access kotlin multiplatform extension
-        val kotlin = project.extensions.findByName("kotlin") ?: return
+        // For KMP projects, add dependencies using platform-specific configuration names
+        // These configurations are created by the Kotlin Multiplatform plugin
+        val kmpTestConfigurations =
+            listOf(
+                "jvmTestImplementation",
+                "androidUnitTestImplementation",
+            )
 
-        try {
-            // Use reflection to access KMP DSL
-            val sourceSets = kotlin.javaClass.getMethod("getSourceSets").invoke(kotlin)
-            val getByName = sourceSets.javaClass.getMethod("getByName", String::class.java)
-
-            // Configure jvmTest source set
-            configureKmpSourceSet(project, getByName, sourceSets, "jvmTest", version, extension)
-
-            // Configure androidUnitTest source set
-            configureKmpSourceSet(project, getByName, sourceSets, "androidUnitTest", version, extension)
-        } catch (e: Exception) {
-            project.logger.warn("Could not configure KMP source sets: ${e.message}")
+        kmpTestConfigurations.forEach { configName ->
+            project.configurations.findByName(configName)?.let { _ ->
+                try {
+                    project.dependencies.add(
+                        configName,
+                        "io.github.garryjeromson:junit-no-network:$version",
+                    )
+                    project.logger.info("Added junit-no-network:$version to $configName")
+                } catch (e: Exception) {
+                    project.logger.debug("Failed to add dependency to $configName: ${e.message}")
+                }
+            } ?: project.logger.debug("Configuration $configName not found")
         }
+
+        // Note: We don't generate junit-platform.properties files for KMP projects
+        // because system properties configured on Test tasks are sufficient and
+        // avoid duplicate resource issues
+        project.logger.info("Configuration complete - using system properties for KMP test configuration")
     }
 
-    private fun configureKmpSourceSet(
+    private fun createJunitPlatformProperties(
         project: Project,
-        getByName: java.lang.reflect.Method,
-        sourceSets: Any,
         sourceSetName: String,
-        version: String,
         extension: JunitNoNetworkExtension,
     ) {
+        // Generate in build directory, not src/
+        val generatedResourcesDir = project.layout.buildDirectory.dir("generated/junit-platform/$sourceSetName/resources").get().asFile
+        val propsFile = File(generatedResourcesDir, "junit-platform.properties")
+
+        generatedResourcesDir.mkdirs()
+
+        val properties =
+            buildString {
+                appendLine("# Generated by JUnit No-Network Gradle Plugin")
+                appendLine("junit.jupiter.extensions.autodetection.enabled=true")
+                appendLine("junit.nonetwork.applyToAllTests=${extension.applyToAllTests.get()}")
+            }
+
+        propsFile.writeText(properties)
+        project.logger.lifecycle("Generated junit-platform.properties for $sourceSetName at: ${propsFile.absolutePath}")
+
+        // Add generated resources to the KMP source set
+        addGeneratedResourcesToKmpSourceSet(project, generatedResourcesDir, sourceSetName)
+    }
+
+    private fun addGeneratedResourcesToKmpSourceSet(
+        project: Project,
+        resourcesDir: File,
+        sourceSetName: String,
+    ) {
         try {
+            val kotlin = project.extensions.findByName("kotlin") ?: return
+            val sourceSets = kotlin.javaClass.getMethod("getSourceSets").invoke(kotlin)
+            val getByName = sourceSets.javaClass.getMethod("getByName", String::class.java)
             val sourceSet = getByName.invoke(sourceSets, sourceSetName)
-            val dependencies = sourceSet.javaClass.getMethod("getDependencies").invoke(sourceSet)
-            val implementation = dependencies.javaClass.getMethod("implementation", Any::class.java)
-
-            implementation.invoke(dependencies, "io.github.garryjeromson:junit-no-network:$version")
-
-            project.logger.info("Added junit-no-network:$version to $sourceSetName")
-
-            // Create platform-specific junit-platform.properties
-            val resourcesDir = project.file("src/$sourceSetName/resources")
-            val propsFile = File(resourcesDir, "junit-platform.properties")
-
-            resourcesDir.mkdirs()
-
-            val properties =
-                buildString {
-                    appendLine("# Generated by JUnit No-Network Gradle Plugin")
-                    appendLine("junit.jupiter.extensions.autodetection.enabled=true")
-                    appendLine("junit.nonetwork.applyToAllTests=${extension.applyToAllTests.get()}")
-                }
-
-            propsFile.writeText(properties)
-            project.logger.lifecycle("Created junit-platform.properties for $sourceSetName")
+            val resources = sourceSet.javaClass.getMethod("getResources").invoke(sourceSet)
+            val srcDir = resources.javaClass.getMethod("srcDir", Any::class.java)
+            srcDir.invoke(resources, resourcesDir)
+            project.logger.info("Added generated resources to $sourceSetName KMP source set")
         } catch (e: Exception) {
-            // Source set doesn't exist, skip it
-            project.logger.debug("Source set $sourceSetName not found: ${e.message}")
+            project.logger.debug("Could not add generated resources to KMP source set $sourceSetName: ${e.message}")
         }
     }
 }

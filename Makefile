@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-jvm test-android test-integration test-integration-app benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify
+.PHONY: help build clean test test-jvm test-android test-integration test-integration-app test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify
 
 # Default Java version for the project (uses Java 17 toolchain internally)
 JAVA_VERSION ?= 21
@@ -28,12 +28,13 @@ help:
 	@echo "  assemble           Assemble all outputs without running tests"
 	@echo ""
 	@echo "Test Commands:"
-	@echo "  test               Run all tests (JVM + Android + Integration + Integration App)"
-	@echo "  test-jvm           Run JVM unit tests only"
-	@echo "  test-android       Run Android unit tests (Robolectric)"
-	@echo "  test-integration   Run JVM integration tests (junit-no-network module)"
-	@echo "  test-integration-app Run integration-test-app tests (real consumer tests)"
-	@echo "  verify             Run all tests and checks (test + lint)"
+	@echo "  test                    Run all tests (JVM + Android + Integration + Apps)"
+	@echo "  test-jvm                Run JVM unit tests only"
+	@echo "  test-android            Run Android unit tests (Robolectric)"
+	@echo "  test-integration        Run JVM integration tests (junit-no-network module)"
+	@echo "  test-integration-app    Run integration-test-app tests (real consumer tests)"
+	@echo "  test-plugin-integration Run plugin-integration-test tests (plugin consumer tests)"
+	@echo "  verify                  Run all tests and checks (test + lint)"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark          Run all performance benchmarks (JVM + Android)"
@@ -71,10 +72,10 @@ clean:
 	@echo "Cleaning build artifacts..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) clean
 
-## test: Run all tests (JVM + Android + Integration + Integration App)
+## test: Run all tests (JVM + Android + Integration + Integration App + Plugin Integration)
 test:
 	@echo "Running all tests..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) test integrationTest :integration-test-app:test
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) test integrationTest :integration-test-app:test :plugin-integration-test:test
 
 ## test-jvm: Run JVM unit tests only
 test-jvm:
@@ -95,6 +96,11 @@ test-integration:
 test-integration-app:
 	@echo "Running integration-test-app tests..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :integration-test-app:test
+
+## test-plugin-integration: Run plugin-integration-test tests (plugin consumer tests)
+test-plugin-integration:
+	@echo "Running plugin-integration-test tests..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :plugin-integration-test:jvmTest :plugin-integration-test:test
 
 ## benchmark: Run all performance benchmarks (JVM + Android)
 benchmark:
@@ -131,7 +137,7 @@ fix: format
 	@echo "Code formatting applied!"
 
 ## verify: Run all tests and checks
-verify: check test-integration test-integration-app
+verify: check test-integration test-integration-app test-plugin-integration
 	@echo "All verification passed!"
 
 ## jar: Build JVM JAR file
