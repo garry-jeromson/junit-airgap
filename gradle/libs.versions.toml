@@ -6,7 +6,7 @@ ktlint-gradle = "12.1.1"
 nexus-publish = "2.0.0"
 
 # JUnit No-Network Plugin
-junit-no-network = "0.1.0-beta.1"
+junit-no-network = "0.1.0-SNAPSHOT"
 
 # Bytecode Instrumentation
 byte-buddy = "1.15.11"
