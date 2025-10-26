@@ -1,10 +1,14 @@
-.PHONY: help build clean test test-jvm test-android test-integration test-integration-jvmti test-plugin-integration benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
+.PHONY: help build clean test test-jvm test-android test-integration test-integration-jvmti test-plugin-integration test-java21 test-java25 test-all-java-versions test-jvm-java21 test-jvm-java25 benchmark benchmark-jvm benchmark-android format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
 
-# Default Java version for the project (uses Java 17 toolchain internally)
+# Default Java version for the project
 JAVA_VERSION ?= 21
 
 # Detect Java home for the required version
 JAVA_HOME := $(shell /usr/libexec/java_home -v $(JAVA_VERSION) 2>/dev/null || echo "")
+
+# Detect available Java versions for multi-version testing
+JAVA_21_HOME := $(shell /usr/libexec/java_home -v 21 2>/dev/null || echo "")
+JAVA_25_HOME := $(shell /usr/libexec/java_home -v 25 2>/dev/null || echo "")
 
 # Gradle wrapper
 GRADLEW := ./gradlew
@@ -34,6 +38,13 @@ help:
 	@echo "  test-integration           Run JVM integration tests (junit-no-network module)"
 	@echo "  test-plugin-integration    Run all plugin integration tests (KMP/Android/JVM × JUnit4/5)"
 	@echo "  verify                     Run all tests and checks (test + lint + plugin tests)"
+	@echo ""
+	@echo "Multi-Version Java Testing:"
+	@echo "  test-java21                Run all tests with Java 21"
+	@echo "  test-java25                Run all tests with Java 25"
+	@echo "  test-all-java-versions     Run tests on all supported Java versions (21, 25)"
+	@echo "  test-jvm-java21            Run JVM tests only with Java 21"
+	@echo "  test-jvm-java25            Run JVM tests only with Java 25"
 	@echo ""
 	@echo "Native Agent Commands (JVMTI Implementation):"
 	@echo "  setup-native            Install native build dependencies (CMake)"
@@ -116,6 +127,74 @@ test-plugin-integration:
 		:plugin-integration-tests:jvm-junit5-allowed-hosts:test \
 		:plugin-integration-tests:jvm-junit5-blocked-hosts:test \
 		:plugin-integration-tests:jvm-junit4-apply-all:test
+
+## Multi-Version Java Testing Targets
+
+## test-java21: Run all tests with Java 21
+test-java21:
+	@if [ -z "$(JAVA_21_HOME)" ]; then \
+		echo "❌ Error: Java 21 not found."; \
+		echo "Please install Java 21 or check your installation."; \
+		exit 1; \
+	fi
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Running all tests with Java 21"
+	@echo "  Java Home: $(JAVA_21_HOME)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@$(JAVA_21_HOME)/bin/java -version
+	@echo ""
+	JAVA_HOME=$(JAVA_21_HOME) $(GRADLEW) test integrationTest
+
+## test-java25: Run all tests with Java 25
+test-java25:
+	@if [ -z "$(JAVA_25_HOME)" ]; then \
+		echo "❌ Error: Java 25 not found."; \
+		echo "Please install Java 25 or check your installation."; \
+		exit 1; \
+	fi
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Running all tests with Java 25"
+	@echo "  Java Home: $(JAVA_25_HOME)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@$(JAVA_25_HOME)/bin/java -version
+	@echo ""
+	JAVA_HOME=$(JAVA_25_HOME) $(GRADLEW) test integrationTest
+
+## test-all-java-versions: Run tests on all supported Java versions (21, 25)
+test-all-java-versions:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Testing on all supported Java versions (21, 25)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@$(MAKE) test-java21
+	@echo ""
+	@echo "─────────────────────────────────────────────────────────────────"
+	@echo ""
+	@$(MAKE) test-java25
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  ✅ All Java versions tested successfully!"
+	@echo "═══════════════════════════════════════════════════════════════"
+
+## test-jvm-java21: Run JVM tests only with Java 21
+test-jvm-java21:
+	@if [ -z "$(JAVA_21_HOME)" ]; then \
+		echo "❌ Error: Java 21 not found."; \
+		exit 1; \
+	fi
+	@echo "Running JVM tests with Java 21..."
+	@$(JAVA_21_HOME)/bin/java -version
+	JAVA_HOME=$(JAVA_21_HOME) $(GRADLEW) jvmTest
+
+## test-jvm-java25: Run JVM tests only with Java 25
+test-jvm-java25:
+	@if [ -z "$(JAVA_25_HOME)" ]; then \
+		echo "❌ Error: Java 25 not found."; \
+		exit 1; \
+	fi
+	@echo "Running JVM tests with Java 25..."
+	@$(JAVA_25_HOME)/bin/java -version
+	JAVA_HOME=$(JAVA_25_HOME) $(GRADLEW) jvmTest
 
 ## benchmark: Run performance benchmarks and compare control vs treatment
 benchmark:
