@@ -1,7 +1,8 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
-    alias(libs.plugins.junit.no.network)
+    // Use plugin from composite build without version
+    id("io.github.garryjeromson.junit-no-network")
 }
 
 kotlin {
@@ -18,7 +19,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(projects.benchmarkCommon)
+                implementation(projects.benchmarks.benchmarkCommon)
             }
         }
 
@@ -102,9 +103,7 @@ tasks.matching { it.name.contains("UnitTest") }.configureEach {
     description = "Run Android performance benchmarks"
     group = "verification"
 
-    // Ensure library and plugin are published to Maven Local before running benchmarks
-    dependsOn(":junit-no-network:publishToMavenLocal")
-    dependsOn(":gradle-plugin:publishToMavenLocal")
+    // Note: Plugin and library are provided by composite build automatically
 }
 
 // Create combined benchmark task

@@ -17,7 +17,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(projects.benchmarkCommon)
+                implementation(projects.benchmarks.benchmarkCommon)
             }
         }
 
@@ -105,8 +105,7 @@ tasks.matching { it.name.contains("UnitTest") }.configureEach {
     description = "Run Android performance benchmarks"
     group = "verification"
 
-    // Ensure library is published to Maven Local before running benchmarks
-    dependsOn(":junit-no-network:publishToMavenLocal")
+    // Note: Library is provided by composite build automatically
 }
 
 // Create combined benchmark task

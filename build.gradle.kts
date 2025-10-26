@@ -46,7 +46,7 @@ gradle.taskGraph.whenReady {
         it.contains("benchmark") || it.contains("Benchmark")
     }) {
         allTasks.filter { task ->
-            task.project.name.startsWith("benchmark-") &&
+            task.project.path.startsWith(":benchmarks:") &&
             (task.name.endsWith("Test") || task.name == "test")
         }.forEach { task ->
             task.enabled = false
@@ -59,24 +59,14 @@ tasks.register("compareBenchmarks") {
     description = "Compare benchmark results from control and treatment projects"
     group = "verification"
 
-    // First ensure libraries are published, THEN run benchmarks
-    // This prevents timing measurements from including build/publish time
-    dependsOn(":junit-no-network:publishToMavenLocal")
-    dependsOn(":gradle-plugin:publishToMavenLocal")
-
-    // Make sure benchmarks run after publishing
-    val controlTest = tasks.getByPath(":benchmark-control:jvmTest")
-    val treatmentTest = tasks.getByPath(":benchmark-treatment:jvmTest")
-    controlTest.mustRunAfter(":junit-no-network:publishToMavenLocal")
-    treatmentTest.mustRunAfter(":gradle-plugin:publishToMavenLocal")
-
-    // Depend on both benchmark runs
-    dependsOn(":benchmark-control:jvmTest")
-    dependsOn(":benchmark-treatment:jvmTest")
+    // Note: Composite build provides libraries automatically, no publishing needed!
+    // benchmark-control depends on published library (via deps), so publish that first
+    dependsOn(":benchmarks:benchmark-control:jvmTest")
+    dependsOn(":benchmarks:benchmark-treatment:jvmTest")
 
     doLast {
-        val controlDir = project(":benchmark-control").layout.buildDirectory.get().asFile
-        val treatmentDir = project(":benchmark-treatment").layout.buildDirectory.get().asFile
+        val controlDir = project(":benchmarks:benchmark-control").layout.buildDirectory.get().asFile
+        val treatmentDir = project(":benchmarks:benchmark-treatment").layout.buildDirectory.get().asFile
 
         // Load and compare results using buildSrc utility
         // Note: High percentage overhead is expected for very fast operations (microseconds)
