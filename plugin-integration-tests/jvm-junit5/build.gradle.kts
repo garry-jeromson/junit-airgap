@@ -32,6 +32,12 @@ dependencies {
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.async.http.client)
     testImplementation(libs.reactor.netty.http)
+    testImplementation(libs.spring.webflux)
+    testImplementation(libs.spring.context)
+    testImplementation(libs.openfeign.core)
+    testImplementation(libs.openfeign.okhttp)
+    testImplementation(libs.fuel)
+    testImplementation(libs.fuel.coroutines)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
