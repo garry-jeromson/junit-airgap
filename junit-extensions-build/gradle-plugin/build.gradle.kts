@@ -3,7 +3,7 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     signing
-    id("junit-extensions.kotlin-common")
+    id("junit-extensions.kotlin-common-convention")
 }
 
 gradlePlugin {

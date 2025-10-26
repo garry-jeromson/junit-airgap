@@ -3,7 +3,7 @@ plugins {
     id("com.android.library")
     `maven-publish`
     signing
-    id("org.jlleitschuh.gradle.ktlint")
+    alias(libs.plugins.ktlint)
 }
 
 // Project coordinates (group and version)

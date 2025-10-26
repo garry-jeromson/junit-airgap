@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath("build-logic:benchmark-support")
+    }
+}
+
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
@@ -39,15 +45,19 @@ tasks.register("compareBenchmarks") {
     group = "verification"
 
     // Note: Composite build provides libraries automatically, no publishing needed!
-    // benchmark-control depends on published library (via deps), so publish that first
     dependsOn(":benchmarks:benchmark-control:jvmTest")
     dependsOn(":benchmarks:benchmark-treatment:jvmTest")
 
-    doLast {
-        val controlDir = project(":benchmarks:benchmark-control").layout.buildDirectory.get().asFile
-        val treatmentDir = project(":benchmarks:benchmark-treatment").layout.buildDirectory.get().asFile
+    // Capture build directories at configuration time for configuration cache compatibility
+    val controlBuildDir = project(":benchmarks:benchmark-control").layout.buildDirectory
+    val treatmentBuildDir = project(":benchmarks:benchmark-treatment").layout.buildDirectory
+    val rootBuildDir = layout.buildDirectory
 
-        // Load and compare results using buildSrc utility
+    doLast {
+        val controlDir = controlBuildDir.get().asFile
+        val treatmentDir = treatmentBuildDir.get().asFile
+
+        // Load and compare results using build-logic utility
         // Note: High percentage overhead is expected for very fast operations (microseconds)
         // because the JVMTI agent has a small constant overhead that becomes a large
         // percentage of tiny operation times. Set threshold high to catch regressions
@@ -59,7 +69,7 @@ tasks.register("compareBenchmarks") {
         )
 
         // Write report
-        val reportFile = File(project.layout.buildDirectory.get().asFile, "benchmark-comparison.md")
+        val reportFile = File(rootBuildDir.get().asFile, "benchmark-comparison.md")
         reportFile.parentFile.mkdirs()
         reportFile.writeText(report)
 

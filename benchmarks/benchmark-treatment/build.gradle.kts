@@ -1,8 +1,8 @@
 plugins {
-    id("junit-extensions.kotlin-multiplatform")
+    id("junit-extensions.kotlin-multiplatform-convention")
     id("com.android.library")
     // Use plugin from composite build without version
-    id("io.github.garryjeromson.junit-no-network")
+    alias(libs.plugins.junit.no.network)
 }
 
 kotlin {

@@ -3,6 +3,9 @@ rootProject.name = "junit-extensions"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    // Include build-logic for convention plugins
+    includeBuild("../build-logic")
+
     repositories {
         google()
         mavenCentral()

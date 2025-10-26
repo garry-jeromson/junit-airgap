@@ -1,5 +1,5 @@
 plugins {
-    id("junit-extensions.kotlin-multiplatform")
+    id("junit-extensions.kotlin-multiplatform-convention")
 }
 
 kotlin {

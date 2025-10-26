@@ -3,6 +3,9 @@ rootProject.name = "junit-extensions-workspace"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    // Include build-logic for convention plugins
+    includeBuild("build-logic")
+
     // Include the composite build for plugin resolution
     // This allows benchmark projects to use the plugin without Maven Local publishing
     includeBuild("junit-extensions-build")

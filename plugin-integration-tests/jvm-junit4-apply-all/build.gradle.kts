@@ -1,6 +1,6 @@
 plugins {
-    id("junit-extensions.kotlin-jvm")
-    id("io.github.garryjeromson.junit-no-network")
+    id("junit-extensions.kotlin-jvm-convention")
+    alias(libs.plugins.junit.no.network)
 }
 
 // Configure the plugin to apply network blocking to ALL tests by default (JUnit 4)

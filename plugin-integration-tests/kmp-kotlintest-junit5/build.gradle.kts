@@ -1,7 +1,7 @@
 plugins {
     id("junit-extensions.kotlin-multiplatform-convention")
     alias(libs.plugins.android.library)
-    id("io.github.garryjeromson.junit-no-network")
+    alias(libs.plugins.junit.no.network)
 }
 
 // Configure the plugin

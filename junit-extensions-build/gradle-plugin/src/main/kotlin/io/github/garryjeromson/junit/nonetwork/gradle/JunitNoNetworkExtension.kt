@@ -66,7 +66,7 @@ abstract class JunitNoNetworkExtension {
         // Set default values
         enabled.convention(true)
         applyToAllTests.convention(false)
-        libraryVersion.convention("0.1.0-SNAPSHOT") // Will be updated to match plugin version
+        libraryVersion.convention("0.1.0-beta.1") // Matches the actual library version
         debug.convention(false)
         injectJUnit4Rule.convention(false)
     }
