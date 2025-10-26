@@ -65,6 +65,13 @@ android {
     }
 }
 
+// Enable strict compilation - treat all warnings as errors
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+    }
+}
+
 // This is a library providing shared test utilities
 // Configure Android test tasks to not fail when no tests are found
 tasks.withType<Test>().configureEach {
