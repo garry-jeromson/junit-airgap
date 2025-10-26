@@ -28,7 +28,7 @@ class ReactorNettyClientIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -143,7 +143,7 @@ class ReactorNettyClientIntegrationTest {
             val response =
                 client
                     .get()
-                    .uri("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .uri("http://localhost:${mockServer.listeningPort}/api/test")
                     .responseContent()
                     .aggregate()
                     .asString()
@@ -165,7 +165,7 @@ class ReactorNettyClientIntegrationTest {
             val response =
                 client
                     .get()
-                    .uri("http://127.0.0.1:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .uri("http://127.0.0.1:${mockServer.listeningPort}/api/test")
                     .responseContent()
                     .aggregate()
                     .asString()
@@ -188,7 +188,7 @@ class ReactorNettyClientIntegrationTest {
             val response =
                 client
                     .get()
-                    .uri("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .uri("http://localhost:${mockServer.listeningPort}/api/test")
                     .responseContent()
                     .aggregate()
                     .asString()
@@ -275,7 +275,7 @@ class ReactorNettyClientIntegrationTest {
             val response =
                 client
                     .get()
-                    .uri("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .uri("http://localhost:${mockServer.listeningPort}/api/test")
                     .responseContent()
                     .aggregate()
                     .asString()

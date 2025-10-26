@@ -42,7 +42,7 @@ class JUnitFrameworkComparisonTest {
             @JvmStatic
             @BeforeClass
             fun startMockServer() {
-                mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+                mockServer = MockHttpServer()
                 mockServer.start()
                 Thread.sleep(100)
             }
@@ -72,7 +72,7 @@ class JUnitFrameworkComparisonTest {
         @AllowRequestsToHosts(hosts = ["localhost"])
         fun `JUnit 4 - should allow configured hosts`() {
             // Should not throw
-            Socket("localhost", MockHttpServer.DEFAULT_PORT).close()
+            Socket("localhost", mockServer.listeningPort).close()
         }
 
         @Test
@@ -99,7 +99,7 @@ class JUnitFrameworkComparisonTest {
             @JvmStatic
             @BeforeAll
             fun startMockServer() {
-                mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+                mockServer = MockHttpServer()
                 mockServer.start()
                 Thread.sleep(100)
             }
@@ -129,7 +129,7 @@ class JUnitFrameworkComparisonTest {
         @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
         fun `JUnit 5 - should allow configured hosts`() {
             // Should not throw
-            Socket("localhost", MockHttpServer.DEFAULT_PORT).close()
+            Socket("localhost", mockServer.listeningPort).close()
         }
 
         @org.junit.jupiter.api.Test

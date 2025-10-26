@@ -32,7 +32,7 @@ class AndroidHttpClientIntegrationTest {
         @JvmStatic
         @BeforeClass
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -61,7 +61,7 @@ class AndroidHttpClientIntegrationTest {
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `allows HttpURLConnection to localhost`() {
         assertNetworkNotBlocked("HttpURLConnection to localhost should work") {
-            val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
             val connection = url.openConnection() as HttpURLConnection
             connection.connect()
             connection.responseCode // Verify we can access the response
@@ -103,7 +103,7 @@ class AndroidHttpClientIntegrationTest {
             val request =
                 Request
                     .Builder()
-                    .url("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .url("http://localhost:${mockServer.listeningPort}/api/test")
                     .build()
             val response = client.newCall(request).execute()
             response.use {
@@ -149,7 +149,7 @@ class AndroidHttpClientIntegrationTest {
     @AllowRequestsToHosts(hosts = ["*"])
     fun `allows all HTTP clients when wildcard is configured`() {
         assertNetworkNotBlocked("Wildcard should allow HttpURLConnection") {
-            val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
             val connection = url.openConnection() as HttpURLConnection
             connection.connect()
         }
@@ -159,7 +159,7 @@ class AndroidHttpClientIntegrationTest {
             val request =
                 Request
                     .Builder()
-                    .url("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .url("http://localhost:${mockServer.listeningPort}/api/test")
                     .build()
             client.newCall(request).execute().close()
         }

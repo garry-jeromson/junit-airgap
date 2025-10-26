@@ -31,7 +31,7 @@ class AndroidJUnit4IntegrationTest {
         @JvmStatic
         @BeforeClass
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -56,7 +56,7 @@ class AndroidJUnit4IntegrationTest {
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `allows configured hosts with Rule on Android`() {
         assertNetworkNotBlocked("JUnit 4 Rule should allow configured hosts on Android") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
     }
 
@@ -96,7 +96,7 @@ class AndroidJUnit4IntegrationTest {
     @AllowRequestsToHosts(hosts = ["127.0.0.1"])
     fun `supports IP addresses with Rule on Android`() {
         assertNetworkNotBlocked("JUnit 4 Rule should support IP addresses on Android") {
-            Socket("127.0.0.1", MockHttpServer.DEFAULT_PORT)
+            Socket("127.0.0.1", mockServer.listeningPort)
         }
     }
 
@@ -105,7 +105,7 @@ class AndroidJUnit4IntegrationTest {
     @AllowRequestsToHosts(hosts = ["*.trusted.com", "localhost", "127.0.0.1"])
     fun `supports multiple allowed hosts with wildcards on Android`() {
         assertNetworkNotBlocked("Multiple allowed hosts should work on Android") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
 
         assertNetworkBlocked("Non-whitelisted hosts should be blocked on Android") {

@@ -4,10 +4,11 @@ import fi.iki.elonen.NanoHTTPD
 
 /**
  * Simple mock HTTP server for integration testing.
- * Runs on localhost at a configurable port.
+ * Runs on localhost at a random available port (or configurable port if specified).
+ * Use [listeningPort] to get the actual port number after calling [start].
  */
 class MockHttpServer(
-    port: Int = 8089,
+    port: Int = 0,
 ) : NanoHTTPD(port) {
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
@@ -39,6 +40,6 @@ class MockHttpServer(
     }
 
     companion object {
-        const val DEFAULT_PORT = 8089
+        const val DEFAULT_PORT = 0 // 0 = random available port
     }
 }

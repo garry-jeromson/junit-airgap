@@ -29,7 +29,7 @@ class HttpClientIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             // Give server time to start
             Thread.sleep(100)
@@ -58,7 +58,7 @@ class HttpClientIntegrationTest {
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `allows HttpURLConnection to localhost`() {
         assertNetworkNotBlocked("HttpURLConnection to localhost should work") {
-            val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()
@@ -102,7 +102,7 @@ class HttpClientIntegrationTest {
             val request =
                 Request
                     .Builder()
-                    .url("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                    .url("http://localhost:${mockServer.listeningPort}/api/test")
                     .build()
 
             val response = client.newCall(request).execute()
@@ -129,7 +129,7 @@ class HttpClientIntegrationTest {
     fun `allows Apache HttpClient to 127_0_0_1`() {
         assertNetworkNotBlocked("Apache HttpClient to 127.0.0.1 should work") {
             val httpClient = HttpClients.createDefault()
-            val request = HttpGet("http://127.0.0.1:${MockHttpServer.DEFAULT_PORT}/api/test")
+            val request = HttpGet("http://127.0.0.1:${mockServer.listeningPort}/api/test")
 
             val response = httpClient.execute(request)
             response.close()
@@ -153,7 +153,7 @@ class HttpClientIntegrationTest {
     fun `allows all HTTP clients when wildcard is configured`() {
         assertNetworkNotBlocked("All clients should work with wildcard") {
             // Test with localhost since we have wildcard
-            val url = URL("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()

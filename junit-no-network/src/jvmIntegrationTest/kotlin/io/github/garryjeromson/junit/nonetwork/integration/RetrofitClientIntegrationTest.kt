@@ -27,7 +27,7 @@ class RetrofitClientIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -72,7 +72,7 @@ class RetrofitClientIntegrationTest {
             val retrofit =
                 Retrofit
                     .Builder()
-                    .baseUrl("http://localhost:${MockHttpServer.DEFAULT_PORT}/")
+                    .baseUrl("http://localhost:${mockServer.listeningPort}/")
                     .addConverterFactory(ScalarsConverterFactory.create())
                     .build()
 
@@ -106,7 +106,7 @@ class RetrofitClientIntegrationTest {
             val retrofit =
                 Retrofit
                     .Builder()
-                    .baseUrl("http://localhost:${MockHttpServer.DEFAULT_PORT}/")
+                    .baseUrl("http://localhost:${mockServer.listeningPort}/")
                     .addConverterFactory(ScalarsConverterFactory.create())
                     .build()
 

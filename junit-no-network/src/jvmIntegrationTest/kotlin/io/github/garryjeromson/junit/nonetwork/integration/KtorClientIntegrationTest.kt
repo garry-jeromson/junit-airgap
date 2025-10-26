@@ -33,7 +33,7 @@ class KtorClientIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -68,7 +68,7 @@ class KtorClientIntegrationTest {
         runBlocking {
             val client = HttpClient(CIO)
             try {
-                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val response: HttpResponse = client.get("http://localhost:${mockServer.listeningPort}/api/test")
                 val body = response.bodyAsText()
                 assertTrue(body.isNotEmpty() || response.status.value == 200)
             } catch (e: NetworkRequestAttemptedException) {
@@ -101,7 +101,7 @@ class KtorClientIntegrationTest {
         runBlocking {
             val client = HttpClient(OkHttp)
             try {
-                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val response: HttpResponse = client.get("http://localhost:${mockServer.listeningPort}/api/test")
                 val body = response.bodyAsText()
                 assertTrue(body.isNotEmpty() || response.status.value == 200)
             } catch (e: NetworkRequestAttemptedException) {
@@ -134,7 +134,7 @@ class KtorClientIntegrationTest {
         runBlocking {
             val client = HttpClient(Java)
             try {
-                val response: HttpResponse = client.get("http://127.0.0.1:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val response: HttpResponse = client.get("http://127.0.0.1:${mockServer.listeningPort}/api/test")
                 val body = response.bodyAsText()
                 assertTrue(body.isNotEmpty() || response.status.value == 200)
             } catch (e: NetworkRequestAttemptedException) {
@@ -222,7 +222,7 @@ class KtorClientIntegrationTest {
         runBlocking {
             val client = HttpClient(CIO)
             try {
-                val response: HttpResponse = client.get("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test")
+                val response: HttpResponse = client.get("http://localhost:${mockServer.listeningPort}/api/test")
                 val body = response.bodyAsText()
                 assertTrue(body.isNotEmpty() || response.status.value == 200)
             } catch (e: NetworkRequestAttemptedException) {

@@ -29,7 +29,7 @@ class Java11HttpClientIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -76,7 +76,7 @@ class Java11HttpClientIntegrationTest {
             val request =
                 HttpRequest
                     .newBuilder()
-                    .uri(URI.create("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test"))
+                    .uri(URI.create("http://localhost:${mockServer.listeningPort}/api/test"))
                     .GET()
                     .build()
 
@@ -134,7 +134,7 @@ class Java11HttpClientIntegrationTest {
             val request =
                 HttpRequest
                     .newBuilder()
-                    .uri(URI.create("http://localhost:${MockHttpServer.DEFAULT_PORT}/api/test"))
+                    .uri(URI.create("http://localhost:${mockServer.listeningPort}/api/test"))
                     .GET()
                     .build()
 
@@ -153,7 +153,7 @@ class Java11HttpClientIntegrationTest {
             val request =
                 HttpRequest
                     .newBuilder()
-                    .uri(URI.create("http://127.0.0.1:${MockHttpServer.DEFAULT_PORT}/api/test"))
+                    .uri(URI.create("http://127.0.0.1:${mockServer.listeningPort}/api/test"))
                     .GET()
                     .build()
 

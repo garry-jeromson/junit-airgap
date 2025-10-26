@@ -24,7 +24,7 @@ class JUnit4IntegrationTest {
         @JvmStatic
         @BeforeClass
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -49,7 +49,7 @@ class JUnit4IntegrationTest {
     @AllowRequestsToHosts(hosts = ["localhost"])
     fun shouldAllowConfiguredHostsWithRule() {
         assertNetworkNotBlocked("JUnit 4 Rule should allow configured hosts") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
     }
 

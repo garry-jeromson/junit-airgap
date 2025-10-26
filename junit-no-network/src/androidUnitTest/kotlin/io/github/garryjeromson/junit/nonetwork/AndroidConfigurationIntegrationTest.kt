@@ -29,7 +29,7 @@ class AndroidConfigurationIntegrationTest {
         @JvmStatic
         @BeforeClass
         fun startMockServer() {
-            mockServer = MockHttpServer(MockHttpServer.DEFAULT_PORT)
+            mockServer = MockHttpServer()
             mockServer.start()
             Thread.sleep(100)
         }
@@ -45,7 +45,7 @@ class AndroidConfigurationIntegrationTest {
     fun `inherits class-level configuration`() {
         // Class allows localhost, so this should work
         assertNetworkNotBlocked("Should inherit class-level allowed hosts") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
 
         // But external hosts should be blocked
@@ -59,7 +59,7 @@ class AndroidConfigurationIntegrationTest {
     fun `merges method-level configuration with class-level`() {
         // localhost from class-level should still work
         assertNetworkNotBlocked("Class-level config should be merged") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
 
         // External hosts should still be blocked
@@ -74,7 +74,7 @@ class AndroidConfigurationIntegrationTest {
     fun `blocks specific hosts even with wildcard allowed`() {
         // Wildcard allows most hosts
         assertNetworkNotBlocked("Wildcard should allow most hosts") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
 
         // But explicitly blocked hosts should fail
@@ -106,11 +106,11 @@ class AndroidConfigurationIntegrationTest {
     fun `supports multiple allowed hosts`() {
         // All localhost variants should work
         assertNetworkNotBlocked("localhost should be allowed") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
 
         assertNetworkNotBlocked("127.0.0.1 should be allowed") {
-            Socket("127.0.0.1", MockHttpServer.DEFAULT_PORT)
+            Socket("127.0.0.1", mockServer.listeningPort)
         }
     }
 
@@ -119,7 +119,7 @@ class AndroidConfigurationIntegrationTest {
     fun `respects method-level blocked hosts over class-level allowed`() {
         // Blocked should take precedence
         assertNetworkBlocked("Method-level blocked should override class-level allowed") {
-            Socket("localhost", MockHttpServer.DEFAULT_PORT)
+            Socket("localhost", mockServer.listeningPort)
         }
     }
 
