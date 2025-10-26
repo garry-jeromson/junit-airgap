@@ -117,12 +117,22 @@ test-plugin-integration:
 		:plugin-integration-tests:jvm-junit5-blocked-hosts:test \
 		:plugin-integration-tests:jvm-junit4-apply-all:test
 
-## benchmark: Run all performance benchmarks (JVM + Android)
+## benchmark: Run performance benchmarks and compare control vs treatment
 benchmark:
-	@echo "Running all performance benchmarks..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:benchmark
+	@echo "Running performance benchmarks with comparison..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) compareBenchmarks
 
-## benchmark-jvm: Run JVM performance benchmarks only
+## benchmark-control: Run control benchmarks only (no plugin)
+benchmark-control:
+	@echo "Running control benchmarks (no plugin)..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:jvmTest
+
+## benchmark-treatment: Run treatment benchmarks only (with plugin)
+benchmark-treatment:
+	@echo "Running treatment benchmarks (with plugin)..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-treatment:jvmTest
+
+## benchmark-jvm: Run JVM performance benchmarks only (legacy alias for benchmark-control)
 benchmark-jvm:
 	@echo "Running JVM performance benchmarks..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:jvmTest

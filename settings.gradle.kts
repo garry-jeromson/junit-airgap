@@ -19,6 +19,7 @@ dependencyResolutionManagement {
 
 include(":junit-no-network")
 include(":gradle-plugin")
+include(":benchmark-common")
 include(":benchmark-control")
 include(":benchmark-treatment")
 

@@ -37,3 +37,36 @@ nexusPublishing {
         }
     }
 }
+
+// Benchmark comparison task
+tasks.register("compareBenchmarks") {
+    description = "Compare benchmark results from control and treatment projects"
+    group = "verification"
+
+    // Depend on both benchmark runs
+    dependsOn(":benchmark-control:jvmTest")
+    dependsOn(":benchmark-treatment:jvmTest")
+
+    doLast {
+        val controlDir = project(":benchmark-control").layout.buildDirectory.get().asFile
+        val treatmentDir = project(":benchmark-treatment").layout.buildDirectory.get().asFile
+
+        // Load and compare results using buildSrc utility
+        val report = BenchmarkComparison.compare(
+            controlDir = controlDir,
+            treatmentDir = treatmentDir,
+            suiteThresholdPercent = 10.0,
+            testThresholdPercent = 5.0
+        )
+
+        // Write report
+        val reportFile = File(project.layout.buildDirectory.get().asFile, "benchmark-comparison.md")
+        reportFile.parentFile.mkdirs()
+        reportFile.writeText(report)
+
+        println()
+        println(report)
+        println()
+        println("Full report written to: ${reportFile.absolutePath}")
+    }
+}

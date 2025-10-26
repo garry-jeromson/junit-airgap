@@ -18,6 +18,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
+                implementation(project(":benchmark-common"))
             }
         }
 
@@ -94,6 +95,31 @@ tasks.named<Test>("jvmTest") {
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
+    }
+
+    // External timing: measure suite startup overhead (including JVMTI agent loading)
+    var startTime: Long = 0
+    doFirst {
+        startTime = System.nanoTime()
+        println("═══════════════════════════════════════════════════════════════")
+        println("  Starting benchmark-treatment suite (with JVMTI agent)")
+        println("═══════════════════════════════════════════════════════════════")
+    }
+
+    doLast {
+        val endTime = System.nanoTime()
+        val durationMs = (endTime - startTime) / 1_000_000.0
+
+        println("═══════════════════════════════════════════════════════════════")
+        println("  Benchmark-treatment suite completed in ${String.format("%.2f", durationMs)}ms")
+        println("═══════════════════════════════════════════════════════════════")
+
+        // Write timing to JSON file
+        val outputDir = File(project.buildDir, "benchmark-results")
+        outputDir.mkdirs()
+        val timingFile = File(outputDir, "suite-timing.json")
+        timingFile.writeText("""{"suiteDurationMs": $durationMs}""")
+        println("  Suite timing written to: ${timingFile.absolutePath}")
     }
 }
 
