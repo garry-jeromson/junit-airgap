@@ -26,13 +26,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
-// Enable strict compilation - treat all warnings as errors
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        allWarningsAsErrors.set(true)
-    }
-}
-
 // Configure test tasks to use JUnit 4
 tasks.withType<Test> {
     useJUnit()

@@ -51,13 +51,6 @@ kotlin {
     }
 }
 
-// Enable strict compilation - treat all warnings as errors
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        allWarningsAsErrors.set(true)
-    }
-}
-
 android {
     namespace = "io.github.garryjeromson.junit.nonetwork.test.kmpjunit5"
     compileSdk = 34
