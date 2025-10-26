@@ -15,14 +15,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.no.network)
             }
         }
 
         val jvmMain by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 // JUnit 5 for JVM tests
                 implementation(libs.junit.jupiter.api)
                 implementation(libs.junit.jupiter.engine)
@@ -34,7 +34,7 @@ kotlin {
 
         val androidMain by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 // JUnit 4 for Android tests
                 implementation(libs.junit4)
                 // Robolectric for Android framework testing

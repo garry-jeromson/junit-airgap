@@ -26,7 +26,7 @@ kotlin {
             dependencies {
                 // Only kotlin.test - no explicit JUnit dependencies
                 // Let KMP choose the test framework defaults for each platform
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
                 implementation(projects.pluginIntegrationTests.testContracts)

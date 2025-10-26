@@ -24,7 +24,7 @@ kotlin {
     sourceSets {
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
                 implementation(projects.pluginIntegrationTests.testContracts)
@@ -35,7 +35,7 @@ kotlin {
 
         val jvmTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.jupiter.engine)
                 // JUnit Vintage engine to run JUnit 4 tests under JUnit Platform
                 implementation(libs.junit.vintage.engine)
@@ -48,7 +48,7 @@ kotlin {
 
         val androidUnitTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.jupiter.engine)
                 // JUnit Vintage engine to run JUnit 4 tests under JUnit Platform
                 implementation(libs.junit.vintage.engine)

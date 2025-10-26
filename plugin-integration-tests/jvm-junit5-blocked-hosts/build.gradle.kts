@@ -21,7 +21,7 @@ kotlin {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlin.test)
     testImplementation(libs.junit.jupiter.engine)
     testImplementation(libs.junit.no.network)
 

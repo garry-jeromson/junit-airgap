@@ -26,7 +26,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 // kotlin.test - will run on JUnit 5 via useJUnitPlatform()
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
                 implementation(projects.pluginIntegrationTests.testContracts)

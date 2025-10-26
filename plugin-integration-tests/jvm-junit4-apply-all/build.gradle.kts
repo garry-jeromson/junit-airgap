@@ -19,7 +19,7 @@ kotlin {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlin.test)
     testImplementation("junit:junit:4.13.2")
     testImplementation(libs.junit.no.network)
 

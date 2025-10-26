@@ -17,7 +17,7 @@ kotlin {
         // Common source sets
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("stdlib"))
+                implementation(libs.kotlin.stdlib)
                 implementation(projects.benchmarkCommon)
             }
         }
@@ -31,7 +31,7 @@ kotlin {
                 implementation(libs.junit.jupiter.engine)
                 implementation(libs.junit.jupiter.params)
 
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
             }
         }
 
@@ -47,7 +47,7 @@ kotlin {
                 implementation(libs.robolectric)
                 implementation(libs.androidx.test.core)
 
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
             }
         }
     }

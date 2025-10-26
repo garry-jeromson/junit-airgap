@@ -42,6 +42,10 @@ kotlinx-coroutines = "1.8.0"
 nanohttpd = "2.3.1"
 
 [libraries]
+# Kotlin Standard Library
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
 # JUnit 4
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 

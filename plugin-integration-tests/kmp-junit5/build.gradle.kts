@@ -23,7 +23,7 @@ kotlin {
     sourceSets {
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
                 implementation(projects.pluginIntegrationTests.testContracts)
@@ -34,7 +34,7 @@ kotlin {
 
         val jvmTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.jupiter.engine)
                 // Ktor HTTP client for JVM (CIO engine)
                 implementation(libs.ktor.client.cio)
@@ -44,7 +44,7 @@ kotlin {
 
         val androidUnitTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
                 implementation(libs.junit.jupiter.engine)
                 // Ktor HTTP client for Android (OkHttp engine)
                 implementation(libs.ktor.client.okhttp)

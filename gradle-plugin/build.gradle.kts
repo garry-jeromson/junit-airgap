@@ -21,17 +21,17 @@ gradlePlugin {
 
 dependencies {
     implementation(gradleApi())
-    implementation(kotlin("stdlib"))
+    implementation(libs.kotlin.stdlib)
 
     // ByteBuddy for JUnit 4 rule injection via bytecode enhancement
-    implementation("net.bytebuddy:byte-buddy:1.15.11")
+    implementation(libs.byte.buddy)
 
     // JUnit 4 API for detecting test annotations
-    implementation("junit:junit:4.13.2")
+    implementation(libs.junit4)
 
     testImplementation(gradleTestKit())
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.junit.jupiter.engine)
 }
 
 // Enable strict compilation - treat all warnings as errors

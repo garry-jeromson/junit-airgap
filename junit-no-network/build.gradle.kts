@@ -23,7 +23,7 @@ kotlin {
         // Common source sets
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("stdlib"))
+                implementation(libs.kotlin.stdlib)
                 // Note: JUnit dependencies moved to JVM/Android source sets
                 // as they are not compatible with native (iOS) targets
             }
@@ -31,7 +31,7 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
             }
         }
 
@@ -152,7 +152,7 @@ kotlin.jvm().compilations.create("integrationTest") {
         kotlin.srcDir("src/jvmIntegrationTest/kotlin")
 
         dependencies {
-            implementation(kotlin("test"))
+            implementation(libs.kotlin.test)
             implementation(libs.junit.jupiter.engine)
             implementation(libs.junit.jupiter.params)
 
