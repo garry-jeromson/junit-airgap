@@ -38,6 +38,22 @@ nexusPublishing {
     }
 }
 
+// Exclude benchmark projects from the default test task
+// Benchmarking is a separate concern from testing
+// Benchmark tests should only run when explicitly requested via 'make benchmark' or 'compareBenchmarks'
+gradle.taskGraph.whenReady {
+    if (!gradle.startParameter.taskNames.any {
+        it.contains("benchmark") || it.contains("Benchmark")
+    }) {
+        allTasks.filter { task ->
+            task.project.name.startsWith("benchmark-") &&
+            (task.name.endsWith("Test") || task.name == "test")
+        }.forEach { task ->
+            task.enabled = false
+        }
+    }
+}
+
 // Benchmark comparison task
 tasks.register("compareBenchmarks") {
     description = "Compare benchmark results from control and treatment projects"
