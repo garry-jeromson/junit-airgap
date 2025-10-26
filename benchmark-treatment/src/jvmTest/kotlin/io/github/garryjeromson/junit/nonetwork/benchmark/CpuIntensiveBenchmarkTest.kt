@@ -1,14 +1,15 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 /**
- * CPU-intensive benchmarks for control group (no plugin).
- * These tests perform significant CPU work to measure baseline performance
- * for computation-heavy operations.
+ * CPU-intensive benchmarks for treatment group (with plugin and JVMTI agent).
+ * These tests measure performance with network blocking enabled for CPU-heavy operations.
  */
 @ExtendWith(BenchmarkResultsCollector::class)
+@BlockNetworkRequests
 class CpuIntensiveBenchmarkTest {
     @Test
     fun `benchmark fibonacci calculation`() {

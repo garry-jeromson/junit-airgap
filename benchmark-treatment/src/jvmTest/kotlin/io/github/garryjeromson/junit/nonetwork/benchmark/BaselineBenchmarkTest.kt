@@ -1,14 +1,16 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
+import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertTrue
 
 /**
- * Baseline benchmarks for control group (no plugin).
- * These tests measure the baseline performance without any network blocking overhead.
+ * Baseline benchmarks for treatment group (with plugin and JVMTI agent).
+ * These tests measure performance with network blocking enabled via @BlockNetworkRequests.
  */
 @ExtendWith(BenchmarkResultsCollector::class)
+@BlockNetworkRequests
 class BaselineBenchmarkTest {
     @Test
     fun `benchmark empty test - no operations`() {
