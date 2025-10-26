@@ -13,7 +13,7 @@ junitNoNetwork {
     enabled = true
     allowedHosts = listOf("*")  // Allow all hosts by default
     blockedHosts = listOf("*.example.com", "badhost.io")  // Except these
-    debug = true
+    debug = false
 }
 
 kotlin {

@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = true // Enable debug logging
+    debug = false // Enable debug logging
     injectJUnit4Rule = true // Enable automatic @Rule injection for JUnit 4
 }
 

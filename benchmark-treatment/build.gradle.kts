@@ -78,7 +78,7 @@ android {
 // Configure the junit-no-network plugin
 junitNoNetwork {
     enabled = true
-    debug = true
+    debug = false
 }
 
 // Configure JVM test task

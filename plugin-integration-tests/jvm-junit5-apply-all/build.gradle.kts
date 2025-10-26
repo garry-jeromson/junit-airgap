@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     applyToAllTests = true // Block network by default, require @AllowNetworkRequests to opt out
-    debug = true
+    debug = false
 }
 
 kotlin {

@@ -11,7 +11,7 @@ junitNoNetwork {
     enabled = true
     injectJUnit4Rule = true // Enable bytecode injection for JUnit 4
     applyToAllTests = true // Block network by default via bytecode-injected @Rule
-    debug = true
+    debug = false
 }
 
 kotlin {

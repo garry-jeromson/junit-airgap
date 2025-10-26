@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     allowedHosts = listOf("localhost", "127.0.0.1", "*.local")
-    debug = true
+    debug = false
 }
 
 kotlin {
