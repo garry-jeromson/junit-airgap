@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     kotlin("android")
     id("junit-extensions.kotlin-common-convention")
+    id("junit-extensions.plugin-integration-test-convention")
     alias(libs.plugins.junit.no.network)
 }
 

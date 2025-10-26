@@ -1,5 +1,6 @@
 plugins {
     id("junit-extensions.kotlin-multiplatform-convention")
+    id("junit-extensions.plugin-integration-test-convention")
     alias(libs.plugins.android.library)
     alias(libs.plugins.junit.no.network)
 }

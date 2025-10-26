@@ -1,5 +1,6 @@
 plugins {
     id("junit-extensions.kotlin-jvm-convention")
+    id("junit-extensions.plugin-integration-test-convention")
     alias(libs.plugins.junit.no.network)
 }
 
