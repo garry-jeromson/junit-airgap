@@ -66,7 +66,6 @@ jobs:
 
           # Update gradle-plugin build.gradle.kts
           sed -i "s/version = \".*\"/version = \"$VERSION\"/" gradle-plugin/build.gradle.kts
-          sed -i "s/version = \".*\"/version = \"$VERSION\"/" gradle-plugin/build.gradle.kts
 
           echo "Updated version to $VERSION in build files"
 

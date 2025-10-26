@@ -246,8 +246,6 @@ void JNICALL NativeMethodBindCallback(
         // Store original function pointer
         std::string key = "java.net.Socket.socketConnect0";
         StoreOriginalFunction(key, address);
-
-        // TODO: Replace with wrapper function
     }
 
     // Check if this is SocketChannelImpl.connect0()
@@ -259,8 +257,6 @@ void JNICALL NativeMethodBindCallback(
         // Store original function pointer
         std::string key = "sun.nio.ch.SocketChannelImpl.connect0";
         StoreOriginalFunction(key, address);
-
-        // TODO: Replace with wrapper function
     }
 
     // Check if this is Inet6AddressImpl.lookupAllHostAddr() - DNS resolution

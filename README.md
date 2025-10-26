@@ -14,7 +14,6 @@ A JUnit extension that automatically fails tests attempting to make outgoing net
 - **[Setup Guides](docs/setup-guides/)** - Step-by-step guides for JVM, Android, and KMP
 - **[HTTP Client Guides](docs/clients/)** - OkHttp, Retrofit, Ktor, and more
 - **[Advanced Configuration](docs/advanced-configuration.md)** - All configuration options
-- **[Migration Guide: Java 24+](docs/migration-java24.md)** - Prepare for SecurityManager removal
 
 ---
 
