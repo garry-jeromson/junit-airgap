@@ -1,27 +1,43 @@
 # Publishing Guide
 
-This document describes how to publish the JUnit No-Network Extension to Maven Central.
+This document describes how to publish the JUnit No-Network Extension to Maven Central and Gradle Plugin Portal.
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [One-Time Setup](#one-time-setup)
   - [1. Create Sonatype OSSRH Account](#1-create-sonatype-ossrh-account)
   - [2. Generate GPG Keys](#2-generate-gpg-keys)
   - [3. Publish GPG Public Key](#3-publish-gpg-public-key)
-  - [4. Configure GitHub Secrets](#4-configure-github-secrets)
+  - [4. Create Gradle Plugin Portal Account](#4-create-gradle-plugin-portal-account)
+  - [5. Configure GitHub Secrets](#5-configure-github-secrets)
 - [Publishing a Release](#publishing-a-release)
 - [Troubleshooting](#troubleshooting)
 
 ---
 
+## Overview
+
+The JUnit No-Network Extension is published to two repositories:
+
+1. **Maven Central** - For the core library artifacts
+   - `io.github.garryjeromson:junit-no-network` (JVM)
+   - `io.github.garryjeromson:junit-no-network-android` (Android)
+
+2. **Gradle Plugin Portal** - For the Gradle plugin
+   - `io.github.garryjeromson.junit-no-network` plugin
+
+The GitHub Actions workflow automates publishing to both repositories simultaneously.
+
 ## Prerequisites
 
-Before you can publish to Maven Central, you need:
+Before you can publish, you need:
 
 1. **Sonatype OSSRH Account** - For publishing to Maven Central
 2. **GPG Key Pair** - For signing artifacts (required by Maven Central)
-3. **GitHub Repository Access** - Admin access to configure secrets
+3. **Gradle Plugin Portal Account** - For publishing the Gradle plugin
+4. **GitHub Repository Access** - Admin access to configure secrets
 
 ---
 
@@ -138,7 +154,29 @@ gpg --keyserver pgp.mit.edu --send-keys ABCD1234EFGH5678
 gpg --keyserver keyserver.ubuntu.com --search-keys your.email@example.com
 ```
 
-### 4. Configure GitHub Secrets
+### 4. Create Gradle Plugin Portal Account
+
+The Gradle plugin needs to be published to the Gradle Plugin Portal.
+
+#### Sign Up
+
+1. Go to https://plugins.gradle.org/
+2. Click **"Log in"** in the top right
+3. Sign in with GitHub, Google, or create an account
+4. Accept the Terms of Service
+
+#### Generate API Keys
+
+1. Once logged in, click your username in the top right
+2. Click **"API Keys"**
+3. Click **"Create new key"**
+4. Give it a descriptive name (e.g., "GitHub Actions Publishing")
+5. Copy the **Key** and **Secret** - you'll need these for GitHub secrets
+   - ⚠️ The secret is only shown once - save it securely
+
+**Note:** These credentials allow publishing plugins under your account. Keep them secure.
+
+### 5. Configure GitHub Secrets
 
 GitHub Actions needs access to your credentials to publish artifacts.
 
@@ -152,6 +190,8 @@ GitHub Actions needs access to your credentials to publish artifacts.
 
 Add the following secrets (click "New repository secret" for each):
 
+**Maven Central Credentials:**
+
 | Secret Name | Value | How to Get It |
 |------------|-------|---------------|
 | `OSSRH_USERNAME` | Your Sonatype username | From step 1 (Sonatype OSSRH account) |
@@ -159,6 +199,13 @@ Add the following secrets (click "New repository secret" for each):
 | `SIGNING_KEY_ID` | Your GPG key ID | Short key ID from step 2 (e.g., `ABCD1234EFGH5678`) |
 | `SIGNING_KEY` | Your GPG private key (base64) | See below |
 | `SIGNING_PASSWORD` | Your GPG passphrase | The passphrase you set when creating the key |
+
+**Gradle Plugin Portal Credentials:**
+
+| Secret Name | Value | How to Get It |
+|------------|-------|---------------|
+| `GRADLE_PUBLISH_KEY` | Your Plugin Portal API key | From step 4 (Plugin Portal API Keys) |
+| `GRADLE_PUBLISH_SECRET` | Your Plugin Portal API secret | From step 4 (Plugin Portal API Keys) |
 
 #### Encoding the Private Key
 
@@ -228,7 +275,7 @@ git push origin v1.0.0
 ### 3. Trigger GitHub Actions Publish Workflow
 
 1. Go to https://github.com/garry-jeromson/junit-request-blocker/actions
-2. Click on **"Publish to Maven Central"** workflow
+2. Click on **"Publish to Maven Central and Gradle Plugin Portal"** workflow
 3. Click **"Run workflow"** button
 4. **Optional:** Override version (leave empty to auto-detect from tag)
 5. Click **"Run workflow"** green button
@@ -242,26 +289,32 @@ git push origin v1.0.0
    - ✅ Sign all artifacts with your GPG key
    - ✅ Publish to Maven Central staging repository
    - ✅ Automatically close and release the staging repository
+   - ✅ Publish Gradle plugin to Plugin Portal
    - ✅ Create a GitHub release
 
 3. **Typical duration:** 5-10 minutes
 
 ### 5. Verify Publication
 
-**Immediate (Staging):**
+**Maven Central - Immediate (Staging):**
 - Check Sonatype Nexus: https://s01.oss.sonatype.org/
 - Log in with your OSSRH credentials
 - Navigate to **Staging Repositories**
 - Your artifacts should be in a "Released" state
 
-**Within 30 minutes:**
+**Maven Central - Within 30 minutes:**
 - Maven Central search: https://search.maven.org/search?q=g:io.github.garryjeromson
 
-**Within 2 hours:**
+**Maven Central - Within 2 hours:**
 - Full Maven Central availability
 - Gradle/Maven can download artifacts
 
-**Test it:**
+**Gradle Plugin Portal - Within 30 minutes:**
+- Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-no-network
+- Plugin should appear in search results
+- Users can apply the plugin with `id("io.github.garryjeromson.junit-no-network")`
+
+**Test Maven Central artifacts:**
 ```gradle
 repositories {
     mavenCentral()
@@ -269,6 +322,13 @@ repositories {
 
 dependencies {
     testImplementation("io.github.garryjeromson:junit-no-network:1.0.0")
+}
+```
+
+**Test Gradle Plugin:**
+```gradle
+plugins {
+    id("io.github.garryjeromson.junit-no-network") version "1.0.0"
 }
 ```
 
