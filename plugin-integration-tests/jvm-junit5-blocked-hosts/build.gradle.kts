@@ -9,8 +9,8 @@ plugins {
 // to allow all hosts EXCEPT those in blockedHosts
 junitNoNetwork {
     enabled = true
-    allowedHosts = listOf("*")  // Allow all hosts by default
-    blockedHosts = listOf("*.example.com", "badhost.io")  // Except these
+    allowedHosts = listOf("*") // Allow all hosts by default
+    blockedHosts = listOf("*.example.com", "badhost.io") // Except these
     debug = false
 }
 

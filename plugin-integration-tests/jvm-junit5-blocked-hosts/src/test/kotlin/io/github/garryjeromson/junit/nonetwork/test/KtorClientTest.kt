@@ -2,7 +2,6 @@ package io.github.garryjeromson.junit.nonetwork.test
 
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
-import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get

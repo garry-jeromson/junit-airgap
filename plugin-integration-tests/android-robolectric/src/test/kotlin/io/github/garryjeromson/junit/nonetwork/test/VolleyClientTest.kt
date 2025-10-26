@@ -34,8 +34,14 @@ class VolleyClientTest {
             StringRequest(
                 Request.Method.GET,
                 "https://example.com/",
-                { successRef.set(true); latch.countDown() },
-                { error -> errorRef.set(error); latch.countDown() },
+                {
+                    successRef.set(true)
+                    latch.countDown()
+                },
+                { error ->
+                    errorRef.set(error)
+                    latch.countDown()
+                },
             )
 
         queue.add(request)

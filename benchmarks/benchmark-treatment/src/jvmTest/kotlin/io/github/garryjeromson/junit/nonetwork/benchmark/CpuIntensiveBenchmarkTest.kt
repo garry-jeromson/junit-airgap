@@ -13,13 +13,14 @@ import org.junit.jupiter.api.extension.ExtendWith
 class CpuIntensiveBenchmarkTest {
     @Test
     fun `benchmark fibonacci calculation`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "CPU-Intensive (Fibonacci)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                fibonacci(20) // Calculate 20th Fibonacci number
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "CPU-Intensive (Fibonacci)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    fibonacci(20) // Calculate 20th Fibonacci number
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -32,13 +33,14 @@ class CpuIntensiveBenchmarkTest {
 
     @Test
     fun `benchmark prime number generation`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "CPU-Intensive (Prime Numbers)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                generatePrimes(100) // Generate first 100 primes
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "CPU-Intensive (Prime Numbers)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    generatePrimes(100) // Generate first 100 primes
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -51,14 +53,15 @@ class CpuIntensiveBenchmarkTest {
 
     @Test
     fun `benchmark array sorting`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "CPU-Intensive (Array Sorting)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                val array = (1..1000).shuffled().toIntArray()
-                array.sort()
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "CPU-Intensive (Array Sorting)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    val array = (1..1000).shuffled().toIntArray()
+                    array.sort()
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -71,17 +74,18 @@ class CpuIntensiveBenchmarkTest {
 
     @Test
     fun `benchmark string manipulation`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "CPU-Intensive (String Operations)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                var result = "hello"
-                repeat(100) {
-                    result = result.uppercase().lowercase()
-                    result = result.replace("l", "L")
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "CPU-Intensive (String Operations)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    var result = "hello"
+                    repeat(100) {
+                        result = result.uppercase().lowercase()
+                        result = result.replace("l", "L")
+                    }
                 }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -97,13 +101,14 @@ class CpuIntensiveBenchmarkTest {
         val emailPattern = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         val text = "Contact us at support@example.com or sales@example.org for more info"
 
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "CPU-Intensive (Regex Matching)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                emailPattern.findAll(text).toList()
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "CPU-Intensive (Regex Matching)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    emailPattern.findAll(text).toList()
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(

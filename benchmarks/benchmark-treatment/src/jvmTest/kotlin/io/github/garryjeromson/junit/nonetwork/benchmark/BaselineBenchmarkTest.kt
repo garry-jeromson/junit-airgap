@@ -14,13 +14,14 @@ import kotlin.test.assertTrue
 class BaselineBenchmarkTest {
     @Test
     fun `benchmark empty test - no operations`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "Empty Test (No Operations)",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                // Completely empty - just test overhead
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "Empty Test (No Operations)",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    // Completely empty - just test overhead
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -33,14 +34,15 @@ class BaselineBenchmarkTest {
 
     @Test
     fun `benchmark simple assertion test`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "Simple Assertion Test",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                val x = 1 + 1
-                assertTrue(x == 2)
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "Simple Assertion Test",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    val x = 1 + 1
+                    assertTrue(x == 2)
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -53,18 +55,19 @@ class BaselineBenchmarkTest {
 
     @Test
     fun `benchmark multiple simple assertions`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "Multiple Simple Assertions",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                val a = 5
-                val b = 10
-                assertTrue(a < b)
-                assertTrue(a + b == 15)
-                assertTrue(b - a == 5)
-                assertTrue(a * 2 == b)
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "Multiple Simple Assertions",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    val a = 5
+                    val b = 10
+                    assertTrue(a < b)
+                    assertTrue(a + b == 15)
+                    assertTrue(b - a == 5)
+                    assertTrue(a * 2 == b)
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -77,14 +80,15 @@ class BaselineBenchmarkTest {
 
     @Test
     fun `benchmark function calls`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "Function Calls",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                val result = calculateSum(1, 2, 3, 4, 5)
-                assertTrue(result == 15)
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "Function Calls",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    val result = calculateSum(1, 2, 3, 4, 5)
+                    assertTrue(result == 15)
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(
@@ -97,14 +101,15 @@ class BaselineBenchmarkTest {
 
     @Test
     fun `benchmark arithmetic operations`() {
-        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
-            name = "Arithmetic Operations",
-        ) {
-            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                val result = calculateProduct(2, 3, 4)
-                assertTrue(result == 24)
+        val (medianNs, stdDevNs) =
+            BenchmarkRunner.measureOperation(
+                name = "Arithmetic Operations",
+            ) {
+                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                    val result = calculateProduct(2, 3, 4)
+                    assertTrue(result == 24)
+                }
             }
-        }
 
         BenchmarkResultsCollector.addResult(
             SingleBenchmarkResult(

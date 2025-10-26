@@ -14,7 +14,8 @@ import org.springframework.web.reactive.function.client.WebClient
 class SpringWebClientTest {
     private fun makeSpringWebClientRequest(): String {
         val client = WebClient.create("https://example.com")
-        return client.get()
+        return client
+            .get()
             .uri("/")
             .retrieve()
             .bodyToMono(String::class.java)
