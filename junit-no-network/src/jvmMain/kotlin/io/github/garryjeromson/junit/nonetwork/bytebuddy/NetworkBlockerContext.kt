@@ -1,5 +1,6 @@
 package io.github.garryjeromson.junit.nonetwork.bytebuddy
 
+import io.github.garryjeromson.junit.nonetwork.DebugLogger
 import io.github.garryjeromson.junit.nonetwork.NetworkConfiguration
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestDetails
@@ -76,10 +77,9 @@ object NetworkBlockerContext {
     private var globalConfiguration: NetworkConfiguration? = null
 
     /**
-     * Debug mode flag (read from system property).
+     * Debug logger for troubleshooting network blocking issues.
      */
-    private val debugMode: Boolean
-        get() = System.getProperty("junit.nonetwork.debug") == "true"
+    private val logger = DebugLogger.instance
 
     /**
      * Set the configuration for the current thread.
@@ -91,12 +91,11 @@ object NetworkBlockerContext {
         // Set the generation on the configuration
         configuration.generation = currentGeneration
 
-        if (debugMode) {
-            println("NetworkBlockerContext: Setting configuration for thread ${Thread.currentThread().name}")
-            println("  allowedHosts: ${configuration.allowedHosts}")
-            println("  blockedHosts: ${configuration.blockedHosts}")
-            println("  generation: ${configuration.generation}")
-        }
+        logger.debug { "NetworkBlockerContext: Setting configuration for thread ${Thread.currentThread().name}" }
+        logger.debug { "  allowedHosts: ${configuration.allowedHosts}" }
+        logger.debug { "  blockedHosts: ${configuration.blockedHosts}" }
+        logger.debug { "  generation: ${configuration.generation}" }
+
         globalConfiguration = configuration
         configurationThreadLocal.set(configuration)
     }
@@ -108,10 +107,9 @@ object NetworkBlockerContext {
      */
     @JvmStatic
     fun clearConfiguration() {
-        if (debugMode) {
-            println("NetworkBlockerContext: Clearing configuration for thread ${Thread.currentThread().name}")
-            println("  Incrementing generation: $currentGeneration -> ${currentGeneration + 1}")
-        }
+        logger.debug { "NetworkBlockerContext: Clearing configuration for thread ${Thread.currentThread().name}" }
+        logger.debug { "  Incrementing generation: $currentGeneration -> ${currentGeneration + 1}" }
+
         globalConfiguration = null
         configurationThreadLocal.remove()
         currentGeneration++  // Invalidate all inherited configurations
@@ -127,25 +125,23 @@ object NetworkBlockerContext {
     fun getConfiguration(): NetworkConfiguration? {
         val config = configurationThreadLocal.get()
 
-        if (debugMode) {
-            println("NetworkBlockerContext.getConfiguration() on thread ${Thread.currentThread().name}")
-            println("  ThreadLocal config: $config")
-            println("  Current generation: $currentGeneration")
-            println("  Global config: $globalConfiguration")
-        }
+        logger.debug { "NetworkBlockerContext.getConfiguration() on thread ${Thread.currentThread().name}" }
+        logger.debug { "  ThreadLocal config: $config" }
+        logger.debug { "  Current generation: $currentGeneration" }
+        logger.debug { "  Global config: $globalConfiguration" }
 
         // If we have a config and it matches current generation, use it
         if (config != null && config.generation == currentGeneration) {
-            if (debugMode) println("  Using thread-local config (generation matches)")
+            logger.debug { "  Using thread-local config (generation matches)" }
             return config
         }
 
         // Otherwise, use the global configuration (for worker threads)
         val global = globalConfiguration
-        if (global != null && debugMode) {
-            println("  Using global configuration (thread-local was stale or missing)")
-        } else if (debugMode) {
-            println("  No configuration available!")
+        if (global != null) {
+            logger.debug { "  Using global configuration (thread-local was stale or missing)" }
+        } else {
+            logger.debug { "  No configuration available!" }
         }
         return global
     }
@@ -168,24 +164,18 @@ object NetworkBlockerContext {
     ) {
         val configuration = getConfiguration()
 
-        if (debugMode) {
-            println("NetworkBlockerContext.checkConnection: host=$host, port=$port, caller=$caller")
-            println("  Configuration: $configuration")
-        }
+        logger.debug { "NetworkBlockerContext.checkConnection: host=$host, port=$port, caller=$caller" }
+        logger.debug { "  Configuration: $configuration" }
 
         // No configuration = no blocking
         if (configuration == null) {
-            if (debugMode) {
-                println("  No configuration set, allowing connection")
-            }
+            logger.debug { "  No configuration set, allowing connection" }
             return
         }
 
         // Check if allowed
         val allowed = configuration.isAllowed(host)
-        if (debugMode) {
-            println("  isAllowed($host) = $allowed")
-        }
+        logger.debug { "  isAllowed($host) = $allowed" }
 
         if (!allowed) {
             val details =
@@ -228,10 +218,8 @@ object NetworkBlockerContext {
             checkConnection(host, port, caller)
         } catch (e: Exception) {
             // If we can't parse URL, allow it (fail open rather than crash)
-            if (debugMode) {
-                println("NetworkBlockerContext: Failed to parse URL: $url, allowing connection")
-                e.printStackTrace()
-            }
+            logger.debug { "NetworkBlockerContext: Failed to parse URL: $url, allowing connection" }
+            logger.debug { "Exception: ${e.message}" }
         }
     }
 
@@ -248,16 +236,12 @@ object NetworkBlockerContext {
     fun isExplicitlyBlocked(host: String): Boolean {
         val configuration = getConfiguration()
 
-        if (debugMode) {
-            println("NetworkBlockerContext.isExplicitlyBlocked: host=$host")
-            println("  Configuration: $configuration")
-        }
+        logger.debug { "NetworkBlockerContext.isExplicitlyBlocked: host=$host" }
+        logger.debug { "  Configuration: $configuration" }
 
         // No configuration = not blocked
         if (configuration == null) {
-            if (debugMode) {
-                println("  No configuration set, not blocked")
-            }
+            logger.debug { "  No configuration set, not blocked" }
             return false
         }
 
@@ -265,15 +249,13 @@ object NetworkBlockerContext {
         val normalizedHost = host.lowercase()
         val blocked = configuration.blockedHosts.any { pattern ->
             val matches = matchesPattern(normalizedHost, pattern.lowercase())
-            if (debugMode && matches) {
-                println("  Host $host matches blocked pattern: $pattern")
+            if (matches) {
+                logger.debug { "  Host $host matches blocked pattern: $pattern" }
             }
             matches
         }
 
-        if (debugMode) {
-            println("  isExplicitlyBlocked($host) = $blocked")
-        }
+        logger.debug { "  isExplicitlyBlocked($host) = $blocked" }
 
         return blocked
     }

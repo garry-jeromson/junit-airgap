@@ -225,6 +225,62 @@ The library uses JVMTI (JVM Tool Interface) for network blocking on all JVM plat
 - Provides API compatibility for KMP projects
 - No actual network blocking occurs on iOS
 
+## Debug Logging
+
+The library uses an internal `DebugLogger` for troubleshooting network blocking issues.
+
+### Enabling Debug Mode
+
+Set the system property to enable debug logging:
+
+```bash
+./gradlew test -Djunit.nonetwork.debug=true
+```
+
+### Architecture
+
+**Location**: `junit-no-network/src/jvmMain/kotlin/.../DebugLogger.kt`
+
+The debug logging system provides:
+- **Zero overhead when disabled**: Uses lazy evaluation (`message: () -> String`)
+- **Testable**: Supports test logger injection for unit testing
+- **Single source of truth**: One place to check debug mode
+- **Clean separation**: Debug logging separated from business logic
+
+### Implementation
+
+```kotlin
+// Usage in library code
+private val logger = DebugLogger.instance
+
+logger.debug { "Connection attempt: $host:$port" }
+logger.debug { "Configuration: $config" }
+```
+
+### Testing Debug Output
+
+The `TestDebugLogger` (in test sources) captures debug messages for assertions:
+
+```kotlin
+@Test
+fun `test debug output`() {
+    val testLogger = TestDebugLogger()
+    DebugLogger.setTestInstance(testLogger)
+
+    try {
+        // Code that logs
+        someMethod()
+
+        // Assert on captured messages
+        assertEquals("Expected message", testLogger.messages[0])
+    } finally {
+        DebugLogger.setTestInstance(null)
+    }
+}
+```
+
+See `junit-no-network/src/jvmTest/kotlin/.../DebugLoggerTest.kt` for examples.
+
 ## Test Contracts Module
 
 The `test-contracts` module provides generic, client-agnostic test assertions used by all integration test projects.

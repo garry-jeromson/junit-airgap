@@ -36,27 +36,21 @@ import org.junit.platform.launcher.LauncherSessionListener
  * JUnit Platform automatically discovers and invokes it.
  */
 class NoNetworkLauncherSessionListener : LauncherSessionListener {
-    override fun launcherSessionOpened(session: LauncherSession) {
-        val debugMode = System.getProperty("junit.nonetwork.debug") == "true"
+    private val logger = DebugLogger.instance
 
-        if (debugMode) {
-            println("[junit-no-network] LauncherSessionListener.launcherSessionOpened() called")
-        }
+    override fun launcherSessionOpened(session: LauncherSession) {
+        logger.debug { "LauncherSessionListener.launcherSessionOpened() called" }
 
         // Force NetworkBlockerContext to initialize by accessing it.
         // This triggers its init block, which calls registerWithAgent() (if JVMTI agent is loaded).
         // We call getConfiguration() because it's a simple getter with no side effects.
         try {
             NetworkBlockerContext.getConfiguration()
-            if (debugMode) {
-                println("[junit-no-network] NetworkBlockerContext initialized successfully")
-            }
+            logger.debug { "NetworkBlockerContext initialized successfully" }
         } catch (e: Throwable) {
             // Ignore errors - NetworkBlockerContext will initialize when first used
             // This is expected if the JVMTI agent is not loaded
-            if (debugMode) {
-                println("[junit-no-network] NetworkBlockerContext initialization failed: ${e.message}")
-            }
+            logger.debug { "NetworkBlockerContext initialization failed: ${e.message}" }
         }
     }
 }

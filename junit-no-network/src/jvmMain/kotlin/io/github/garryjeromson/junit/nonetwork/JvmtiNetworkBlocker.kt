@@ -129,6 +129,7 @@ internal class JvmtiNetworkBlocker(
     private val configuration: NetworkConfiguration,
 ) : NetworkBlockerStrategy {
     private var isInstalled: Boolean = false
+    private val logger = DebugLogger.instance
 
     /**
      * Install the network blocker.
@@ -152,10 +153,8 @@ internal class JvmtiNetworkBlocker(
         // via JNI to check this configuration
         NetworkBlockerContext.setConfiguration(configuration)
 
-        if (System.getProperty("junit.nonetwork.debug") == "true") {
-            println("JvmtiNetworkBlocker: Installed for thread ${Thread.currentThread().name}")
-            println("  NOTE: JVMTI agent must be loaded via -agentpath at JVM startup")
-        }
+        logger.debug { "JvmtiNetworkBlocker: Installed for thread ${Thread.currentThread().name}" }
+        logger.debug { "  NOTE: JVMTI agent must be loaded via -agentpath at JVM startup" }
 
         isInstalled = true
     }
@@ -176,9 +175,7 @@ internal class JvmtiNetworkBlocker(
         // Clear ThreadLocal configuration
         NetworkBlockerContext.clearConfiguration()
 
-        if (System.getProperty("junit.nonetwork.debug") == "true") {
-            println("JvmtiNetworkBlocker: Uninstalled for thread ${Thread.currentThread().name}")
-        }
+        logger.debug { "JvmtiNetworkBlocker: Uninstalled for thread ${Thread.currentThread().name}" }
 
         isInstalled = false
     }
