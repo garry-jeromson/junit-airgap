@@ -3,16 +3,23 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     signing
+    id("com.gradle.plugin-publish") version "1.3.0"
     id("junit-extensions.kotlin-common-convention")
+    alias(libs.plugins.kover)
 }
 
 gradlePlugin {
+    // Plugin Portal configuration
+    website.set("https://github.com/garry-jeromson/junit-request-blocker")
+    vcsUrl.set("https://github.com/garry-jeromson/junit-request-blocker.git")
+
     plugins {
         create("junitNoNetworkPlugin") {
             id = "io.github.garryjeromson.junit-no-network"
             implementationClass = "io.github.garryjeromson.junit.nonetwork.gradle.JunitNoNetworkPlugin"
             displayName = "JUnit No-Network Plugin"
             description = "Automatically configure JUnit tests to block network requests"
+            tags.set(listOf("testing", "junit", "junit5", "junit4", "network", "isolation", "test-isolation"))
         }
     }
 }
@@ -186,5 +193,23 @@ signing {
     if (signingKeyId != null && signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
         sign(publishing.publications)
+    }
+}
+
+// ============================================================================
+// Code Coverage Configuration (Kover)
+// ============================================================================
+
+kover {
+    reports {
+        // Generate both XML (for CI) and HTML (for local viewing) reports
+        total {
+            xml {
+                onCheck = true
+            }
+            html {
+                onCheck = true
+            }
+        }
     }
 }

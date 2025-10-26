@@ -4,6 +4,7 @@ plugins {
     `maven-publish`
     signing
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
 }
 
 // Project coordinates (group and version)
@@ -473,5 +474,23 @@ signing {
     if (signingKeyId != null && signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
         sign(publishing.publications)
+    }
+}
+
+// ============================================================================
+// Code Coverage Configuration (Kover)
+// ============================================================================
+
+kover {
+    reports {
+        // Generate both XML (for CI) and HTML (for local viewing) reports
+        total {
+            xml {
+                onCheck = true
+            }
+            html {
+                onCheck = true
+            }
+        }
     }
 }

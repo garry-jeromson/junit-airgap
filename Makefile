@@ -52,9 +52,14 @@ help:
 	@echo "  check              Run all checks (lint + tests)"
 	@echo "  fix                Auto-fix formatting and lint issues"
 	@echo ""
+	@echo "Code Coverage Commands:"
+	@echo "  coverage           Generate code coverage reports"
+	@echo "  coverage-report    Open HTML coverage report in browser"
+	@echo ""
 	@echo "Publishing Commands:"
-	@echo "  install            Install to local Maven repository"
-	@echo "  publish            Publish to configured repository"
+	@echo "  install            Install to local Maven repository (~/.m2/repository)"
+	@echo "  publish            Publish to Maven Central (requires OSSRH credentials)"
+	@echo "  publish-plugin     Publish Gradle plugin to Plugin Portal (requires credentials)"
 	@echo ""
 	@echo "Utility Commands:"
 	@echo "  tasks              List all available Gradle tasks"
@@ -136,6 +141,20 @@ check:
 fix: format
 	@echo "Code formatting applied!"
 
+## coverage: Generate code coverage reports
+coverage:
+	@echo "Generating code coverage reports..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) koverHtmlReport koverXmlReport
+
+## coverage-report: Open HTML coverage report in browser
+coverage-report: coverage
+	@echo "Opening coverage report..."
+	@open junit-no-network/build/reports/kover/html/index.html || \
+	 open gradle-plugin/build/reports/kover/html/index.html || \
+	 echo "Coverage reports generated. Check:"
+	@echo "  - junit-no-network/build/reports/kover/html/index.html"
+	@echo "  - gradle-plugin/build/reports/kover/html/index.html"
+
 ## verify: Run all tests and checks
 verify: check test
 	@echo "All verification passed!"
@@ -160,10 +179,15 @@ install:
 	@echo "Installing to local Maven repository..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publishToMavenLocal
 
-## publish: Publish to configured repository
+## publish: Publish to Maven Central
 publish:
-	@echo "Publishing artifacts..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publish
+	@echo "Publishing artifacts to Maven Central..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+## publish-plugin: Publish Gradle plugin to Plugin Portal
+publish-plugin:
+	@echo "Publishing Gradle plugin to Plugin Portal..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishPlugins
 
 ## tasks: List all available Gradle tasks
 tasks:

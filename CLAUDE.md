@@ -125,6 +125,50 @@ The plugin provides two integration paths:
 - Resolves Test task's classpath at execution time (not configuration time)
 - **Known Issue**: Android/KMP projects currently have task wiring challenges
 
+## Code Coverage
+
+The project uses Kover (Kotlin-focused coverage tool) to measure code coverage for the core modules.
+
+### Coverage is Enabled For
+
+- **`:junit-no-network`** - Core Kotlin Multiplatform library (JVM and Android targets)
+- **`:gradle-plugin`** - Gradle plugin
+
+### Generating Coverage Reports
+
+```bash
+# Generate coverage reports (both XML and HTML)
+make coverage
+
+# Generate and open HTML report in browser
+make coverage-report
+```
+
+Or directly with Gradle:
+
+```bash
+JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew koverHtmlReport koverXmlReport
+```
+
+### Report Locations
+
+After running coverage, reports are available at:
+
+- **junit-no-network**: `junit-no-network/build/reports/kover/html/index.html`
+- **gradle-plugin**: `gradle-plugin/build/reports/kover/html/index.html`
+
+XML reports (for CI integration):
+- **junit-no-network**: `junit-no-network/build/reports/kover/report.xml`
+- **gradle-plugin**: `gradle-plugin/build/reports/kover/report.xml`
+
+### Coverage Notes
+
+- Coverage runs automatically with tests
+- HTML reports are user-friendly for local development
+- XML reports can be integrated with CI/CD tools
+- Integration test projects are excluded (test-only code)
+- Benchmarks are excluded (performance measurement, not functionality)
+
 ## Code Quality
 
 ### Formatting with ktlint
