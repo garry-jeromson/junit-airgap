@@ -6,10 +6,6 @@ pluginManagement {
     // Include build-logic for convention plugins
     includeBuild("build-logic")
 
-    // Include the composite build for plugin resolution
-    // This allows benchmark projects to use the plugin without Maven Local publishing
-    includeBuild("junit-extensions-build")
-
     repositories {
         mavenLocal() // For plugin-integration-test to consume locally published plugin
         google()
@@ -19,16 +15,16 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    // Include the composite build for dependency resolution
-    // This allows benchmark projects to depend on junit-no-network without Maven Local
-    includeBuild("junit-extensions-build")
-
     repositories {
         mavenLocal() // For integration-test-app to consume published artifacts
         google()
         mavenCentral()
     }
 }
+
+// Core library and plugin
+include(":junit-no-network")
+include(":gradle-plugin")
 
 // Benchmark projects
 include(":benchmarks:benchmark-common")

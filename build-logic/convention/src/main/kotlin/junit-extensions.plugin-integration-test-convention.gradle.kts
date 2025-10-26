@@ -12,8 +12,5 @@
 
 // Configure all test tasks to depend on publishing the gradle plugin
 tasks.withType<Test>().configureEach {
-    // Find the included build and add task dependency
-    gradle.includedBuilds.find { it.name == "junit-extensions-build" }?.let { includedBuild ->
-        dependsOn(includedBuild.task(":gradle-plugin:publishToMavenLocal"))
-    }
+    dependsOn(":gradle-plugin:publishToMavenLocal")
 }
