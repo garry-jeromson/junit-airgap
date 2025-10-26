@@ -39,6 +39,41 @@ gradle.taskGraph.whenReady {
     }
 }
 
+// Configure root test task to run all tests across the project
+// This ensures that running `./gradlew test` runs comprehensive test coverage:
+// - Core library tests (JVM + Android) via included build
+// - Gradle plugin tests via included build
+// - Integration tests via included build
+// - Plugin integration tests (all 11 projects) in this workspace
+tasks.register("test") {
+    description = "Run all tests across the project (core library, gradle plugin, integration tests, and plugin integration tests)"
+    group = "verification"
+
+    // Depend on tests from the included build (junit-extensions-build)
+    gradle.includedBuilds.find { it.name == "junit-extensions-build" }?.let { includedBuild ->
+        dependsOn(
+            includedBuild.task(":junit-no-network:test"),
+            includedBuild.task(":gradle-plugin:test"),
+            includedBuild.task(":junit-no-network:integrationTest")
+        )
+    }
+
+    // Depend on all test tasks in this workspace (plugin-integration-tests)
+    dependsOn(
+        ":plugin-integration-tests:jvm-junit5:test",
+        ":plugin-integration-tests:jvm-junit4:test",
+        ":plugin-integration-tests:jvm-junit5-apply-all:test",
+        ":plugin-integration-tests:jvm-junit5-allowed-hosts:test",
+        ":plugin-integration-tests:jvm-junit5-blocked-hosts:test",
+        ":plugin-integration-tests:jvm-junit4-apply-all:test",
+        ":plugin-integration-tests:kmp-junit5:test",
+        ":plugin-integration-tests:kmp-junit4:test",
+        ":plugin-integration-tests:kmp-kotlintest:test",
+        ":plugin-integration-tests:kmp-kotlintest-junit5:test",
+        ":plugin-integration-tests:android-robolectric:test"
+    )
+}
+
 // Benchmark comparison task
 tasks.register("compareBenchmarks") {
     description = "Compare benchmark results from control and treatment projects"
