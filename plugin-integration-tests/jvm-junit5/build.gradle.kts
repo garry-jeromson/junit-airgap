@@ -31,6 +31,7 @@ dependencies {
     testImplementation(libs.retrofit)
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.async.http.client)
+    testImplementation(libs.slf4j.simple)  // SLF4J implementation for async-http-client
     testImplementation(libs.reactor.netty.http)
     testImplementation("io.netty:netty-resolver-dns-native-macos:${libs.versions.netty.get()}:osx-aarch_64")
     testImplementation(libs.spring.webflux)

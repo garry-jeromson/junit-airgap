@@ -40,6 +40,7 @@ kotlinx-coroutines = "1.8.0"
 
 # Test Utilities
 nanohttpd = "2.3.1"
+slf4j = "2.0.16"
 
 [libraries]
 # Kotlin Standard Library
@@ -102,6 +103,9 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 # Test Servers
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
+
+# Logging (for tests)
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
 # Bytecode Instrumentation
 byte-buddy = { module = "net.bytebuddy:byte-buddy", version.ref = "byte-buddy" }
