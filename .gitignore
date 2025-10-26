@@ -34,5 +34,10 @@ captures/
 .externalNativeBuild/
 .cxx/
 
+# Native agent libraries (generated during build)
+*.dylib
+*.so
+*.dll
+
 # Logs
 *.log

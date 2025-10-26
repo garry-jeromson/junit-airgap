@@ -37,8 +37,8 @@ dependencies {
 
 // Enable strict compilation - treat all warnings as errors
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        allWarningsAsErrors = true
+    compilerOptions {
+        allWarningsAsErrors.set(true)
     }
 }
 
