@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.garryjeromson"
-version = "0.1.0-SNAPSHOT"
+version = "0.1.0-beta.1"
 
 gradlePlugin {
     plugins {
@@ -143,7 +143,7 @@ publishing {
         create<MavenPublication>("pluginMaven") {
             groupId = "io.github.garryjeromson"
             artifactId = "junit-no-network-gradle-plugin"
-            version = "0.1.0-SNAPSHOT"
+            version = "0.1.0-beta.1"
 
             // POM metadata for Maven Central
             pom {

@@ -23,7 +23,7 @@ kotlin {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.engine)
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
 
     // Test contracts for shared test behaviors
     testImplementation(project(":plugin-integration-tests:test-contracts"))

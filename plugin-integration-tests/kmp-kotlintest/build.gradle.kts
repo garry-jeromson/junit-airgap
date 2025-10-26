@@ -27,7 +27,7 @@ kotlin {
                 // Only kotlin.test - no explicit JUnit dependencies
                 // Let KMP choose the test framework defaults for each platform
                 implementation(kotlin("test"))
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
                 // Test contracts for shared test behaviors
                 implementation(project(":plugin-integration-tests:test-contracts"))
                 // Ktor HTTP client core (platform-independent)
