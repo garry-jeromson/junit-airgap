@@ -104,7 +104,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     compilerOptions {
         allWarningsAsErrors.set(true)
         // Suppress Beta warning for expect/actual classes (KMP standard pattern)
-        freeCompilerArgs.addAll("-Xexpect-actual-classes")
+        // Suppress experimental language version warning (Gradle 9.1.0 uses Kotlin 2.2.0)
+        freeCompilerArgs.addAll(
+            "-Xexpect-actual-classes",
+            "-Xsuppress-version-warnings"
+        )
     }
 }
 

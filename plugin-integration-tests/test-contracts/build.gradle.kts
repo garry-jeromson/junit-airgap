@@ -64,3 +64,13 @@ android {
         }
     }
 }
+
+// This is a library providing shared test utilities
+// Configure Android test tasks to not fail when no tests are found
+tasks.withType<Test>().configureEach {
+    if (name.contains("AndroidUnitTest") || name.contains("UnitTest")) {
+        // Don't fail Android unit test tasks when no tests are found
+        // (this project has JVM and common tests, but no Android-specific tests)
+        failOnNoDiscoveredTests.set(false)
+    }
+}
