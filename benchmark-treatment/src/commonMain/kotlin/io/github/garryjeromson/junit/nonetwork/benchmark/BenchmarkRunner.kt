@@ -8,7 +8,48 @@ package io.github.garryjeromson.junit.nonetwork.benchmark
  */
 object BenchmarkRunner {
     /**
+     * Run a benchmark measuring a single operation.
+     * Results are returned for later comparison.
+     *
+     * @param name Name of the benchmark
+     * @param operation Function to benchmark
+     * @return Timing statistics (median and stddev in nanoseconds)
+     */
+    fun measureOperation(
+        name: String,
+        operation: () -> Unit,
+    ): Pair<Double, Double> {
+        // Warmup phase
+        println("Warming up $name...")
+        repeat(BenchmarkConfig.WARMUP_ITERATIONS) {
+            operation()
+        }
+
+        // Measurement phase
+        println("Measuring $name...")
+        val times = mutableListOf<Double>()
+        repeat(BenchmarkConfig.MEASUREMENT_ITERATIONS) {
+            val startTime = System.nanoTime()
+            operation()
+            val endTime = System.nanoTime()
+            times.add((endTime - startTime).toDouble())
+        }
+
+        // Remove outliers
+        val timesFiltered = Statistics.removeOutliers(times)
+
+        // Calculate statistics
+        val median = Statistics.median(timesFiltered)
+        val stdDev = Statistics.stdDev(timesFiltered)
+
+        println("  Median: ${median / 1_000_000.0}ms (±${stdDev / 1_000_000.0}ms)")
+
+        return Pair(median, stdDev)
+    }
+
+    /**
      * Run a benchmark comparing control vs treatment.
+     * This is the legacy API for backward compatibility within a single test.
      *
      * @param name Name of the benchmark
      * @param control Function to benchmark without the extension
@@ -20,42 +61,8 @@ object BenchmarkRunner {
         control: () -> Unit,
         treatment: () -> Unit,
     ): BenchmarkResult {
-        // Warmup phase
-        println("Warming up $name...")
-        repeat(BenchmarkConfig.WARMUP_ITERATIONS) {
-            control()
-            treatment()
-        }
-
-        // Measurement phase - Control
-        println("Measuring control group for $name...")
-        val controlTimes = mutableListOf<Double>()
-        repeat(BenchmarkConfig.MEASUREMENT_ITERATIONS) {
-            val startTime = System.nanoTime()
-            control()
-            val endTime = System.nanoTime()
-            controlTimes.add((endTime - startTime).toDouble())
-        }
-
-        // Measurement phase - Treatment
-        println("Measuring treatment group for $name...")
-        val treatmentTimes = mutableListOf<Double>()
-        repeat(BenchmarkConfig.MEASUREMENT_ITERATIONS) {
-            val startTime = System.nanoTime()
-            treatment()
-            val endTime = System.nanoTime()
-            treatmentTimes.add((endTime - startTime).toDouble())
-        }
-
-        // Remove outliers
-        val controlTimesFiltered = Statistics.removeOutliers(controlTimes)
-        val treatmentTimesFiltered = Statistics.removeOutliers(treatmentTimes)
-
-        // Calculate statistics
-        val controlMedian = Statistics.median(controlTimesFiltered)
-        val treatmentMedian = Statistics.median(treatmentTimesFiltered)
-        val controlStdDev = Statistics.stdDev(controlTimesFiltered)
-        val treatmentStdDev = Statistics.stdDev(treatmentTimesFiltered)
+        val (controlMedian, controlStdDev) = measureOperation("$name (control)", control)
+        val (treatmentMedian, treatmentStdDev) = measureOperation("$name (treatment)", treatment)
 
         return BenchmarkResult(
             name = name,

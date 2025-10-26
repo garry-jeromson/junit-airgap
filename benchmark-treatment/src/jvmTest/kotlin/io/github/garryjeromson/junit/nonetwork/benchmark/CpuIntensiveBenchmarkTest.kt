@@ -1,117 +1,115 @@
 package io.github.garryjeromson.junit.nonetwork.benchmark
 
-import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 /**
- * CPU-intensive benchmarks to verify no overhead for computation-heavy tests.
- * These tests perform significant CPU work to ensure SecurityManager overhead
- * is negligible compared to actual test work.
+ * CPU-intensive benchmarks for control group (no plugin).
+ * These tests perform significant CPU work to measure baseline performance
+ * for computation-heavy operations.
  */
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(BenchmarkResultsCollector::class)
 class CpuIntensiveBenchmarkTest {
     @Test
-    @BlockNetworkRequests
     fun `benchmark fibonacci calculation`() {
-        BenchmarkRunner.runBenchmarkAndAssert(
+        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
             name = "CPU-Intensive (Fibonacci)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    fibonacci(20) // Calculate 20th Fibonacci number
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    fibonacci(20)
-                }
-            },
+        ) {
+            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                fibonacci(20) // Calculate 20th Fibonacci number
+            }
+        }
+
+        BenchmarkResultsCollector.addResult(
+            SingleBenchmarkResult(
+                name = "CPU-Intensive (Fibonacci)",
+                medianNs = medianNs,
+                stdDevNs = stdDevNs,
+            ),
         )
     }
 
     @Test
-    @BlockNetworkRequests
     fun `benchmark prime number generation`() {
-        BenchmarkRunner.runBenchmarkAndAssert(
+        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
             name = "CPU-Intensive (Prime Numbers)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    generatePrimes(100) // Generate first 100 primes
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    generatePrimes(100)
-                }
-            },
+        ) {
+            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                generatePrimes(100) // Generate first 100 primes
+            }
+        }
+
+        BenchmarkResultsCollector.addResult(
+            SingleBenchmarkResult(
+                name = "CPU-Intensive (Prime Numbers)",
+                medianNs = medianNs,
+                stdDevNs = stdDevNs,
+            ),
         )
     }
 
     @Test
-    @BlockNetworkRequests
     fun `benchmark array sorting`() {
-        BenchmarkRunner.runBenchmarkAndAssert(
+        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
             name = "CPU-Intensive (Array Sorting)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    val array = (1..1000).shuffled().toIntArray()
-                    array.sort()
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    val array = (1..1000).shuffled().toIntArray()
-                    array.sort()
-                }
-            },
+        ) {
+            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                val array = (1..1000).shuffled().toIntArray()
+                array.sort()
+            }
+        }
+
+        BenchmarkResultsCollector.addResult(
+            SingleBenchmarkResult(
+                name = "CPU-Intensive (Array Sorting)",
+                medianNs = medianNs,
+                stdDevNs = stdDevNs,
+            ),
         )
     }
 
     @Test
-    @BlockNetworkRequests
     fun `benchmark string manipulation`() {
-        BenchmarkRunner.runBenchmarkAndAssert(
+        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
             name = "CPU-Intensive (String Operations)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    var result = "hello"
-                    repeat(100) {
-                        result = result.uppercase().lowercase()
-                        result = result.replace("l", "L")
-                    }
+        ) {
+            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                var result = "hello"
+                repeat(100) {
+                    result = result.uppercase().lowercase()
+                    result = result.replace("l", "L")
                 }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    var result = "hello"
-                    repeat(100) {
-                        result = result.uppercase().lowercase()
-                        result = result.replace("l", "L")
-                    }
-                }
-            },
+            }
+        }
+
+        BenchmarkResultsCollector.addResult(
+            SingleBenchmarkResult(
+                name = "CPU-Intensive (String Operations)",
+                medianNs = medianNs,
+                stdDevNs = stdDevNs,
+            ),
         )
     }
 
     @Test
-    @BlockNetworkRequests
     fun `benchmark regex operations`() {
         val emailPattern = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         val text = "Contact us at support@example.com or sales@example.org for more info"
 
-        BenchmarkRunner.runBenchmarkAndAssert(
+        val (medianNs, stdDevNs) = BenchmarkRunner.measureOperation(
             name = "CPU-Intensive (Regex Matching)",
-            control = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    emailPattern.findAll(text).toList()
-                }
-            },
-            treatment = {
-                repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
-                    emailPattern.findAll(text).toList()
-                }
-            },
+        ) {
+            repeat(BenchmarkConfig.OPERATIONS_PER_ITERATION) {
+                emailPattern.findAll(text).toList()
+            }
+        }
+
+        BenchmarkResultsCollector.addResult(
+            SingleBenchmarkResult(
+                name = "CPU-Intensive (Regex Matching)",
+                medianNs = medianNs,
+                stdDevNs = stdDevNs,
+            ),
         )
     }
 
