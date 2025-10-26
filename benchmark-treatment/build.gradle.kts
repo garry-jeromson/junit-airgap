@@ -86,9 +86,8 @@ tasks.named<Test>("jvmTest") {
     description = "Run JVM performance benchmarks"
     group = "verification"
 
-    // Ensure library and plugin are published to Maven Local before running benchmarks
-    dependsOn(":junit-no-network:publishToMavenLocal")
-    dependsOn(":gradle-plugin:publishToMavenLocal")
+    // Note: Dependencies are managed by compareBenchmarks task to ensure
+    // publishing happens before timing measurements begin
 
     useJUnitPlatform()
 

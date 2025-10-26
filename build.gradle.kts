@@ -43,6 +43,17 @@ tasks.register("compareBenchmarks") {
     description = "Compare benchmark results from control and treatment projects"
     group = "verification"
 
+    // First ensure libraries are published, THEN run benchmarks
+    // This prevents timing measurements from including build/publish time
+    dependsOn(":junit-no-network:publishToMavenLocal")
+    dependsOn(":gradle-plugin:publishToMavenLocal")
+
+    // Make sure benchmarks run after publishing
+    val controlTest = tasks.getByPath(":benchmark-control:jvmTest")
+    val treatmentTest = tasks.getByPath(":benchmark-treatment:jvmTest")
+    controlTest.mustRunAfter(":junit-no-network:publishToMavenLocal")
+    treatmentTest.mustRunAfter(":gradle-plugin:publishToMavenLocal")
+
     // Depend on both benchmark runs
     dependsOn(":benchmark-control:jvmTest")
     dependsOn(":benchmark-treatment:jvmTest")
