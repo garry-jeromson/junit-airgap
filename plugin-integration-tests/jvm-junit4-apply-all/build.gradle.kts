@@ -25,6 +25,11 @@ dependencies {
 
     // Test contracts for shared test behaviors
     testImplementation(project(":plugin-integration-tests:test-contracts"))
+
+    // HTTP clients for network testing
+    testImplementation(libs.ktor.client.core)
+    testImplementation(libs.ktor.client.cio)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 // Enable strict compilation - treat all warnings as errors

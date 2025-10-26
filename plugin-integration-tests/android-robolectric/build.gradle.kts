@@ -59,6 +59,8 @@ dependencies {
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.reactor.netty.http)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.volley)
+    testImplementation("org.robolectric:shadows-httpclient:4.13")
 }
 
 // NOTE: Uses Robolectric for Android framework testing with JUnit 4
