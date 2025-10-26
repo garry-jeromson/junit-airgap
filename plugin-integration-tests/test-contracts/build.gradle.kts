@@ -16,7 +16,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
+                implementation(libs.junit.no.network)
             }
         }
 

@@ -27,7 +27,7 @@ kotlin {
             dependencies {
                 // kotlin.test - will run on JUnit 5 via useJUnitPlatform()
                 implementation(kotlin("test"))
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
+                implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
                 implementation(project(":plugin-integration-tests:test-contracts"))
                 // Ktor HTTP client core (platform-independent)

@@ -21,7 +21,7 @@ kotlin {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
+    testImplementation(libs.junit.no.network)
 
     // Test contracts for shared test behaviors
     testImplementation(project(":plugin-integration-tests:test-contracts"))
