@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("junit-extensions.kotlin-jvm")
     id("io.github.garryjeromson.junit-no-network")
 }
 
@@ -11,10 +11,6 @@ junitNoNetwork {
     allowedHosts = listOf("*")  // Allow all hosts by default
     blockedHosts = listOf("*.example.com", "badhost.io")  // Except these
     debug = false
-}
-
-kotlin {
-    jvmToolchain(21)
 }
 
 dependencies {

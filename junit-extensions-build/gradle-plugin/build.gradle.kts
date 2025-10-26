@@ -3,10 +3,8 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     signing
+    id("junit-extensions.kotlin-common")
 }
-
-group = "io.github.garryjeromson"
-version = "0.1.0-SNAPSHOT"
 
 gradlePlugin {
     plugins {
@@ -34,10 +32,10 @@ dependencies {
     testImplementation(libs.junit.jupiter.engine)
 }
 
-// Enable strict compilation - treat all warnings as errors
+// Additional compiler flags specific to gradle-plugin
+// (allWarningsAsErrors is already configured by junit-extensions.kotlin-common)
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
-        allWarningsAsErrors.set(true)
         // Suppress Beta warning for expect/actual classes (KMP standard pattern from junit-no-network dependency)
         // Suppress experimental language version warning (Gradle 9.1.0 uses Kotlin 2.2.0)
         freeCompilerArgs.addAll(
@@ -141,9 +139,8 @@ tasks.named("processResources") {
 publishing {
     publications {
         create<MavenPublication>("pluginMaven") {
-            groupId = "io.github.garryjeromson"
+            // groupId and version are inherited from project
             artifactId = "junit-no-network-gradle-plugin"
-            version = "0.1.0-SNAPSHOT"
 
             // POM metadata for Maven Central
             pom {

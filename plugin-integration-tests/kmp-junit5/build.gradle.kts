@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    id("junit-extensions.kotlin-multiplatform-convention")
     alias(libs.plugins.android.library)
     id("io.github.garryjeromson.junit-no-network")
 }
@@ -12,8 +12,6 @@ junitNoNetwork {
 }
 
 kotlin {
-    jvmToolchain(21)
-
     jvm()
     androidTarget()
 

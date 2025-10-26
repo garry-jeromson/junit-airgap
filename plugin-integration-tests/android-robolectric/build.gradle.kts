@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     kotlin("android")
+    id("junit-extensions.kotlin-common-convention")
     id("io.github.garryjeromson.junit-no-network")
 }
 

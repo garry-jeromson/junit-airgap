@@ -3,9 +3,29 @@ plugins {
     id("com.android.library")
     `maven-publish`
     signing
+    id("org.jlleitschuh.gradle.ktlint")
+}
+
+// Project coordinates (group and version)
+group = "io.github.garryjeromson"
+version = "0.1.0-beta.1"
+
+// Configure ktlint for consistent code formatting
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    version.set("1.3.1")
+    android.set(true)
+    verbose.set(true)
+    outputToConsole.set(true)
+    outputColorName.set("RED")
+    ignoreFailures.set(false)
+
+    filter {
+        exclude("**/build/**")
+    }
 }
 
 kotlin {
+    // Use Java 17 for broader compatibility (other projects use 21)
     jvmToolchain(17)
 
     // JVM target

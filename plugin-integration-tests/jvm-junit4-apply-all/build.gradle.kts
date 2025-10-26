@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("junit-extensions.kotlin-jvm")
     id("io.github.garryjeromson.junit-no-network")
 }
 
@@ -9,10 +9,6 @@ junitNoNetwork {
     injectJUnit4Rule = true // Enable bytecode injection for JUnit 4
     applyToAllTests = true // Block network by default via bytecode-injected @Rule
     debug = false
-}
-
-kotlin {
-    jvmToolchain(21)
 }
 
 dependencies {

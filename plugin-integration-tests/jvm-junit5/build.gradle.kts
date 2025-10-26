@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("junit-extensions.kotlin-jvm")
     id("io.github.garryjeromson.junit-no-network")
 }
 
@@ -8,10 +8,6 @@ junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
-}
-
-kotlin {
-    jvmToolchain(21)
 }
 
 dependencies {

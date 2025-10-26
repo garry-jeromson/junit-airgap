@@ -1,8 +1,9 @@
 plugins {
-    kotlin("multiplatform")
+    id("junit-extensions.kotlin-multiplatform")
 }
 
 kotlin {
+    // Use Java 17 to match junit-no-network compatibility
     jvmToolchain(17)
 
     // JVM target

@@ -1,10 +1,10 @@
 plugins {
-    kotlin("multiplatform")
+    id("junit-extensions.kotlin-multiplatform")
     id("com.android.library")
 }
 
 kotlin {
-    jvmToolchain(21)
+    // jvmToolchain(21) is configured by junit-extensions.kotlin-multiplatform
 
     // JVM target
     jvm()

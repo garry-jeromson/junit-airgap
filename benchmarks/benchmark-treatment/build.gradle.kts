@@ -1,12 +1,12 @@
 plugins {
-    kotlin("multiplatform")
+    id("junit-extensions.kotlin-multiplatform")
     id("com.android.library")
     // Use plugin from composite build without version
     id("io.github.garryjeromson.junit-no-network")
 }
 
 kotlin {
-    jvmToolchain(21)
+    // jvmToolchain(21) is configured by junit-extensions.kotlin-multiplatform
 
     // JVM target
     jvm()
