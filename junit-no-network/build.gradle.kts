@@ -67,7 +67,7 @@ kotlin {
             dependencies {
                 // Android unit tests (Robolectric) run on JVM, so they need jvmMain classes
                 // This gives access to NetworkBlockerContext for configuration
-                implementation(project(":junit-no-network")) {
+                implementation(projects.junitNoNetwork) {
                     attributes {
                         attribute(org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.attribute, org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.jvm)
                     }

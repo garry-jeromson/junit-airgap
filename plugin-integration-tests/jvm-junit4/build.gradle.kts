@@ -24,7 +24,7 @@ dependencies {
     testImplementation(libs.junit.no.network)
 
     // Test contracts for shared test behaviors
-    testImplementation(project(":plugin-integration-tests:test-contracts"))
+    testImplementation(projects.pluginIntegrationTests.testContracts)
 
     // HTTP clients for network testing
     testImplementation(libs.ktor.client.core)

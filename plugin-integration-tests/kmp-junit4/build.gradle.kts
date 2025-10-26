@@ -27,7 +27,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.junit.no.network)
                 // Test contracts for shared test behaviors
-                implementation(project(":plugin-integration-tests:test-contracts"))
+                implementation(projects.pluginIntegrationTests.testContracts)
                 // Ktor HTTP client core (platform-independent)
                 implementation(libs.ktor.client.core)
             }
