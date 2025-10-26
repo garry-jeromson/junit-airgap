@@ -86,7 +86,7 @@ kotlin {
                 implementation(libs.nanohttpd)
 
                 // Robolectric shadows for Apache HTTP (required by Volley)
-                implementation("org.robolectric:shadows-httpclient:4.13")
+                implementation(libs.robolectric.shadows.httpclient)
             }
         }
 

@@ -26,7 +26,7 @@ kotlin {
             dependencies {
                 // Depend on the published junit-no-network library from Maven Local
                 // Use root artifact for proper platform variant matching
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation(libs.junit.no.network)
 
                 // JUnit 5
                 implementation(libs.junit.jupiter.engine)
@@ -41,7 +41,7 @@ kotlin {
             dependencies {
                 // Depend on the published junit-no-network library from Maven Local
                 // Use root artifact for proper Android variant matching
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation(libs.junit.no.network)
 
                 // JUnit 4 for Android
                 implementation(libs.junit4)
@@ -53,8 +53,10 @@ kotlin {
                 implementation(libs.kotlin.test)
 
                 // Note: junit-no-network-jvm would be added automatically by the plugin,
-                // but benchmark doesn't use the plugin, so we add it manually
-                implementation("io.github.garryjeromson:junit-no-network-jvm:0.1.0-SNAPSHOT")
+                // but benchmark doesn't use the plugin, so we need the JVM variant explicitly
+                // Using the catalog reference which resolves to the multiplatform artifact
+                // that includes the JVM variant
+                implementation(libs.junit.no.network)
             }
         }
     }
