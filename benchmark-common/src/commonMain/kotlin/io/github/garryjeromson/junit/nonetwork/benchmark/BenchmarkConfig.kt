@@ -7,13 +7,14 @@ object BenchmarkConfig {
     /**
      * Number of warmup iterations to run before measuring.
      * Warmup iterations allow JIT compilation to optimize code paths.
+     * Increased to ensure JIT fully optimizes hot paths.
      */
-    const val WARMUP_ITERATIONS = 10
+    const val WARMUP_ITERATIONS = 20
 
     /**
      * Number of measurement iterations to run for timing.
      */
-    const val MEASUREMENT_ITERATIONS = 50
+    const val MEASUREMENT_ITERATIONS = 1000
 
     /**
      * Percentage of outliers to remove from top and bottom of results.
