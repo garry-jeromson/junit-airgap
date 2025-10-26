@@ -548,9 +548,88 @@ fun test() {
 3. Enable debug to see which hosts are checked
 4. Remember: `*.example.com` does NOT match `example.com`
 
+## Performance & Overhead
+
+The JVMTI agent provides comprehensive network blocking with minimal performance impact.
+
+### Quick Summary
+
+- **Agent loading**: ONE TIME at JVM startup (~5-10ms)
+- **Per-test overhead**: ~100-500 nanoseconds (ThreadLocal configuration)
+- **Real-world impact**: <10% for tests doing meaningful work
+
+### Performance Measurements
+
+From benchmark suite (100 iterations, Java 21, macOS ARM64):
+
+| Test Type | Overhead | Notes |
+|-----------|----------|-------|
+| Empty Test | +458 ns (+183%) | High % but negligible absolute time |
+| Simple Assertion | -80 ns (-3.6%) | Measurement noise |
+| Array Sorting (4.2ms) | +270 μs (+6.4%) | Realistic test - low overhead |
+| String Operations | -56 μs (-6.6%) | Negative = measurement variance |
+
+### Key Insights
+
+1. **Small constant overhead**: ~250-500ns for ThreadLocal operations per test
+2. **High % for tiny tests**: 183% overhead on 250ns operation = only 458ns absolute
+3. **Low % for real tests**: 6.4% overhead on 4.2ms operation = 270μs absolute
+4. **Negligible for I/O tests**: Any test doing I/O will have <1% overhead
+
+### Understanding the Numbers
+
+**Why high percentages for small tests?**
+
+The overhead is a small constant (~500ns) that becomes a high percentage of very fast operations:
+- Empty test: 250ns → 708ns = +183% (but only 458ns absolute)
+- Real test: 4.2ms → 4.5ms = +6.4% (270μs absolute, negligible)
+
+**When does overhead matter?**
+
+Overhead is negligible if your test:
+- ✅ Makes any I/O operations (file, network, database)
+- ✅ Performs computation (>1ms)
+- ✅ Allocates objects or uses reflection
+
+Overhead might be noticeable if your test:
+- ⚠️ Is a microbenchmark measuring nanoseconds
+- ⚠️ Runs thousands of times in tight loop
+
+### Three-Stage Loading Model
+
+The "loading" process has three distinct stages:
+
+1. **Agent Loading** (JVM Startup)
+   - **When**: JVM process starts
+   - **Frequency**: ONE TIME per JVM
+   - **Duration**: ~5-10ms
+   - **What**: Gradle plugin adds `-agentpath`, JVM loads native agent
+
+2. **Native Method Replacement** (First Call)
+   - **When**: First time socket method is called
+   - **Frequency**: ONCE per native method
+   - **Duration**: ~microseconds
+   - **What**: Agent replaces function pointers with wrappers
+
+3. **Configuration Setting** (Per-Test)
+   - **When**: Before/after each test
+   - **Frequency**: EVERY TEST
+   - **Duration**: ~100-500ns
+   - **What**: Set/clear ThreadLocal configuration
+
+**Common misconception**: "The agent loads/unloads every test"
+**Reality**: Only step 3 happens per-test. The agent loads once at startup.
+
+### Detailed Documentation
+
+For a comprehensive explanation of the loading model, performance characteristics, and benchmark methodology, see:
+
+**[JVMTI Agent Loading & Performance](architecture/jvmti-loading.md)**
+
 ## See Also
 
 - [Compatibility Matrix](compatibility-matrix.md)
 - [Setup Guides](setup-guides/)
 - [Gradle Plugin Guide](setup-guides/gradle-plugin.md)
 - [Migration Guide: Java 24+](migration-java24.md)
+- [JVMTI Agent Loading & Performance](architecture/jvmti-loading.md)

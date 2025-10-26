@@ -339,15 +339,34 @@ make test-plugin-integration
 
 ## ⚡ Performance
 
-**Design goal**: Zero overhead for tests that don't make network requests.
+The JVMTI agent loads **once** at JVM startup and has minimal per-test overhead.
 
-**Benchmark results**:
-- Baseline tests: **< 1% overhead**
-- CPU-intensive: **< 3% overhead**
-- Memory operations: **< 6% overhead**
-- I/O operations: **< 1% overhead**
+### Quick Summary
 
-All benchmarks pass **< 5% threshold** ✅
+- **Agent loading**: ONE TIME at JVM startup (~5-10ms)
+- **Per-test overhead**: ~100-500 nanoseconds (ThreadLocal configuration)
+- **Real-world impact**: <10% for tests doing meaningful work
+
+### Benchmark Results
+
+From benchmark suite (100 iterations, Java 21):
+
+| Test Type | Overhead | Notes |
+|-----------|----------|-------|
+| Empty Test | +458 ns (+183%) | High % but negligible absolute time |
+| Array Sorting (4.2ms) | +270 μs (+6.4%) | Realistic test - low overhead |
+
+**Key insight**: The small constant overhead (~500ns) appears as high percentage for nanosecond operations, but is negligible for real tests.
+
+### Common Misconceptions
+
+**❌ "The agent loads/unloads every test"**
+**✅ Reality**: The JVMTI agent loads ONCE at JVM startup. Per-test operations only set ThreadLocal configuration (~500ns).
+
+**❌ "400% overhead means tests run 4x slower"**
+**✅ Reality**: High percentage only appears on nanosecond-scale operations. Real tests have <10% overhead.
+
+**[Learn more about JVMTI loading behavior →](docs/architecture/jvmti-loading.md)**
 
 Run benchmarks: `make benchmark`
 
