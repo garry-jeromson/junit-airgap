@@ -33,7 +33,7 @@ A JUnit extension that automatically fails tests attempting to make outgoing net
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-no-network") version "0.1.0-beta.1"
 }
 
 junitNoNetwork {
@@ -119,6 +119,10 @@ All tested and supported:
 | Apache HttpClient5 | ✅ | ✅ | - |
 | Reactor Netty | ✅ | - | - |
 | AsyncHttpClient | ✅ | - | - |
+| Spring WebClient | ✅ | - | - |
+| OpenFeign | ✅ | - | - |
+| Fuel | ✅ | - | - |
+| Volley | - | ✅ | - |
 
 **Full compatibility details**: [Compatibility Matrix](docs/compatibility-matrix.md)
 
@@ -252,6 +256,10 @@ Uses JVMTI (JVM Tool Interface) agent for network blocking:
 - ✅ **Apache HttpClient5**: 5.3.1
 - ✅ **Reactor Netty HTTP**: 1.1.22
 - ✅ **AsyncHttpClient**: 3.0.0
+- ✅ **Spring WebClient**: 6.2.0
+- ✅ **OpenFeign**: 13.5
+- ✅ **Fuel**: 2.3.1
+- ✅ **Android Volley**: 1.2.1
 
 **Exception handling varies by client**:
 - **Direct exceptions**: Ktor CIO, Apache HttpClient5, Reactor Netty, AsyncHttpClient
@@ -267,7 +275,7 @@ See [HTTP Client Guides](docs/clients/) for details.
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-no-network") version "0.1.0-beta.1"
 }
 
 junitNoNetwork {
@@ -279,7 +287,7 @@ junitNoNetwork {
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
 }
 ```
 
@@ -295,7 +303,7 @@ dependencies {
 junitNoNetwork {
     enabled = true // Enable plugin
     applyToAllTests = false // Block all tests by default
-    libraryVersion = "0.1.0-SNAPSHOT" // Library version
+    libraryVersion = "0.1.0-beta.1" // Library version
     allowedHosts = listOf("localhost", "*.test.local") // Allowed hosts
     blockedHosts = listOf("evil.com") // Blocked hosts
     debug = false // Debug logging
@@ -396,7 +404,7 @@ Contributions welcome! This project was developed using **Test-Driven Developmen
 
 ## 📝 License
 
-[Add your license here]
+MIT License - See [LICENSE](LICENSE) for details
 
 ---
 
@@ -405,6 +413,97 @@ Contributions welcome! This project was developed using **Test-Driven Developmen
 Developed using TDD with comprehensive test coverage to ensure reliability and maintainability.
 
 **Test coverage**: 156 tests covering all platforms, frameworks, and HTTP clients.
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Tests Pass But Network Requests Go Through**
+
+1. **Check JVMTI Agent is Loaded**
+   - Enable debug logging: `-Djunit.nonetwork.debug=true`
+   - Look for "JVMTI agent installed" messages
+   - Agent must be loaded at JVM startup via `-agentpath` or auto-extraction
+
+2. **Verify Annotations Are Applied**
+   - Check that `@BlockNetworkRequests` is on your test method/class
+   - For JUnit 5: Verify `@ExtendWith(NoNetworkExtension::class)` is present
+   - For JUnit 4: Verify `@Rule NoNetworkRule` field exists
+
+3. **Check Configuration**
+   - Ensure `allowedHosts` doesn't accidentally permit the request
+   - Review wildcard patterns (e.g., `*` allows everything)
+   - Check `blockedHosts` isn't overriding your intent
+
+**JVMTI Agent Not Found**
+
+```
+WARNING: JVMTI agent not found at: /path/to/agent.dylib
+```
+
+**Solution**: The Gradle plugin should automatically extract and load the agent. If you see this:
+- Run `./gradlew clean build` to rebuild
+- Check that `junitNoNetwork { enabled = true }` in build.gradle.kts
+- For manual setup, see [Gradle Plugin Guide](docs/setup-guides/gradle-plugin.md)
+
+**UnsatisfiedLinkError on Native Library**
+
+```
+java.lang.UnsatisfiedLinkError: no junit-no-network-agent in java.library.path
+```
+
+**Solution**: Agent file doesn't match your platform/architecture.
+- Verify your OS and arch: macOS ARM64 currently supported
+- Linux, Windows, and macOS Intel support coming soon
+- Check [Platform Compatibility](docs/compatibility-matrix.md)
+
+**Tests Hang or Timeout**
+
+**Cause**: Some HTTP clients have timeouts that prevent quick failure.
+
+**Solution**:
+```kotlin
+// Reduce timeout for faster test failure
+val client = HttpClient.newBuilder()
+    .connectTimeout(Duration.ofMillis(100))
+    .build()
+```
+
+**Netty DNS Resolver Warning**
+
+```
+SEVERE: Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider
+```
+
+**Solution**: Add Netty's macOS DNS resolver dependency:
+```kotlin
+testImplementation("io.netty:netty-resolver-dns-native-macos:4.1.115.Final:osx-aarch_64")
+```
+
+### Enable Debug Logging
+
+To see detailed information about network blocking:
+
+```kotlin
+// Gradle
+tasks.test {
+    systemProperty("junit.nonetwork.debug", "true")
+}
+```
+
+Or run tests with:
+```bash
+./gradlew test -Djunit.nonetwork.debug=true
+```
+
+### Getting Help
+
+Still stuck? Check:
+- [Compatibility Matrix](docs/compatibility-matrix.md) - Verify your setup is supported
+- [Setup Guides](docs/setup-guides/) - Follow step-by-step instructions
+- [GitHub Issues](https://github.com/garry-jeromson/junit-request-blocker/issues) - Report bugs or ask questions
 
 ---
 
