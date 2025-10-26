@@ -7,14 +7,20 @@ package io.github.garryjeromson.junit.nonetwork
  *                     Patterns support wildcards (e.g., "*.example.com").
  * @param blockedHosts Set of host names or patterns that are blocked. Blocked hosts take precedence
  *                     over allowed hosts.
- * @param generation Generation counter to invalidate stale configurations in inherited threads.
- *                   Used internally to handle InheritableThreadLocal persistence across test methods.
  */
 data class NetworkConfiguration(
     val allowedHosts: Set<String> = emptySet(),
     val blockedHosts: Set<String> = emptySet(),
-    internal val generation: Long = 0,
 ) {
+    /**
+     * Generation counter to invalidate stale configurations in inherited threads.
+     * Used internally to handle InheritableThreadLocal persistence across test methods.
+     *
+     * This is not part of the primary constructor to exclude it from equals(), hashCode(),
+     * copy(), and other data class generated methods.
+     */
+    var generation: Long = 0
+        internal set
     /**
      * Checks if a given host is allowed based on the configuration.
      *

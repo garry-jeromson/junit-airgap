@@ -88,17 +88,17 @@ object NetworkBlockerContext {
      */
     @JvmStatic
     fun setConfiguration(configuration: NetworkConfiguration) {
-        // Create a new configuration with the current generation
-        val configWithGeneration = configuration.copy(generation = currentGeneration)
+        // Set the generation on the configuration
+        configuration.generation = currentGeneration
 
         if (debugMode) {
             println("NetworkBlockerContext: Setting configuration for thread ${Thread.currentThread().name}")
-            println("  allowedHosts: ${configWithGeneration.allowedHosts}")
-            println("  blockedHosts: ${configWithGeneration.blockedHosts}")
-            println("  generation: ${configWithGeneration.generation}")
+            println("  allowedHosts: ${configuration.allowedHosts}")
+            println("  blockedHosts: ${configuration.blockedHosts}")
+            println("  generation: ${configuration.generation}")
         }
-        globalConfiguration = configWithGeneration
-        configurationThreadLocal.set(configWithGeneration)
+        globalConfiguration = configuration
+        configurationThreadLocal.set(configuration)
     }
 
     /**
