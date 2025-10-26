@@ -162,7 +162,7 @@ kotlin.jvm().compilations.create("integrationTest") {
             implementation(libs.retrofit)
             implementation(libs.retrofit.converter.scalars)
             implementation(libs.reactor.netty.http)
-            implementation("io.netty:netty-resolver-dns-native-macos:4.1.115.Final:osx-aarch_64")
+            implementation("io.netty:netty-resolver-dns-native-macos:${libs.versions.netty.get()}:osx-aarch_64")
             implementation(libs.spring.webflux)
             implementation(libs.spring.context)
             implementation(libs.openfeign.core)

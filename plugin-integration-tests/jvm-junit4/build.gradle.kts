@@ -33,7 +33,7 @@ dependencies {
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.async.http.client)
     testImplementation(libs.reactor.netty.http)
-    testImplementation("io.netty:netty-resolver-dns-native-macos:4.1.115.Final:osx-aarch_64")
+    testImplementation("io.netty:netty-resolver-dns-native-macos:${libs.versions.netty.get()}:osx-aarch_64")
     testImplementation(libs.spring.webflux)
     testImplementation(libs.spring.context)
     testImplementation(libs.openfeign.core)

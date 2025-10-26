@@ -57,6 +57,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 # Robolectric
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-shadows-httpclient = { module = "org.robolectric:shadows-httpclient", version.ref = "robolectric" }
 
 # AndroidX Testing
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }
@@ -68,6 +69,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 retrofit-converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "retrofit" }
 async-http-client = { module = "org.asynchttpclient:async-http-client", version.ref = "async-http-client" }
 reactor-netty-http = { module = "io.projectreactor.netty:reactor-netty-http", version.ref = "reactor-netty" }
+netty-resolver-dns-native-macos = { module = "io.netty:netty-resolver-dns-native-macos", version.ref = "netty" }
 
 # Ktor Client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }

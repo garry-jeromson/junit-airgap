@@ -58,10 +58,10 @@ dependencies {
     testImplementation(libs.retrofit)
     testImplementation(libs.retrofit.converter.scalars)
     testImplementation(libs.reactor.netty.http)
-    testImplementation("io.netty:netty-resolver-dns-native-macos:4.1.115.Final:osx-aarch_64")
+    testImplementation("io.netty:netty-resolver-dns-native-macos:${libs.versions.netty.get()}:osx-aarch_64")
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.volley)
-    testImplementation("org.robolectric:shadows-httpclient:4.13")
+    testImplementation(libs.robolectric.shadows.httpclient)
 }
 
 // NOTE: Uses Robolectric for Android framework testing with JUnit 4
