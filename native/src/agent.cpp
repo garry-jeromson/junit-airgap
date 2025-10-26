@@ -224,7 +224,7 @@ void JNICALL NativeMethodBindCallback(
     if (strcmp(class_signature, "Lsun/nio/ch/Net;") == 0 &&
         strcmp(method_name, "connect0") == 0) {
 
-        fprintf(stderr, "[JVMTI-Agent] Intercepted sun.nio.ch.Net.connect0() binding\n");
+        DEBUG_LOG("Intercepted sun.nio.ch.Net.connect0() binding");
 
         // Store original function pointer
         std::string key = "sun.nio.ch.Net.connect0";
@@ -234,14 +234,14 @@ void JNICALL NativeMethodBindCallback(
         void* wrapper_address = InstallNetConnect0Wrapper(address);
         *new_address_ptr = wrapper_address;
 
-        fprintf(stderr, "[JVMTI-Agent] Replaced Net.connect0() with wrapper at %p\n", wrapper_address);
+        DEBUG_LOGF("Replaced Net.connect0() with wrapper at %p", wrapper_address);
     }
 
     // Check if this is Socket.socketConnect0() (legacy, pre-Java 7)
     if (strcmp(class_signature, "Ljava/net/Socket;") == 0 &&
         strcmp(method_name, "socketConnect0") == 0) {
 
-        fprintf(stderr, "[JVMTI-Agent] Intercepted Socket.socketConnect0() binding\n");
+        DEBUG_LOG("Intercepted Socket.socketConnect0() binding");
 
         // Store original function pointer
         std::string key = "java.net.Socket.socketConnect0";
@@ -254,7 +254,7 @@ void JNICALL NativeMethodBindCallback(
     if (strcmp(class_signature, "Lsun/nio/ch/SocketChannelImpl;") == 0 &&
         strcmp(method_name, "connect0") == 0) {
 
-        fprintf(stderr, "[JVMTI-Agent] Intercepted SocketChannel.connect0() binding\n");
+        DEBUG_LOG("Intercepted SocketChannel.connect0() binding");
 
         // Store original function pointer
         std::string key = "sun.nio.ch.SocketChannelImpl.connect0";
@@ -267,7 +267,7 @@ void JNICALL NativeMethodBindCallback(
     if (strcmp(class_signature, "Ljava/net/Inet6AddressImpl;") == 0 &&
         strcmp(method_name, "lookupAllHostAddr") == 0) {
 
-        fprintf(stderr, "[JVMTI-Agent] Intercepted Inet6AddressImpl.lookupAllHostAddr() binding\n");
+        DEBUG_LOG("Intercepted Inet6AddressImpl.lookupAllHostAddr() binding");
 
         // Store original function pointer
         std::string key = "java.net.Inet6AddressImpl.lookupAllHostAddr";
@@ -277,14 +277,14 @@ void JNICALL NativeMethodBindCallback(
         void* wrapper_address = InstallInet6LookupWrapper(address);
         *new_address_ptr = wrapper_address;
 
-        fprintf(stderr, "[JVMTI-Agent] Replaced Inet6AddressImpl.lookupAllHostAddr() with wrapper at %p\n", wrapper_address);
+        DEBUG_LOGF("Replaced Inet6AddressImpl.lookupAllHostAddr() with wrapper at %p", wrapper_address);
     }
 
     // Check if this is Inet4AddressImpl.lookupAllHostAddr() - DNS resolution
     if (strcmp(class_signature, "Ljava/net/Inet4AddressImpl;") == 0 &&
         strcmp(method_name, "lookupAllHostAddr") == 0) {
 
-        fprintf(stderr, "[JVMTI-Agent] Intercepted Inet4AddressImpl.lookupAllHostAddr() binding\n");
+        DEBUG_LOG("Intercepted Inet4AddressImpl.lookupAllHostAddr() binding");
 
         // Store original function pointer
         std::string key = "java.net.Inet4AddressImpl.lookupAllHostAddr";
@@ -294,7 +294,7 @@ void JNICALL NativeMethodBindCallback(
         void* wrapper_address = InstallInet4LookupWrapper(address);
         *new_address_ptr = wrapper_address;
 
-        fprintf(stderr, "[JVMTI-Agent] Replaced Inet4AddressImpl.lookupAllHostAddr() with wrapper at %p\n", wrapper_address);
+        DEBUG_LOGF("Replaced Inet4AddressImpl.lookupAllHostAddr() with wrapper at %p", wrapper_address);
     }
 
     // Cleanup
@@ -338,7 +338,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
         return JNI_ERR;
     }
 
-    fprintf(stderr, "[JVMTI-Agent] JVMTI Agent loaded successfully\n");
+    DEBUG_LOG("JVMTI Agent loaded successfully");
     return JNI_OK;
 }
 
@@ -455,5 +455,5 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_Ne
     }
 
     DEBUG_LOG("NetworkBlockerContext registered successfully");
-    fprintf(stderr, "[JVMTI-Agent] NetworkBlockerContext registered - network blocking enabled\n");
+    DEBUG_LOG("NetworkBlockerContext registered - network blocking enabled");
 }
