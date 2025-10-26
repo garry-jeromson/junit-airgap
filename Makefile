@@ -120,17 +120,17 @@ test-plugin-integration:
 ## benchmark: Run all performance benchmarks (JVM + Android)
 benchmark:
 	@echo "Running all performance benchmarks..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark:benchmark
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:benchmark
 
 ## benchmark-jvm: Run JVM performance benchmarks only
 benchmark-jvm:
 	@echo "Running JVM performance benchmarks..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark:jvmTest
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:jvmTest
 
 ## benchmark-android: Run Android performance benchmarks only
 benchmark-android:
 	@echo "Running Android performance benchmarks..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark:testDebugUnitTest
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :benchmark-control:testDebugUnitTest
 
 ## format: Auto-format code with ktlint
 format:
