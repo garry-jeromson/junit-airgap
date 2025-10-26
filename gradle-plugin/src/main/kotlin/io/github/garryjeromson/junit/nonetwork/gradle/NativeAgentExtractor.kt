@@ -68,11 +68,13 @@ object NativeAgentExtractor {
      *
      * @param project Gradle project
      * @param logger Logger for diagnostic messages
+     * @param debug Whether debug logging is enabled
      * @return Path to the extracted agent, or null if extraction failed
      */
     fun extractAgent(
         project: Project,
         logger: Logger,
+        debug: Boolean = false,
     ): File? {
         val platform = detectPlatform()
         if (platform == null) {
@@ -124,7 +126,9 @@ object NativeAgentExtractor {
                 extractedAgent.setExecutable(true, false)
             }
 
-            logger.lifecycle("Extracted JVMTI agent to: ${extractedAgent.absolutePath}")
+            if (debug) {
+                logger.debug("Extracted JVMTI agent to: ${extractedAgent.absolutePath}")
+            }
             return extractedAgent
         } catch (e: Exception) {
             logger.error("Failed to extract JVMTI agent: ${e.message}", e)
@@ -139,12 +143,14 @@ object NativeAgentExtractor {
      *
      * @param project Gradle project
      * @param logger Logger for diagnostic messages
+     * @param debug Whether debug logging is enabled
      * @return Absolute path to the agent, or null if unavailable
      */
     fun getAgentPath(
         project: Project,
         logger: Logger,
+        debug: Boolean = false,
     ): String? {
-        return extractAgent(project, logger)?.absolutePath
+        return extractAgent(project, logger, debug)?.absolutePath
     }
 }

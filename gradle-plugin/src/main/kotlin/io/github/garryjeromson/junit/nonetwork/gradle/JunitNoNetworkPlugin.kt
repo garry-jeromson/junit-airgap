@@ -48,7 +48,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project: Project,
         extension: JunitNoNetworkExtension,
     ) {
-        project.logger.lifecycle("Configuring JUnit No-Network plugin")
+        if (extension.debug.get()) {
+            project.logger.debug("Configuring JUnit No-Network plugin")
+        }
 
         // 1. Add library dependency
         addDependencies(project, extension)
@@ -168,7 +170,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
 
         // Write properties file
         propsFile.writeText(properties)
-        project.logger.lifecycle("Generated junit-platform.properties at: ${propsFile.absolutePath}")
+        if (extension.debug.get()) {
+            project.logger.debug("Generated junit-platform.properties at: ${propsFile.absolutePath}")
+        }
 
         // Add generated resources to test source set
         addGeneratedResourcesToSourceSet(project, generatedResourcesDir, "test")
@@ -225,7 +229,7 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             // Extract native agent at execution time (doFirst)
             // This ensures the agent is extracted before the test JVM starts
             doFirst {
-                val agentPath = NativeAgentExtractor.getAgentPath(project, project.logger)
+                val agentPath = NativeAgentExtractor.getAgentPath(project, project.logger, extension.debug.get())
 
                 if (agentPath != null) {
                     // Add debug option if debug mode is enabled
@@ -236,7 +240,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                             "-agentpath:$agentPath"
                         }
                     jvmArgs(agentArg)
-                    project.logger.lifecycle("Loading JVMTI agent from: $agentPath")
+                    if (extension.debug.get()) {
+                        project.logger.debug("Loading JVMTI agent from: $agentPath")
+                    }
                 } else {
                     project.logger.warn(
                         "JVMTI agent not available for test task '$name'. " +
@@ -339,7 +345,8 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             }
 
         propsFile.writeText(properties)
-        project.logger.lifecycle("Generated junit-platform.properties for $sourceSetName at: ${propsFile.absolutePath}")
+        // Note: extension is not available in this method, so we skip debug logging here
+        project.logger.debug("Generated junit-platform.properties for $sourceSetName at: ${propsFile.absolutePath}")
 
         // Add generated resources to the KMP source set
         addGeneratedResourcesToKmpSourceSet(project, generatedResourcesDir, sourceSetName)
@@ -368,28 +375,38 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project: Project,
         extension: JunitNoNetworkExtension,
     ) {
-        project.logger.lifecycle("Configuring JUnit 4 @Rule injection via bytecode enhancement")
+        if (extension.debug.get()) {
+            project.logger.debug("Configuring JUnit 4 @Rule injection via bytecode enhancement")
+        }
 
         // Detect project type and configure accordingly
         val hasKmpPlugin = project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
         val hasAndroidLibrary = project.plugins.hasPlugin("com.android.library")
         val hasAndroidApp = project.plugins.hasPlugin("com.android.application")
 
-        project.logger.lifecycle(
-            "Plugin detection: KMP=$hasKmpPlugin, AndroidLib=$hasAndroidLibrary, AndroidApp=$hasAndroidApp",
-        )
+        if (extension.debug.get()) {
+            project.logger.debug(
+                "Plugin detection: KMP=$hasKmpPlugin, AndroidLib=$hasAndroidLibrary, AndroidApp=$hasAndroidApp",
+            )
+        }
 
         when {
             hasKmpPlugin -> {
-                project.logger.lifecycle("Detected KMP project - configuring KMP injection")
+                if (extension.debug.get()) {
+                    project.logger.debug("Detected KMP project - configuring KMP injection")
+                }
                 configureKmpJUnit4Injection(project, extension)
             }
             hasAndroidLibrary || hasAndroidApp -> {
-                project.logger.lifecycle("Detected Android project - configuring Android injection")
+                if (extension.debug.get()) {
+                    project.logger.debug("Detected Android project - configuring Android injection")
+                }
                 configureAndroidJUnit4Injection(project, extension)
             }
             else -> {
-                project.logger.lifecycle("Detected JVM project - configuring JVM injection")
+                if (extension.debug.get()) {
+                    project.logger.debug("Detected JVM project - configuring JVM injection")
+                }
                 configureJvmJUnit4Injection(project, extension)
             }
         }

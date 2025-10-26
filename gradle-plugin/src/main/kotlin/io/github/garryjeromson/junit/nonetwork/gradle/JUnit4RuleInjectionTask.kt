@@ -58,19 +58,24 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
     @TaskAction
     fun injectRules() {
         val classesDir = testClassesDir.get().asFile
-        logger.lifecycle("JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}")
+        val debugMode = debug.get()
+
+        if (debugMode) {
+            logger.debug("JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}")
+        }
 
         if (!classesDir.exists()) {
-            logger.lifecycle(
-                "Test classes directory does not exist, skipping rule injection: ${classesDir.absolutePath}",
-            )
+            if (debugMode) {
+                logger.debug(
+                    "Test classes directory does not exist, skipping rule injection: ${classesDir.absolutePath}",
+                )
+            }
             return
         }
 
-        val debugMode = debug.get()
-        logger.lifecycle("Scanning for JUnit 4 test classes in: ${classesDir.absolutePath}")
         if (debugMode) {
-            logger.lifecycle("Debug mode enabled")
+            logger.debug("Scanning for JUnit 4 test classes in: ${classesDir.absolutePath}")
+            logger.debug("Debug mode enabled")
         }
 
         // Find all .class files
@@ -82,7 +87,7 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                 .toList()
 
         if (debugMode) {
-            logger.lifecycle("Found ${classFiles.size} class files to analyze")
+            logger.debug("Found ${classFiles.size} class files to analyze")
         }
 
         var enhancedCount = 0
@@ -101,7 +106,7 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                     urls.add(file.toURI().toURL())
                 }
                 if (debugMode) {
-                    logger.lifecycle(
+                    logger.debug(
                         "Added ${testTask.classpath.files.size} files from test task '$taskName' classpath",
                     )
                 }
@@ -113,8 +118,8 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         }
 
         if (debugMode) {
-            logger.lifecycle("Using test classes directory for injection: ${classesDir.absolutePath}")
-            logger.lifecycle("Total classpath URLs: ${urls.size}")
+            logger.debug("Using test classes directory for injection: ${classesDir.absolutePath}")
+            logger.debug("Total classpath URLs: ${urls.size}")
         }
 
         // Use plugin's classloader as parent (includes JUnit for annotation detection)
@@ -125,42 +130,42 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
 
             try {
                 if (debugMode) {
-                    logger.lifecycle("Loading class: $className")
+                    logger.debug("Loading class: $className")
                 }
                 val clazz = classLoader.loadClass(className)
 
                 if (debugMode) {
-                    logger.lifecycle("Checking if $className is JUnit 4 test class...")
+                    logger.debug("Checking if $className is JUnit 4 test class...")
                 }
 
                 if (isJUnit4TestClass(clazz)) {
                     if (debugMode) {
-                        logger.lifecycle("  ✓ $className IS a JUnit 4 test class")
+                        logger.debug("  ✓ $className IS a JUnit 4 test class")
                     }
                     if (hasNoNetworkRule(clazz)) {
                         if (debugMode) {
-                            logger.info("  Skipping $className - already has noNetworkRule field")
+                            logger.debug("  Skipping $className - already has noNetworkRule field")
                         }
                         skippedCount++
                     } else {
                         injectRule(clazz, classFile, classLoader)
                         enhancedCount++
                         if (debugMode) {
-                            logger.lifecycle("  Enhanced: $className")
+                            logger.debug("  Enhanced: $className")
                         }
                     }
                 } else {
                     if (debugMode) {
-                        logger.lifecycle("  ✗ $className is NOT a JUnit 4 test class")
+                        logger.debug("  ✗ $className is NOT a JUnit 4 test class")
                     }
                 }
             } catch (e: ClassNotFoundException) {
                 if (debugMode) {
-                    logger.lifecycle("Could not load class $className: ${e.message}")
+                    logger.debug("Could not load class $className: ${e.message}")
                 }
             } catch (e: NoClassDefFoundError) {
                 if (debugMode) {
-                    logger.lifecycle("Could not load class $className (missing dependency): ${e.message}")
+                    logger.debug("Could not load class $className (missing dependency): ${e.message}")
                 }
             } catch (e: Exception) {
                 logger.warn("Error processing class $className: ${e.message}")
@@ -170,8 +175,8 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
             }
         }
 
-        if (enhancedCount > 0 || debugMode) {
-            logger.lifecycle("JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes")
+        if (debugMode && (enhancedCount > 0 || skippedCount > 0)) {
+            logger.debug("JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes")
         }
     }
 
@@ -195,27 +200,27 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         val debugMode = debug.get()
 
         if (debugMode) {
-            logger.lifecycle("  Checking if ${clazz.name} is a JUnit 4 test class")
-            logger.lifecycle("    Found ${clazz.declaredMethods.size} methods")
+            logger.debug("  Checking if ${clazz.name} is a JUnit 4 test class")
+            logger.debug("    Found ${clazz.declaredMethods.size} methods")
         }
 
         // Check for @Test annotation from org.junit (JUnit 4)
         val hasJUnit4Test =
             clazz.declaredMethods.any { method ->
                 if (debugMode) {
-                    logger.lifecycle("    Method: ${method.name}, annotations: ${method.annotations.size}")
+                    logger.debug("    Method: ${method.name}, annotations: ${method.annotations.size}")
                 }
                 val hasTest =
                     method.annotations.any { annotation ->
                         // Use Kotlin reflection to get the annotation type
                         val annotationTypeName = annotation.annotationClass.java.name
                         if (debugMode) {
-                            logger.lifecycle("      Annotation: $annotationTypeName")
+                            logger.debug("      Annotation: $annotationTypeName")
                         }
                         annotationTypeName == "org.junit.Test"
                     }
                 if (debugMode && hasTest) {
-                    logger.lifecycle("      ✓ Method ${method.name} has @Test annotation")
+                    logger.debug("      ✓ Method ${method.name} has @Test annotation")
                 }
                 hasTest
             }
@@ -225,14 +230,14 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
             clazz.annotations.any { annotation ->
                 val annotationTypeName = annotation.annotationClass.java.name
                 if (debugMode) {
-                    logger.lifecycle("    Class annotation: $annotationTypeName")
+                    logger.debug("    Class annotation: $annotationTypeName")
                 }
                 annotationTypeName == "org.junit.runner.RunWith"
             }
 
         val isJUnit4 = hasJUnit4Test || hasRunWith
         if (debugMode) {
-            logger.lifecycle("    Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4")
+            logger.debug("    Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4")
         }
 
         return isJUnit4
