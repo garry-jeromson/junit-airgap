@@ -41,6 +41,8 @@ kotlin {
                 // JUnit dependencies for JVM
                 implementation(libs.junit.jupiter.api)
                 implementation(libs.junit4)
+                // JUnit Platform Launcher for LauncherSessionListener
+                implementation(libs.junit.platform.launcher)
             }
         }
 
@@ -100,7 +102,8 @@ kotlin {
 }
 
 // Enable strict compilation - treat all warnings as errors
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+// Apply to all Kotlin compilation tasks (JVM, Android, Native)
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
     compilerOptions {
         allWarningsAsErrors.set(true)
         // Suppress Beta warning for expect/actual classes (KMP standard pattern)
@@ -181,23 +184,24 @@ tasks.named<Test>("jvmTest") {
     )
 
     // Load JVMTI agent for network blocking
-    val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
+    // Capture file references at configuration time for configuration cache compatibility
+    val agentFile = project.file("../native/build/libjunit-no-network-agent.dylib")
+    val agentPath = agentFile.absolutePath
 
     doFirst {
-        val agentFile = file(agentPath)
-        if (agentFile.exists()) {
-            println("Loading JVMTI agent from: $agentPath")
-        } else {
-            println("WARNING: JVMTI agent not found at: $agentPath")
-            println("Run 'make build-native' to build the native agent.")
-            println("Tests will fail without the agent.")
+        if (!agentFile.exists()) {
+            logger.warn("JVMTI agent not found at: $agentPath")
+            logger.warn("Run 'make build-native' to build the native agent.")
+            logger.warn("Tests will fail without the agent.")
         }
     }
 
     jvmArgs("-agentpath:$agentPath")
 
     // Pass junit.nonetwork system properties to test JVM
-    systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
+    // Capture system property at configuration time for configuration cache compatibility
+    val debugProperty = System.getProperty("junit.nonetwork.debug") ?: "false"
+    systemProperty("junit.nonetwork.debug", debugProperty)
 }
 
 // Make jvmTest depend on native build
@@ -218,16 +222,15 @@ tasks.withType<Test>().configureEach {
         )
 
         // Load JVMTI agent for network blocking
-        val agentPath = project.file("../native/build/libjunit-no-network-agent.dylib").absolutePath
+        // Capture file references at configuration time for configuration cache compatibility
+        val agentFile = project.file("../native/build/libjunit-no-network-agent.dylib")
+        val agentPath = agentFile.absolutePath
 
         doFirst {
-            val agentFile = file(agentPath)
-            if (agentFile.exists()) {
-                println("Loading JVMTI agent for Android test: $agentPath")
-            } else {
-                println("WARNING: JVMTI agent not found at: $agentPath")
-                println("Run 'make build-native' to build the native agent.")
-                println("Android tests will fail without the agent.")
+            if (!agentFile.exists()) {
+                logger.warn("JVMTI agent not found at: $agentPath")
+                logger.warn("Run 'make build-native' to build the native agent.")
+                logger.warn("Android tests will fail without the agent.")
             }
         }
 
@@ -239,7 +242,9 @@ tasks.withType<Test>().configureEach {
         }
 
         // Pass junit.nonetwork system properties to test JVM
-        systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
+        // Capture system property at configuration time for configuration cache compatibility
+        val debugProperty = System.getProperty("junit.nonetwork.debug") ?: "false"
+        systemProperty("junit.nonetwork.debug", debugProperty)
     }
 }
 
@@ -266,8 +271,32 @@ tasks.register<Test>("integrationTest") {
     // Exclude Kotlin companion objects from test discovery
     exclude("**/*\$Companion.class")
 
+    // Use Java 21 toolchain (native agent built with Java 21)
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        },
+    )
+
+    // Load JVMTI agent for network blocking
+    // Capture file references at configuration time for configuration cache compatibility
+    val agentFile = project.file("../native/build/libjunit-no-network-agent.dylib")
+    val agentPath = agentFile.absolutePath
+
+    doFirst {
+        if (!agentFile.exists()) {
+            logger.warn("JVMTI agent not found at: $agentPath")
+            logger.warn("Run 'make build-native' to build the native agent.")
+            logger.warn("Integration tests will fail without the agent.")
+        }
+    }
+
+    jvmArgs("-agentpath:$agentPath")
+
     // Pass junit.nonetwork system properties to test JVM
-    systemProperty("junit.nonetwork.debug", System.getProperty("junit.nonetwork.debug") ?: "false")
+    // Capture system property at configuration time for configuration cache compatibility
+    val debugProperty = System.getProperty("junit.nonetwork.debug") ?: "false"
+    systemProperty("junit.nonetwork.debug", debugProperty)
 
     testLogging {
         events("passed", "skipped", "failed")
@@ -286,9 +315,11 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
 
     workingDir = project.file("../native")
 
+    // Capture build directory at configuration time for configuration cache compatibility
+    val buildDir = project.file("../native/build")
+
     // Create build directory if it doesn't exist
     doFirst {
-        val buildDir = project.file("../native/build")
         if (!buildDir.exists()) {
             buildDir.mkdirs()
         }
@@ -303,10 +334,6 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
         }
 
     commandLine("cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=$buildType")
-
-    doFirst {
-        println("Configuring native agent with CMAKE_BUILD_TYPE=$buildType")
-    }
 
     // Only re-run if CMakeLists.txt or source files change
     inputs.files(
@@ -351,10 +378,6 @@ tasks.register<Exec>("buildNativeAgent") {
             else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
         }
     outputs.file("../native/build/$libraryName")
-
-    doLast {
-        println("✅ Native agent built: ../native/build/$libraryName")
-    }
 }
 
 // Task to clean native build artifacts

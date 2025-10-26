@@ -8,11 +8,12 @@ import net.bytebuddy.implementation.MethodCall
 import net.bytebuddy.implementation.SuperMethodCall
 import net.bytebuddy.matcher.ElementMatchers
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.junit.Rule
 import java.io.File
@@ -44,11 +45,11 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
     abstract val debug: Property<Boolean>
 
     /**
-     * Name of the Test task to get classpath from (resolved at execution time)
+     * Test runtime classpath (for ByteBuddy TypePool to resolve dependencies)
+     * This must be wired at configuration time from the Test task's classpath
      */
-    @get:Input
-    @get:Optional
-    abstract val testTaskName: Property<String>
+    @get:Classpath
+    abstract val testClasspath: ConfigurableFileCollection
 
     init {
         group = "verification"
@@ -97,28 +98,14 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         // Include test classes directory + full test runtime classpath (for ByteBuddy TypePool)
         val urls = mutableListOf(classesDir.toURI().toURL())
 
-        // Resolve test task's classpath at execution time
-        if (testTaskName.isPresent) {
-            val taskName = testTaskName.get()
-            val testTask = project.tasks.findByName(taskName) as? org.gradle.api.tasks.testing.Test
-            if (testTask != null) {
-                testTask.classpath.files.forEach { file ->
-                    urls.add(file.toURI().toURL())
-                }
-                if (debugMode) {
-                    logger.debug(
-                        "Added ${testTask.classpath.files.size} files from test task '$taskName' classpath",
-                    )
-                }
-            } else {
-                logger.warn("Test task '$taskName' not found or not a Test task")
-            }
-        } else {
-            logger.warn("Test task name not provided - bytecode injection may fail")
+        // Add test runtime classpath (wired at configuration time)
+        testClasspath.files.forEach { file ->
+            urls.add(file.toURI().toURL())
         }
 
         if (debugMode) {
             logger.debug("Using test classes directory for injection: ${classesDir.absolutePath}")
+            logger.debug("Test classpath entries: ${testClasspath.files.size}")
             logger.debug("Total classpath URLs: ${urls.size}")
         }
 

@@ -10,7 +10,7 @@ version = "1.0-SNAPSHOT"
 junitNoNetwork {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = false // Enable debug logging for diagnosing network blocking
+    debug = false
 }
 
 kotlin {
@@ -45,4 +45,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 // Configure JUnit Platform for test tasks
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    // Show test output for debugging
+    testLogging {
+        events("passed", "skipped", "failed", "standardOut", "standardError")
+        showStandardStreams = true
+    }
 }

@@ -33,7 +33,13 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // Create extension
         val extension = project.extensions.create<JunitNoNetworkExtension>("junitNoNetwork")
 
+        // Configure Test tasks immediately (uses lazy .configureEach, so safe to call at apply time)
+        // This must happen at apply time, NOT in afterEvaluate, for configuration cache compatibility
+        configureTestTasks(project, extension)
+
         // Configure after project evaluation
+        // Note: Only use afterEvaluate for operations that truly need project type detection
+        // Task wiring must NOT happen here for configuration cache compatibility
         project.afterEvaluate {
             if (!extension.enabled.get()) {
                 project.logger.info("JUnit No-Network plugin is disabled")
@@ -55,10 +61,7 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         // 1. Add library dependency
         addDependencies(project, extension)
 
-        // 2. Configure Test tasks (system properties work for all project types)
-        configureTestTasks(project, extension)
-
-        // 3. Configure JUnit 4 rule injection (if enabled)
+        // 2. Configure JUnit 4 rule injection (if enabled)
         if (extension.injectJUnit4Rule.get()) {
             configureJUnit4RuleInjection(project, extension)
         }
@@ -205,31 +208,48 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         project.tasks.withType<Test>().configureEach {
-            // Configure system properties for the test JVM
+            // Enable JUnit Platform automatic extension detection
             systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
-            systemProperty("junit.nonetwork.applyToAllTests", extension.applyToAllTests.get())
 
-            // Add allowedHosts if configured
-            if (extension.allowedHosts.isPresent && extension.allowedHosts.get().isNotEmpty()) {
-                val hosts = extension.allowedHosts.get().joinToString(",")
-                systemProperty("junit.nonetwork.allowedHosts", hosts)
-            }
-
-            // Add blockedHosts if configured
-            if (extension.blockedHosts.isPresent && extension.blockedHosts.get().isNotEmpty()) {
-                val hosts = extension.blockedHosts.get().joinToString(",")
-                systemProperty("junit.nonetwork.blockedHosts", hosts)
-            }
+            // Set system properties at configuration time (resolved lazily via Provider.get())
+            // Note: These are also set again in doFirst to handle special cases, but setting them here
+            // allows tests to inspect systemProperties at configuration time
+            systemProperty("junit.nonetwork.applyToAllTests", extension.applyToAllTests.get().toString())
+            systemProperty("junit.nonetwork.debug", extension.debug.get().toString())
 
             // Enable SecurityManager on Java 21+ (required for SECURITY_MANAGER and SECURITY_POLICY implementations)
             // On Java 21+, SecurityManager is deprecated and disabled by default
             // This JVM argument allows setting it: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/SecurityManager.html
             jvmArgs("-Djava.security.manager=allow")
 
-            // Extract native agent at execution time (doFirst)
-            // This ensures the agent is extracted before the test JVM starts
+            // Capture test task name and build directory for logging (configuration cache compatible)
+            val testTaskName = name
+            val buildDirectory = project.layout.buildDirectory.get().asFile
+
+            // Extract native agent and set system properties at execution time (doFirst)
+            // This ensures everything is resolved when the test JVM starts
+            // Note: We use task's logger and captured build directory to avoid capturing project reference
             doFirst {
-                val agentPath = NativeAgentExtractor.getAgentPath(project, project.logger, extension.debug.get())
+                // Set system properties with resolved values (must be done in doFirst for config cache)
+                systemProperty("junit.nonetwork.applyToAllTests", extension.applyToAllTests.get().toString())
+                systemProperty("junit.nonetwork.debug", extension.debug.get().toString())
+
+                // Only set host lists if they have values
+                val allowedHosts = extension.allowedHosts.get().joinToString(",")
+                if (allowedHosts.isNotEmpty()) {
+                    systemProperty("junit.nonetwork.allowedHosts", allowedHosts)
+                }
+
+                val blockedHosts = extension.blockedHosts.get().joinToString(",")
+                if (blockedHosts.isNotEmpty()) {
+                    systemProperty("junit.nonetwork.blockedHosts", blockedHosts)
+                }
+
+                val agentPath = NativeAgentExtractor.getAgentPath(
+                    buildDirectory, // Use captured build directory
+                    logger, // Use task's logger
+                    extension.debug.get()
+                )
 
                 if (agentPath != null) {
                     // Add debug option if debug mode is enabled
@@ -241,21 +261,15 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                         }
                     jvmArgs(agentArg)
                     if (extension.debug.get()) {
-                        project.logger.debug("Loading JVMTI agent from: $agentPath")
+                        logger.debug("Loading JVMTI agent from: $agentPath")
                     }
                 } else {
-                    project.logger.warn(
-                        "JVMTI agent not available for test task '$name'. " +
+                    logger.warn(
+                        "JVMTI agent not available for test task '$testTaskName'. " +
                             "Network blocking may not work on this platform.",
                     )
                 }
             }
-
-            if (extension.debug.get()) {
-                systemProperty("junit.nonetwork.debug", "true")
-            }
-
-            project.logger.info("Configured test task: $name with network blocking")
         }
     }
 
@@ -417,20 +431,26 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         extension: JunitNoNetworkExtension,
     ) {
         // Register injection task for JVM project
-        project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
             testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
             debug.set(extension.debug)
-            testTaskName.set("test")
         }
 
-        // Hook after test compilation
-        project.tasks.matching { it.name == "compileTestKotlin" || it.name == "compileTestJava" }.all {
-            finalizedBy("injectJUnit4NetworkRule")
-        }
+        // Wire test classpath and configure task dependencies in a nested afterEvaluate
+        // to ensure all tasks exist before we reference them
+        project.afterEvaluate {
+            // Wire test classpath using named() directly instead of .configure() to avoid task realization issues
+            project.tasks.named("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+                testClasspath.setFrom(
+                    project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements }
+                )
+            }
 
-        // Ensure test task depends on injection
-        project.tasks.matching { it.name == "test" }.all {
-            dependsOn("injectJUnit4NetworkRule")
+            // Configure task wiring using lazy approach
+            configureTaskWiring(project, "compileTestKotlin", "injectJUnit4NetworkRule")
+            configureTaskWiring(project, "compileTestJava", "injectJUnit4NetworkRule")
+            configureTaskWiring(project, "test", null, "injectJUnit4NetworkRule")
         }
 
         project.logger.info("Configured JUnit 4 rule injection for JVM project")
@@ -459,14 +479,21 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         val compilationTaskName = "compile${variant}UnitTestKotlin"
 
         // Register injection task for this variant
-        project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
+        val injectionTask = project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
             testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
             debug.set(extension.debug)
-            this.testTaskName.set(testTaskName)
         }
 
         // Configure automatic task wiring after project evaluation
         project.afterEvaluate {
+            // Wire test classpath using named() directly instead of .configure() to avoid task realization issues
+            project.tasks.named(taskName, JUnit4RuleInjectionTask::class.java) {
+                testClasspath.setFrom(
+                    project.tasks.named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements }
+                )
+            }
+
             // Wire compilation task to finalize with injection
             configureTaskWiring(this, compilationTaskName, taskName)
             // Wire test task to depend on injection
@@ -482,10 +509,9 @@ class JunitNoNetworkPlugin : Plugin<Project> {
     ) {
         // For KMP, we need to configure injection for each target platform
         // JVM target
-        project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+        val jvmInjectionTask = project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
             testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
             debug.set(extension.debug)
-            testTaskName.set("jvmTest")
 
             // Depend on compilation task
             project.tasks.findByName("compileTestKotlinJvm")?.let { compileTask ->
@@ -501,6 +527,14 @@ class JunitNoNetworkPlugin : Plugin<Project> {
 
         // Configure automatic task wiring after project evaluation
         project.afterEvaluate {
+            // Wire test classpath for JVM target using named() directly instead of .configure()
+            project.tasks.named("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+                testClasspath.setFrom(
+                    project.tasks.named("jvmTest", org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements }
+                )
+            }
+
             // Wire JVM target tasks
             configureTaskWiring(project, "compileTestKotlinJvm", "injectJvmJUnit4NetworkRule")
             configureTaskWiring(project, "jvmTest", null, "injectJvmJUnit4NetworkRule")
@@ -510,6 +544,14 @@ class JunitNoNetworkPlugin : Plugin<Project> {
                 val injectionTaskName = "injectAndroid${variant}JUnit4NetworkRule"
                 val compilationTaskName = "compile${variant}UnitTestKotlinAndroid"
                 val testTaskName = "test${variant}UnitTest"
+
+                // Wire test classpath for Android variant using named() directly instead of .configure()
+                project.tasks.named(injectionTaskName, JUnit4RuleInjectionTask::class.java) {
+                    testClasspath.setFrom(
+                        project.tasks.named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
+                            .flatMap { it.classpath.elements }
+                    )
+                }
 
                 configureTaskWiring(project, compilationTaskName, injectionTaskName)
                 configureTaskWiring(project, testTaskName, null, injectionTaskName)
@@ -534,7 +576,6 @@ class JunitNoNetworkPlugin : Plugin<Project> {
         project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
             testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
             debug.set(extension.debug)
-            this.testTaskName.set(testTaskName)
 
             // Depend on compilation task
             project.tasks.findByName(compilationTaskName)?.let { compileTask ->
@@ -543,7 +584,7 @@ class JunitNoNetworkPlugin : Plugin<Project> {
             }
         }
 
-        project.logger.debug("Configured injection task $taskName for KMP Android $variant variant")
+        project.logger.debug("Configured injection task $taskName for KMP Android $variant variant (classpath will be wired in afterEvaluate)")
     }
 
     private fun configureTaskWiring(

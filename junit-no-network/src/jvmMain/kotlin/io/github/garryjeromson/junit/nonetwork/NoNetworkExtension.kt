@@ -66,6 +66,20 @@ class NoNetworkExtension(
     AfterEachCallback {
     companion object {
         private const val BLOCKER_KEY = "junit-no-network-blocker"
+
+        init {
+            // Force NetworkBlockerContext to initialize early.
+            // This ensures it registers with the JVMTI agent (if loaded) before any tests run.
+            // Without this, the agent might intercept network calls before registration happens,
+            // causing "NetworkBlockerContext not registered" warnings.
+            try {
+                // Access the object to trigger its init block (accessing just ::class doesn't work)
+                // getConfiguration() is a simple getter that won't cause side effects
+                io.github.garryjeromson.junit.nonetwork.bytebuddy.NetworkBlockerContext.getConfiguration()
+            } catch (e: Throwable) {
+                // Ignore errors - NetworkBlockerContext will initialize when first used
+            }
+        }
     }
 
     override fun beforeEach(context: ExtensionContext) {

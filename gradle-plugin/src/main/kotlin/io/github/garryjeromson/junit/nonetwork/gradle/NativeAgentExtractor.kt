@@ -66,13 +66,13 @@ object NativeAgentExtractor {
     /**
      * Extract the native agent for the current platform to the build directory.
      *
-     * @param project Gradle project
+     * @param buildDir Build directory (for configuration cache compatibility)
      * @param logger Logger for diagnostic messages
      * @param debug Whether debug logging is enabled
      * @return Path to the extracted agent, or null if extraction failed
      */
     fun extractAgent(
-        project: Project,
+        buildDir: File,
         logger: Logger,
         debug: Boolean = false,
     ): File? {
@@ -85,10 +85,12 @@ object NativeAgentExtractor {
             return null
         }
 
-        logger.info("Detected platform: ${platform.os}-${platform.arch}")
+        if (debug) {
+            logger.debug("Detected platform: ${platform.os}-${platform.arch}")
+        }
 
         // Extract to build/junit-no-network/native/
-        val extractDir = project.layout.buildDirectory.dir("junit-no-network/native").get().asFile
+        val extractDir = File(buildDir, "junit-no-network/native")
         val extractedAgent = File(extractDir, platform.agentFileName)
 
         // Skip extraction if agent already exists and is up-to-date
@@ -141,16 +143,34 @@ object NativeAgentExtractor {
      *
      * Convenience method that combines detection and extraction.
      *
-     * @param project Gradle project
+     * @param buildDir Build directory (for configuration cache compatibility)
      * @param logger Logger for diagnostic messages
      * @param debug Whether debug logging is enabled
      * @return Absolute path to the agent, or null if unavailable
      */
     fun getAgentPath(
+        buildDir: File,
+        logger: Logger,
+        debug: Boolean = false,
+    ): String? {
+        return extractAgent(buildDir, logger, debug)?.absolutePath
+    }
+
+    /**
+     * Get the path to the native agent, extracting it if necessary (Project overload).
+     *
+     * @param project Gradle project
+     * @param logger Logger for diagnostic messages
+     * @param debug Whether debug logging is enabled
+     * @return Absolute path to the agent, or null if unavailable
+     * @deprecated Use getAgentPath(File, Logger, Boolean) instead for configuration cache compatibility
+     */
+    @Deprecated("Use getAgentPath(File, Logger, Boolean) instead")
+    fun getAgentPath(
         project: Project,
         logger: Logger,
         debug: Boolean = false,
     ): String? {
-        return extractAgent(project, logger, debug)?.absolutePath
+        return extractAgent(project.layout.buildDirectory.get().asFile, logger, debug)?.absolutePath
     }
 }

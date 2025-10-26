@@ -60,7 +60,7 @@ tasks.register<Copy>("packageNativeAgent") {
     description = "Copy native JVMTI agent into plugin resources for packaging"
     group = "native"
 
-    // Determine platform-specific paths
+    // Determine platform-specific paths at configuration time
     val osName = System.getProperty("os.name").lowercase()
     val osArch = System.getProperty("os.arch").lowercase()
 
@@ -97,7 +97,9 @@ tasks.register<Copy>("packageNativeAgent") {
         }
 
     // Source: built agent from junit-no-network module
-    from(project(":junit-no-network").layout.projectDirectory.dir("../native/build")) {
+    // Use layout.projectDirectory navigation for configuration cache compatibility
+    // gradle-plugin is a sibling of junit-no-network, so go up to parent, then into native/build
+    from(layout.projectDirectory.dir("../native/build")) {
         include(agentFileName)
     }
 
@@ -107,21 +109,20 @@ tasks.register<Copy>("packageNativeAgent") {
     // Depend on the native build task from junit-no-network
     dependsOn(":junit-no-network:buildNativeAgent")
 
-    doFirst {
-        // Determine if this is a release build
-        val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }
-        val buildType = if (isReleaseBuild) "Release" else "Debug"
+    // Capture agent file path at configuration time for configuration cache
+    val agentFilePath = layout.projectDirectory.file("../native/build/$agentFileName").asFile
 
+    // Capture build type at configuration time for configuration cache
+    val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }
+    val buildType = if (isReleaseBuild) "Release" else "Debug"
+
+    doFirst {
         logger.lifecycle("Packaging native agent (BUILD_TYPE=$buildType) for $os-$arch")
 
-        // Verify the agent file exists
-        val agentFile =
-            project(":junit-no-network").layout.projectDirectory
-                .file("../native/build/$agentFileName")
-                .asFile
-        if (!agentFile.exists()) {
+        // Verify the agent file exists (using captured path)
+        if (!agentFilePath.exists()) {
             throw GradleException(
-                "Native agent not found at ${agentFile.absolutePath}. " +
+                "Native agent not found at ${agentFilePath.absolutePath}. " +
                     "Run ':junit-no-network:buildNativeAgent' first.",
             )
         }
