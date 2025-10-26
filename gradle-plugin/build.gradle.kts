@@ -108,7 +108,7 @@ tasks.register<Copy>("packageNativeAgent") {
     dependsOn(":junit-no-network:buildNativeAgent")
 
     // Capture agent file path at configuration time for configuration cache
-    val agentFilePath = layout.projectDirectory.file("native/build/$agentFileName").asFile
+    val agentFilePath = layout.projectDirectory.file("../native/build/$agentFileName").asFile
 
     // Capture build type at configuration time for configuration cache
     val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }
