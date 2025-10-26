@@ -81,8 +81,10 @@ That's it! 🎉
 
 | Version | Status | Notes |
 |---------|--------|-------|
-| 21+ | ✅ Supported | Uses JVMTI agent for network blocking |
-| 17-20 | ❌ Not Supported | Requires Java 21+ for JVMTI agent support |
+| 21+ | ✅ Supported | Single JVMTI agent binary works across all 21+ versions |
+| 17-20 | ❌ Not Supported | Requires Java 21+ |
+
+**Java version compatibility**: The JVMTI agent is compiled once per platform and works across all Java 21+ versions due to JVMTI's stable API and backward compatibility. You do NOT need different agent binaries for Java 21 vs 22 vs 25. [Learn more →](docs/architecture/java-version-compatibility.md)
 
 ### JUnit Versions
 
@@ -93,12 +95,15 @@ That's it! 🎉
 
 ### Platforms
 
-| Platform | Status | Guide |
-|----------|--------|-------|
-| JVM | ✅ Full Support | [JUnit 5](docs/setup-guides/jvm-junit5.md) / [JUnit 4](docs/setup-guides/jvm-junit4.md) |
-| Android (Robolectric) | ✅ Full Support | [Setup Guide](docs/setup-guides/android-junit4.md) |
-| KMP (JVM + Android) | ✅ Full Support | [JUnit 5](docs/setup-guides/kmp-junit5.md) / [JUnit 4](docs/setup-guides/kmp-junit4.md) |
-| iOS | ⚠️ API Only | No active blocking |
+| Platform | OS/Architecture | Status | Guide |
+|----------|-----------------|--------|-------|
+| JVM | macOS ARM64 | ✅ Supported | [JUnit 5](docs/setup-guides/jvm-junit5.md) / [JUnit 4](docs/setup-guides/jvm-junit4.md) |
+| JVM | macOS Intel, Linux, Windows | 🚧 Planned | See [platform roadmap](docs/architecture/java-version-compatibility.md#platform-matrix) |
+| Android (Robolectric) | All | ✅ Supported | [Setup Guide](docs/setup-guides/android-junit4.md) |
+| KMP (JVM + Android) | macOS ARM64 + Android | ✅ Supported | [JUnit 5](docs/setup-guides/kmp-junit5.md) / [JUnit 4](docs/setup-guides/kmp-junit4.md) |
+| iOS | - | ⚠️ API Only | No active blocking (Kotlin/Native limitation) |
+
+**Note**: Native JVMTI agent currently built for macOS ARM64. Linux, Windows, and macOS Intel support coming soon.
 
 ### HTTP Clients
 
