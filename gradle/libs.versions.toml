@@ -29,6 +29,10 @@ ktor = "2.3.7"
 retrofit = "2.11.0"
 async-http-client = "3.0.0"
 reactor-netty = "1.1.22"
+spring-webflux = "6.2.0"
+openfeign = "13.5"
+fuel = "2.3.1"
+volley = "1.2.1"
 
 # Coroutines
 kotlinx-coroutines = "1.8.0"
@@ -70,6 +74,21 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+
+# Spring WebFlux (Spring WebClient)
+spring-webflux = { module = "org.springframework:spring-webflux", version.ref = "spring-webflux" }
+spring-context = { module = "org.springframework:spring-context", version.ref = "spring-webflux" }
+
+# Feign (OpenFeign)
+openfeign-core = { module = "io.github.openfeign:feign-core", version.ref = "openfeign" }
+openfeign-okhttp = { module = "io.github.openfeign:feign-okhttp", version.ref = "openfeign" }
+
+# Fuel (Kotlin HTTP Client)
+fuel = { module = "com.github.kittinunf.fuel:fuel", version.ref = "fuel" }
+fuel-coroutines = { module = "com.github.kittinunf.fuel:fuel-coroutines", version.ref = "fuel" }
+
+# Android Volley
+volley = { module = "com.android.volley:volley", version.ref = "volley" }
 
 # Coroutines
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }

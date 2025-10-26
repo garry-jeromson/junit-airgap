@@ -82,7 +82,11 @@ kotlin {
                 implementation(libs.okhttp)
                 implementation(libs.retrofit)
                 implementation(libs.retrofit.converter.scalars)
+                implementation(libs.volley)
                 implementation(libs.nanohttpd)
+
+                // Robolectric shadows for Apache HTTP (required by Volley)
+                implementation("org.robolectric:shadows-httpclient:4.13")
             }
         }
 
@@ -158,6 +162,12 @@ kotlin.jvm().compilations.create("integrationTest") {
             implementation(libs.retrofit)
             implementation(libs.retrofit.converter.scalars)
             implementation(libs.reactor.netty.http)
+            implementation(libs.spring.webflux)
+            implementation(libs.spring.context)
+            implementation(libs.openfeign.core)
+            implementation(libs.openfeign.okhttp)
+            implementation(libs.fuel)
+            implementation(libs.fuel.coroutines)
 
             // Ktor client for integration testing
             implementation(libs.ktor.client.core)
