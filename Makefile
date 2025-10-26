@@ -110,10 +110,7 @@ test-integration:
 
 ## test-plugin-integration: Run all plugin integration tests across different configurations
 test-plugin-integration:
-	@echo "Publishing artifacts to mavenLocal..."
-	@JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-no-network:publishToMavenLocal :gradle-plugin:publishToMavenLocal
-	@echo ""
-	@echo "Running plugin integration tests..."
+	@echo "Running plugin integration tests (using composite build)..."
 	@JAVA_HOME=$(JAVA_HOME) $(GRADLEW) \
 		:plugin-integration-tests:kmp-junit5:test \
 		:plugin-integration-tests:kmp-junit4:test \

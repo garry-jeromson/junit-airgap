@@ -3,9 +3,6 @@ plugins {
     alias(libs.plugins.android.library)
 }
 
-group = "io.github.garryjeromson.test"
-version = "1.0-SNAPSHOT"
-
 kotlin {
     jvmToolchain(21)
 

@@ -1,10 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.junit.no.network)
+    id("io.github.garryjeromson.junit-no-network")
 }
-
-group = "io.github.garryjeromson.test"
-version = "1.0-SNAPSHOT"
 
 // Configure the plugin
 junitNoNetwork {
