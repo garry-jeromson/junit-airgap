@@ -32,6 +32,7 @@ help:
 	@echo "  assemble           Assemble all outputs without running tests"
 	@echo ""
 	@echo "Test Commands:"
+	@echo "  bootstrap      Bootstrap plugin to Maven Local (auto-runs on first test)"
 	@echo "  test           Run all tests (default Java 21)"
 	@echo "  test-java21    Run all tests with Java 21"
 	@echo "  test-java25    Run all tests with Java 25"
@@ -82,8 +83,28 @@ clean:
 	@echo "Cleaning build artifacts..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) clean
 
+## bootstrap: Bootstrap plugin to Maven Local (required before first test run)
+bootstrap:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Bootstrapping plugin to Maven Local..."
+	@echo "═══════════════════════════════════════════════════════════════"
+	@JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishToMavenLocal --quiet || \
+		JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishToMavenLocal
+	@echo "✅ Plugin bootstrap complete"
+	@echo ""
+
 ## test: Run all tests (Core library + Gradle plugin + Integration tests + Plugin integration tests)
 test:
+	@# Check if plugin exists in Maven Local (only check gradle-plugin marker)
+	@if [ ! -d "$$HOME/.m2/repository/io/github/garryjeromson/junit-airgap-gradle-plugin" ]; then \
+		echo "═══════════════════════════════════════════════════════════════"; \
+		echo "  First-time setup: Publishing plugin to Maven Local..."; \
+		echo "═══════════════════════════════════════════════════════════════"; \
+		JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishToMavenLocal --quiet || \
+			JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishToMavenLocal; \
+		echo "✅ Plugin published successfully"; \
+		echo ""; \
+	fi
 	@echo "Running all tests..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) test
 

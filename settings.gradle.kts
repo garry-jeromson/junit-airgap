@@ -31,11 +31,41 @@ include(":gradle-plugin")
 // - They consume the plugin from Maven Local (realistic testing)
 // - They're isolated workspaces with their own configuration
 // - Main build doesn't evaluate their build files during configuration
-// Only include these builds when not publishing (they require plugin to be published first)
-val skipIncludedBuilds = gradle.startParameter.taskNames.any {
+//
+// Bootstrap logic:
+// 1. Skip included builds when running publish tasks (they need the published plugin)
+// 2. Check if plugin exists in Maven Local before including builds
+// 3. Provide helpful error message when plugin is missing
+
+val isPublishing = gradle.startParameter.taskNames.any {
     it.contains("publish") || it.contains("MavenLocal")
 }
-if (!skipIncludedBuilds) {
+
+val pluginMarkerPath = file("${System.getProperty("user.home")}/.m2/repository/io/github/garryjeromson/junit-airgap-gradle-plugin")
+val pluginExists = pluginMarkerPath.exists()
+
+if (isPublishing) {
+    // Skip included builds during publishing to avoid circular dependency
+    logger.quiet("Skipping included builds during publish operation")
+} else if (!pluginExists) {
+    // Plugin not published yet - provide helpful message
+    logger.warn("")
+    logger.warn("═══════════════════════════════════════════════════════════════")
+    logger.warn("  Plugin not found in Maven Local")
+    logger.warn("═══════════════════════════════════════════════════════════════")
+    logger.warn("The Gradle plugin must be published to Maven Local before")
+    logger.warn("included builds (benchmarks, plugin-integration-tests) can be used.")
+    logger.warn("")
+    logger.warn("Run one of:")
+    logger.warn("  make test              (auto-bootstraps and runs all tests)")
+    logger.warn("  make bootstrap         (just bootstrap the plugin)")
+    logger.warn("  ./gradlew publishToMavenLocal")
+    logger.warn("")
+    logger.warn("Skipping included builds for now...")
+    logger.warn("═══════════════════════════════════════════════════════════════")
+    logger.warn("")
+} else {
+    // Plugin exists - include all builds
     includeBuild("benchmarks")
     includeBuild("plugin-integration-tests")
 }
