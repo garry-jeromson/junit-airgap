@@ -93,6 +93,52 @@ JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/
 JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :plugin-integration-tests:android-robolectric:testDebugUnitTest
 ```
 
+### Bootstrap Behavior (Fresh Clones)
+
+The project uses an included builds architecture where benchmarks and plugin integration tests consume the Gradle plugin from Maven Local. On fresh clones, this plugin isn't published yet.
+
+**Solution**: Automatic bootstrap logic handles this transparently:
+
+```bash
+# First run on fresh clone
+$ make test
+═══════════════════════════════════════════════════════════════
+  First-time setup: Publishing plugin to Maven Local...
+═══════════════════════════════════════════════════════════════
+✅ Plugin published successfully
+
+Running all tests...
+[tests run successfully]
+
+# Subsequent runs (fast - no bootstrap needed)
+$ make test
+Running all tests...
+[tests run]
+```
+
+**Manual Bootstrap** (if needed):
+```bash
+# Bootstrap plugin only
+make bootstrap
+
+# Or use Gradle directly
+./gradlew :gradle-plugin:publishToMavenLocal
+```
+
+**Direct Gradle Usage on Fresh Clone**:
+If you run `./gradlew` commands directly on a fresh clone (before running `make test`), you'll see a helpful message:
+
+```
+═══════════════════════════════════════════════════════════════
+  Plugin not found in Maven Local
+═══════════════════════════════════════════════════════════════
+Run one of:
+  make test              (auto-bootstraps and runs all tests)
+  make bootstrap         (just bootstrap the plugin)
+  ./gradlew publishToMavenLocal
+═══════════════════════════════════════════════════════════════
+```
+
 ## Plugin Development Workflow
 
 The Gradle plugin is tested using integration tests that consume it from Maven Local.
