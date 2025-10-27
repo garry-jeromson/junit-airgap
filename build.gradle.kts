@@ -21,11 +21,12 @@ nexusPublishing {
 // This ensures that running `./gradlew test` runs comprehensive test coverage:
 // - Core library tests (JVM + Android)
 // - Gradle plugin tests
-// - Integration tests
-// Note: Plugin integration tests and benchmarks are in included builds
-// and should be run separately (they require the plugin to be published to Maven Local first)
+// - Core integration tests
+// - Plugin integration tests (all 11 integration test projects)
+// Note: Benchmarks are excluded and run separately via compareBenchmarks
+// Plugin integration tests require publishToMavenLocal to be run first
 tasks.register("test") {
-    description = "Run core library and gradle plugin tests"
+    description = "Run all tests: core library, plugin, and plugin integration tests"
     group = "verification"
 
     // Depend on tests from core library and plugin (main workspace)
@@ -34,6 +35,9 @@ tasks.register("test") {
         ":gradle-plugin:test",
         ":junit-airgap:integrationTest"
     )
+
+    // Include plugin integration tests from the included build
+    dependsOn(gradle.includedBuild("plugin-integration-tests").task(":test"))
 }
 
 // Task to run plugin integration tests from the included build
