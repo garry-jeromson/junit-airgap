@@ -31,5 +31,11 @@ include(":gradle-plugin")
 // - They consume the plugin from Maven Local (realistic testing)
 // - They're isolated workspaces with their own configuration
 // - Main build doesn't evaluate their build files during configuration
-includeBuild("benchmarks")
-includeBuild("plugin-integration-tests")
+// Only include these builds when not publishing (they require plugin to be published first)
+val skipIncludedBuilds = gradle.startParameter.taskNames.any {
+    it.contains("publish") || it.contains("MavenLocal")
+}
+if (!skipIncludedBuilds) {
+    includeBuild("benchmarks")
+    includeBuild("plugin-integration-tests")
+}
