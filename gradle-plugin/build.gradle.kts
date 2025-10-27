@@ -143,6 +143,13 @@ tasks.named("processResources") {
     dependsOn("packageNativeAgent")
 }
 
+// Make all source JAR tasks depend on packageNativeAgent to avoid task ordering issues
+tasks.withType<Jar>().configureEach {
+    if (name.contains("sources", ignoreCase = true)) {
+        dependsOn("packageNativeAgent")
+    }
+}
+
 publishing {
     publications {
         create<MavenPublication>("pluginMaven") {
