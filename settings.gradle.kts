@@ -6,13 +6,8 @@ pluginManagement {
     // Include build-logic for convention plugins
     includeBuild("build-logic")
 
-    // Include gradle-plugin as a composite build
-    // This allows plugin-integration-tests and benchmarks to use the plugin
-    // without requiring it to be published to Maven Local first
-    includeBuild("gradle-plugin")
-
     repositories {
-        mavenLocal() // Fallback for external testing
+        mavenLocal() // For included builds to consume locally published plugin
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -27,27 +22,14 @@ dependencyResolutionManagement {
     }
 }
 
-// Core library
+// Core library and plugin
 include(":junit-airgap")
-// gradle-plugin is now an included build (see pluginManagement above)
+include(":gradle-plugin")
 
-// Benchmark projects
-include(":benchmarks:benchmark-common")
-include(":benchmarks:benchmark-control")
-include(":benchmarks:benchmark-treatment")
-
-// Plugin integration tests
-include(":plugin-integration-tests:test-contracts")
-include(":plugin-integration-tests:kmp-junit5")
-include(":plugin-integration-tests:kmp-junit4")
-include(":plugin-integration-tests:kmp-kotlintest")
-include(":plugin-integration-tests:kmp-kotlintest-junit5")
-include(":plugin-integration-tests:android-robolectric")
-include(":plugin-integration-tests:jvm-junit5")
-include(":plugin-integration-tests:jvm-junit4")
-
-// Plugin configuration option tests
-include(":plugin-integration-tests:jvm-junit5-apply-all")
-include(":plugin-integration-tests:jvm-junit5-allowed-hosts")
-include(":plugin-integration-tests:jvm-junit5-blocked-hosts")
-include(":plugin-integration-tests:jvm-junit4-apply-all")
+// Benchmark projects and plugin integration tests are included builds
+// This avoids circular dependency during configuration phase:
+// - They consume the plugin from Maven Local (realistic testing)
+// - They're isolated workspaces with their own configuration
+// - Main build doesn't evaluate their build files during configuration
+includeBuild("benchmarks")
+includeBuild("plugin-integration-tests")

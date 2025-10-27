@@ -1,6 +1,6 @@
 plugins {
     id("junit-extensions.kotlin-multiplatform-convention")
-    id("com.android.library")
+    alias(libs.plugins.android.library)
 }
 
 kotlin {
