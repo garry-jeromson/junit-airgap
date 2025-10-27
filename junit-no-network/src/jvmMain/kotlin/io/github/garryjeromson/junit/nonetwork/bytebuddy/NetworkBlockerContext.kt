@@ -201,29 +201,6 @@ object NetworkBlockerContext {
     }
 
     /**
-     * Check connection with URL (for URL-based APIs).
-     *
-     * @param url Full URL string
-     * @param caller Name of the calling class
-     */
-    @JvmStatic
-    fun checkConnectionUrl(
-        url: String,
-        caller: String = "unknown",
-    ) {
-        try {
-            val parsedUrl = java.net.URL(url)
-            val host = parsedUrl.host
-            val port = if (parsedUrl.port != -1) parsedUrl.port else parsedUrl.defaultPort
-            checkConnection(host, port, caller)
-        } catch (e: Exception) {
-            // If we can't parse URL, allow it (fail open rather than crash)
-            logger.debug { "NetworkBlockerContext: Failed to parse URL: $url, allowing connection" }
-            logger.debug { "Exception: ${e.message}" }
-        }
-    }
-
-    /**
      * Check if a host is explicitly in the blockedHosts list.
      *
      * This is used by the JVMTI agent to determine if a hostname/IP should be blocked
