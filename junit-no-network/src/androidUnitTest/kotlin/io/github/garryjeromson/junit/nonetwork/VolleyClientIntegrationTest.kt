@@ -122,7 +122,9 @@ class VolleyClientIntegrationTest {
         // throws NetworkRequestAttemptedException and the request never completes
         // We verify blocking by checking that the request didn't succeed
         if (successRef.get()) {
-            throw AssertionError("Volley JsonObjectRequest should be blocked - Expected request to fail but it succeeded")
+            throw AssertionError(
+                "Volley JsonObjectRequest should be blocked - Expected request to fail but it succeeded",
+            )
         }
         // If we got an error callback, verify it contains network blocking exception
         errorRef.get()?.let { error ->

@@ -101,7 +101,10 @@ class ExtensionConfigurationTest {
 
     @Test
     fun `getBlockedHosts trims whitespace around hosts`() {
-        System.setProperty(ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY, " blocked1.com , blocked2.com , blocked3.com ")
+        System.setProperty(
+            ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY,
+            " blocked1.com , blocked2.com , blocked3.com ",
+        )
         val hosts = ExtensionConfiguration.getBlockedHosts()
         assertEquals(setOf("blocked1.com", "blocked2.com", "blocked3.com"), hosts)
     }

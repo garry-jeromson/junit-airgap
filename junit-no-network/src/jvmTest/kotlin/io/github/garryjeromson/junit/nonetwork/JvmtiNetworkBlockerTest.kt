@@ -20,10 +20,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         blocker.install()
@@ -39,10 +40,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         blocker.install()
@@ -56,10 +58,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         // Install first
@@ -78,10 +81,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         blocker.install()
@@ -98,10 +102,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         blocker.install()
@@ -118,10 +123,11 @@ class JvmtiNetworkBlockerTest {
         val testLogger = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger)
 
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         blocker.uninstall() // Uninstall without install
@@ -132,10 +138,11 @@ class JvmtiNetworkBlockerTest {
 
     @Test
     fun `isAvailable always returns true`() {
-        val configuration = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         val blocker = JvmtiNetworkBlocker(configuration)
 
         // isAvailable should always return true (graceful degradation)

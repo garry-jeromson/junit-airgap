@@ -1,7 +1,6 @@
 package io.github.garryjeromson.junit.nonetwork.integration
 
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.coroutines.awaitString
 import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
@@ -54,7 +53,8 @@ class FuelClientIntegrationTest {
     fun `blocks Fuel POST requests to external host`() {
         assertNetworkBlocked("Fuel POST should be blocked") {
             val (_, _, result) =
-                Fuel.post("https://api.example.com/api/submit")
+                Fuel
+                    .post("https://api.example.com/api/submit")
                     .body("test data")
                     .responseString()
             // Access result to trigger actual network call

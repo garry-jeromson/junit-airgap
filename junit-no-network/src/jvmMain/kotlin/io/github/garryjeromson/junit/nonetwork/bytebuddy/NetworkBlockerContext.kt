@@ -112,7 +112,7 @@ object NetworkBlockerContext {
 
         globalConfiguration = null
         configurationThreadLocal.remove()
-        currentGeneration++  // Invalidate all inherited configurations
+        currentGeneration++ // Invalidate all inherited configurations
     }
 
     /**
@@ -224,13 +224,14 @@ object NetworkBlockerContext {
 
         // Check if host matches any pattern in blockedHosts
         val normalizedHost = host.lowercase()
-        val blocked = configuration.blockedHosts.any { pattern ->
-            val matches = matchesPattern(normalizedHost, pattern.lowercase())
-            if (matches) {
-                logger.debug { "  Host $host matches blocked pattern: $pattern" }
+        val blocked =
+            configuration.blockedHosts.any { pattern ->
+                val matches = matchesPattern(normalizedHost, pattern.lowercase())
+                if (matches) {
+                    logger.debug { "  Host $host matches blocked pattern: $pattern" }
+                }
+                matches
             }
-            matches
-        }
 
         logger.debug { "  isExplicitlyBlocked($host) = $blocked" }
 

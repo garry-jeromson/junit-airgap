@@ -41,7 +41,8 @@ class SpringWebClientIntegrationTest {
     fun `blocks Spring WebClient GET requests to external host`() {
         assertNetworkBlocked("Spring WebClient should be blocked") {
             val client = WebClient.create("http://example.com")
-            client.get()
+            client
+                .get()
                 .uri("/api/test")
                 .retrieve()
                 .bodyToMono(String::class.java)
@@ -54,7 +55,8 @@ class SpringWebClientIntegrationTest {
     fun `blocks Spring WebClient POST requests to external host`() {
         assertNetworkBlocked("Spring WebClient POST should be blocked") {
             val client = WebClient.create("http://example.com")
-            client.post()
+            client
+                .post()
                 .uri("/api/submit")
                 .bodyValue("test data")
                 .retrieve()
@@ -70,7 +72,8 @@ class SpringWebClientIntegrationTest {
         assertNetworkNotBlocked("Spring WebClient to localhost should work") {
             val client = WebClient.create("http://localhost:${mockServer.listeningPort}")
             val response =
-                client.get()
+                client
+                    .get()
                     .uri("/api/test")
                     .retrieve()
                     .bodyToMono(String::class.java)
@@ -87,7 +90,8 @@ class SpringWebClientIntegrationTest {
         assertNetworkNotBlocked("Spring WebClient to 127.0.0.1 should work") {
             val client = WebClient.create("http://127.0.0.1:${mockServer.listeningPort}")
             val response =
-                client.get()
+                client
+                    .get()
                     .uri("/api/test")
                     .retrieve()
                     .bodyToMono(String::class.java)
@@ -103,7 +107,8 @@ class SpringWebClientIntegrationTest {
         assertNetworkNotBlocked("Spring WebClient should work with wildcard") {
             val client = WebClient.create("http://localhost:${mockServer.listeningPort}")
             val response =
-                client.get()
+                client
+                    .get()
                     .uri("/api/test")
                     .retrieve()
                     .bodyToMono(String::class.java)

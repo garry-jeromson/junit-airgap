@@ -75,7 +75,8 @@ class NoNetworkExtension(
             try {
                 // Access the object to trigger its init block (accessing just ::class doesn't work)
                 // getConfiguration() is a simple getter that won't cause side effects
-                io.github.garryjeromson.junit.nonetwork.bytebuddy.NetworkBlockerContext.getConfiguration()
+                io.github.garryjeromson.junit.nonetwork.bytebuddy.NetworkBlockerContext
+                    .getConfiguration()
             } catch (e: Throwable) {
                 // Ignore errors - NetworkBlockerContext will initialize when first used
             }

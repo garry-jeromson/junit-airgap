@@ -1,7 +1,6 @@
 package io.github.garryjeromson.junit.nonetwork
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.platform.launcher.LauncherSession
@@ -133,8 +132,9 @@ class NoNetworkLauncherSessionListenerTest {
 
         // Second message should be either success or failure
         val secondMessage = testLogger.messages[1]
-        val isSuccessOrFailure = secondMessage.contains("initialized successfully") ||
-            secondMessage.contains("initialization failed")
+        val isSuccessOrFailure =
+            secondMessage.contains("initialized successfully") ||
+                secondMessage.contains("initialization failed")
         assertTrue(isSuccessOrFailure) {
             "Second message should indicate initialization result, but was: $secondMessage"
         }
