@@ -24,7 +24,6 @@ nexusPublishing {
 // - Core integration tests
 // - Plugin integration tests (all 11 integration test projects)
 // Note: Benchmarks are excluded and run separately via compareBenchmarks
-// Plugin integration tests require publishToMavenLocal to be run first
 tasks.register("test") {
     description = "Run all tests: core library, plugin, and plugin integration tests"
     group = "verification"
@@ -36,8 +35,14 @@ tasks.register("test") {
         ":junit-airgap:integrationTest"
     )
 
+    // Publish plugin to Maven Local before running integration tests
+    // Integration tests consume the plugin from Maven Local (realistic testing)
+    dependsOn(":gradle-plugin:publishToMavenLocal")
+
     // Include plugin integration tests from the included build
+    // Must run after publishToMavenLocal
     dependsOn(gradle.includedBuild("plugin-integration-tests").task(":test"))
+    mustRunAfter(":gradle-plugin:publishToMavenLocal")
 }
 
 // Task to run plugin integration tests from the included build
