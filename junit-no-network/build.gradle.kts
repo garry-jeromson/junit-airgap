@@ -90,7 +90,10 @@ kotlin {
                 // This gives access to NetworkBlockerContext for configuration
                 implementation(projects.junitNoNetwork) {
                     attributes {
-                        attribute(org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.attribute, org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.jvm)
+                        attribute(
+                            org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.attribute,
+                            org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.jvm,
+                        )
                     }
                 }
 
@@ -135,7 +138,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().con
         // Suppress experimental language version warning (Gradle 9.1.0 uses Kotlin 2.2.0)
         freeCompilerArgs.addAll(
             "-Xexpect-actual-classes",
-            "-Xsuppress-version-warnings"
+            "-Xsuppress-version-warnings",
         )
     }
 }
@@ -359,7 +362,9 @@ tasks.register<Exec>("cmakeConfigureNativeAgent") {
 
     // Determine build type: Release for publishing, Debug for local development
     val buildType =
-        if (project.gradle.startParameter.taskNames.any { it.contains("publish") || it.contains("release") }) {
+        if (project.gradle.startParameter.taskNames
+                .any { it.contains("publish") || it.contains("release") }
+        ) {
             "Release"
         } else {
             "Debug"
@@ -496,6 +501,14 @@ kover {
             filters {
                 excludes {
                     packages("io.github.garryjeromson.junit.nonetwork.integration")
+                }
+            }
+
+            // Verify minimum coverage thresholds
+            verify {
+                onCheck = true
+                rule {
+                    minBound(95)
                 }
             }
         }

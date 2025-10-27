@@ -141,4 +141,68 @@ class NoNetworkRuleConfigurationTest {
             }
         }
     }
+
+    /**
+     * Test 5: Constructor parameter applyToAllTests = false
+     */
+    class ConstructorParameterFalseTest {
+        @get:Rule
+        val noNetworkRule = NoNetworkRule(applyToAllTests = false)
+
+        @Test
+        fun shouldNotBlockWhenApplyToAllTestsIsFalse() {
+            // Should not block without annotation when explicitly set to false
+            try {
+                Socket("example.com", 80)
+            } catch (e: NetworkRequestAttemptedException) {
+                throw AssertionError("Should not block when applyToAllTests = false", e)
+            } catch (e: Exception) {
+                // Other errors are fine
+            }
+        }
+
+        @Test
+        @BlockNetworkRequests
+        fun shouldStillBlockWithAnnotationWhenApplyToAllTestsIsFalse() {
+            // Annotation should still work
+            try {
+                Socket("example.com", 80)
+                throw AssertionError("Should have blocked with @BlockNetworkRequests")
+            } catch (e: NetworkRequestAttemptedException) {
+                // Expected
+            }
+        }
+    }
+
+    /**
+     * Test 6: System property junit.nonetwork.applyToAllTests
+     */
+    class SystemPropertyTest {
+        @get:Rule
+        val noNetworkRule = NoNetworkRule()
+
+        companion object {
+            @org.junit.BeforeClass
+            @JvmStatic
+            fun setSystemProperty() {
+                System.setProperty("junit.nonetwork.applyToAllTests", "true")
+            }
+
+            @org.junit.AfterClass
+            @JvmStatic
+            fun clearSystemProperty() {
+                System.clearProperty("junit.nonetwork.applyToAllTests")
+            }
+        }
+
+        @Test
+        fun shouldBlockWhenSystemPropertyIsTrue() {
+            try {
+                Socket("example.com", 80)
+                throw AssertionError("Should have blocked when system property is true")
+            } catch (e: NetworkRequestAttemptedException) {
+                // Expected
+            }
+        }
+    }
 }

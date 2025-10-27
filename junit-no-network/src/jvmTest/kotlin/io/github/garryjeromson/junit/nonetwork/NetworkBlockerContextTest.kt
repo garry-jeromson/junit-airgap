@@ -19,16 +19,18 @@ class NetworkBlockerContextTest {
     @Test
     fun `checkConnection includes caller in exception message`() {
         // Set up configuration that blocks all hosts
-        val configuration = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(configuration)
 
         // Attempt connection with custom caller string
-        val exception = assertThrows<NetworkRequestAttemptedException> {
-            NetworkBlockerContext.checkConnection("example.com", 443, "test-caller")
-        }
+        val exception =
+            assertThrows<NetworkRequestAttemptedException> {
+                NetworkBlockerContext.checkConnection("example.com", 443, "test-caller")
+            }
 
         // Verify caller appears in exception message
         assertTrue(exception.message!!.contains("via test-caller")) {
@@ -39,16 +41,18 @@ class NetworkBlockerContextTest {
     @Test
     fun `checkConnection uses default caller when not specified`() {
         // Set up configuration that blocks all hosts
-        val configuration = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(configuration)
 
         // Attempt connection without specifying caller (uses default)
-        val exception = assertThrows<NetworkRequestAttemptedException> {
-            NetworkBlockerContext.checkConnection("example.com", 443)
-        }
+        val exception =
+            assertThrows<NetworkRequestAttemptedException> {
+                NetworkBlockerContext.checkConnection("example.com", 443)
+            }
 
         // Verify default caller appears in exception message
         assertTrue(exception.message!!.contains("via unknown")) {
@@ -59,16 +63,18 @@ class NetworkBlockerContextTest {
     @Test
     fun `checkConnection includes JVMTI-Agent caller in exception message`() {
         // Set up configuration that blocks all hosts
-        val configuration = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(configuration)
 
         // Attempt connection with JVMTI-Agent caller string (as used by native code)
-        val exception = assertThrows<NetworkRequestAttemptedException> {
-            NetworkBlockerContext.checkConnection("example.com", 443, "JVMTI-Agent")
-        }
+        val exception =
+            assertThrows<NetworkRequestAttemptedException> {
+                NetworkBlockerContext.checkConnection("example.com", 443, "JVMTI-Agent")
+            }
 
         // Verify JVMTI-Agent caller appears in exception message
         assertTrue(exception.message!!.contains("via JVMTI-Agent")) {
@@ -79,16 +85,18 @@ class NetworkBlockerContextTest {
     @Test
     fun `checkConnection includes JVMTI-DNS caller in exception message`() {
         // Set up configuration that blocks all hosts
-        val configuration = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(configuration)
 
         // Attempt DNS lookup with JVMTI-DNS caller string (as used by native DNS interceptor)
-        val exception = assertThrows<NetworkRequestAttemptedException> {
-            NetworkBlockerContext.checkConnection("example.com", -1, "JVMTI-DNS")
-        }
+        val exception =
+            assertThrows<NetworkRequestAttemptedException> {
+                NetworkBlockerContext.checkConnection("example.com", -1, "JVMTI-DNS")
+            }
 
         // Verify JVMTI-DNS caller appears in exception message
         assertTrue(exception.message!!.contains("via JVMTI-DNS")) {
@@ -99,20 +107,65 @@ class NetworkBlockerContextTest {
     @Test
     fun `checkConnection includes host and port in exception message`() {
         // Set up configuration that blocks all hosts
-        val configuration = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = emptySet(),
-        )
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(configuration)
 
         // Attempt connection
-        val exception = assertThrows<NetworkRequestAttemptedException> {
-            NetworkBlockerContext.checkConnection("blocked.com", 8080, "test-caller")
-        }
+        val exception =
+            assertThrows<NetworkRequestAttemptedException> {
+                NetworkBlockerContext.checkConnection("blocked.com", 8080, "test-caller")
+            }
 
         // Verify host and port appear in exception message
         assertTrue(exception.message!!.contains("blocked.com:8080")) {
             "Exception message should contain 'blocked.com:8080', but was: ${exception.message}"
         }
+    }
+
+    @Test
+    fun `isExplicitlyBlocked matches wildcard pattern`() {
+        // Set up configuration with wildcard blocked hosts
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("*"),
+                blockedHosts = setOf("*"),
+            )
+        NetworkBlockerContext.setConfiguration(configuration)
+
+        // Verify wildcard pattern matches any host
+        val isBlocked = NetworkBlockerContext.isExplicitlyBlocked("example.com")
+        assertTrue(isBlocked) {
+            "Wildcard pattern '*' should match any host"
+        }
+    }
+
+    @Test
+    fun `getConfiguration returns global config when thread-local is stale`() {
+        // Set up configuration in main thread
+        val configuration =
+            NetworkConfiguration(
+                allowedHosts = setOf("example.com"),
+                blockedHosts = emptySet(),
+            )
+        NetworkBlockerContext.setConfiguration(configuration)
+
+        // Clear thread-local but keep global
+        val thread =
+            Thread {
+                // This thread should fall back to global configuration
+                val config = NetworkBlockerContext.getConfiguration()
+                assertTrue(config != null) {
+                    "Should get global configuration in new thread"
+                }
+                assertTrue(config!!.allowedHosts.contains("example.com")) {
+                    "Global config should have example.com"
+                }
+            }
+        thread.start()
+        thread.join()
     }
 }

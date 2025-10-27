@@ -21,6 +21,7 @@ data class NetworkConfiguration(
      */
     var generation: Long = 0
         internal set
+
     /**
      * Checks if a given host is allowed based on the configuration.
      *

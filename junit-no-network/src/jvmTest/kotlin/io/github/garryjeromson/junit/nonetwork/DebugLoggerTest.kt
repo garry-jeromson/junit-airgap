@@ -124,4 +124,32 @@ class DebugLoggerTest {
         assertEquals("Connection to example.com:80", testLogger.messages[0])
         assertEquals("Configuration: test-config", testLogger.messages[1])
     }
+
+    @Test
+    fun `test logger with debug enabled captures messages`() {
+        // Create a custom debug logger that always has debug enabled
+        val debugLogger =
+            object : DebugLogger {
+                val messages = mutableListOf<String>()
+
+                override fun debug(message: () -> String) {
+                    // Simulate what SystemPropertyDebugLogger does when debug is enabled
+                    val msg = "[junit-no-network] ${message()}"
+                    messages.add(msg)
+                }
+            }
+
+        DebugLogger.setTestInstance(debugLogger)
+
+        val logger = DebugLogger.instance
+        logger.debug { "Test debug message" }
+
+        assertEquals(1, debugLogger.messages.size)
+        assertTrue(debugLogger.messages[0].contains("[junit-no-network]")) {
+            "Output should contain [junit-no-network] prefix"
+        }
+        assertTrue(debugLogger.messages[0].contains("Test debug message")) {
+            "Output should contain the debug message"
+        }
+    }
 }
