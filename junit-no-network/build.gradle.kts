@@ -491,6 +491,13 @@ kover {
             html {
                 onCheck = true
             }
+
+            // Exclude integration tests from coverage
+            filters {
+                excludes {
+                    packages("io.github.garryjeromson.junit.nonetwork.integration")
+                }
+            }
         }
     }
 }
