@@ -62,15 +62,6 @@ class DebugLoggerTest {
     }
 
     @Test
-    fun `test logger isDebugEnabled returns true for test logger`() {
-        val testLogger = TestDebugLogger()
-        DebugLogger.setTestInstance(testLogger)
-
-        val logger = DebugLogger.instance
-        assertTrue(logger.isDebugEnabled())
-    }
-
-    @Test
     fun `test logger instance changes with setTestInstance`() {
         val testLogger1 = TestDebugLogger()
         DebugLogger.setTestInstance(testLogger1)

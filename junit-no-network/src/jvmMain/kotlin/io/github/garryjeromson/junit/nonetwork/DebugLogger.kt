@@ -41,11 +41,6 @@ internal interface DebugLogger {
      */
     fun debug(message: () -> String)
 
-    /**
-     * Check if debug mode is currently enabled.
-     */
-    fun isDebugEnabled(): Boolean
-
     companion object {
         /**
          * Get the current logger instance (either test or default).
@@ -86,8 +81,6 @@ private class SystemPropertyDebugLogger : DebugLogger {
      * Checking system property on every log call would be expensive.
      */
     private val debugEnabled: Boolean = System.getProperty("junit.nonetwork.debug") == "true"
-
-    override fun isDebugEnabled(): Boolean = debugEnabled
 
     override fun debug(message: () -> String) {
         if (debugEnabled) {

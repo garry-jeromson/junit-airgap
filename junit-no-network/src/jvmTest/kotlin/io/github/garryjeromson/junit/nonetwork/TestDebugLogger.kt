@@ -13,8 +13,6 @@ internal class TestDebugLogger : DebugLogger {
     val messages: List<String>
         get() = _messages.toList()
 
-    override fun isDebugEnabled(): Boolean = true
-
     override fun debug(message: () -> String) {
         _messages.add(message())
     }
