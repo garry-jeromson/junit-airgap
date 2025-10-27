@@ -199,6 +199,10 @@ signing {
 
     if (signingKeyId != null && signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    }
+
+    // Only configure signing tasks if we have credentials
+    if (signingKeyId != null && signingKey != null && signingPassword != null) {
         sign(publishing.publications)
     }
 }
