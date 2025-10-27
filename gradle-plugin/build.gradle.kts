@@ -189,8 +189,14 @@ publishing {
 
 // Signing configuration for Maven Central
 signing {
-    // Only require signing if publishing to Maven Central (not for local builds)
-    setRequired { gradle.taskGraph.allTasks.any { it.name.contains("publish") } }
+    // Only require signing if publishing to Maven Central (not for Maven Local)
+    // This ensures publishToMavenLocal doesn't require signing credentials
+    setRequired {
+        gradle.taskGraph.allTasks.any { task ->
+            task.name.contains("publish", ignoreCase = true) &&
+                !task.name.contains("ToMavenLocal", ignoreCase = true)
+        }
+    }
 
     // Use in-memory key from environment variables or gradle.properties
     val signingKeyId: String? = findProperty("signingKeyId") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKeyId")
