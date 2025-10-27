@@ -2,7 +2,7 @@
 
 ## Overview
 
-The junit-no-network JVMTI agent is compiled once per platform and works across multiple Java versions due to JVMTI's stable API and backward compatibility guarantees.
+The junit-airgap JVMTI agent is compiled once per platform and works across multiple Java versions due to JVMTI's stable API and backward compatibility guarantees.
 
 **Key Takeaway**: You do NOT need different agent binaries for different Java versions. One binary per platform (OS + architecture) works for all supported Java versions.
 
@@ -223,13 +223,13 @@ gradle-plugin.jar
 ├── io/github/garryjeromson/junit/nonetwork/gradle/  (Kotlin code)
 └── native/
     ├── darwin-aarch64/
-    │   └── libjunit-no-network-agent.dylib  (works for all Java 21+ on macOS ARM)
+    │   └── libjunit-airgap-agent.dylib  (works for all Java 21+ on macOS ARM)
     ├── darwin-x86-64/
-    │   └── libjunit-no-network-agent.dylib  (TODO: works for all Java 21+ on macOS Intel)
+    │   └── libjunit-airgap-agent.dylib  (TODO: works for all Java 21+ on macOS Intel)
     ├── linux-x86-64/
-    │   └── libjunit-no-network-agent.so     (TODO: works for all Java 21+ on Linux AMD64)
+    │   └── libjunit-airgap-agent.so     (TODO: works for all Java 21+ on Linux AMD64)
     └── windows-x86-64/
-        └── junit-no-network-agent.dll       (TODO: works for all Java 21+ on Windows)
+        └── junit-airgap-agent.dll       (TODO: works for all Java 21+ on Windows)
 ```
 
 **One JAR** contains agents for all platforms, each agent works for all Java versions.

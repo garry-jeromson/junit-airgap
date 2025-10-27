@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
-    signing
+    // signing  // Temporarily disabled for local development
     id("com.gradle.plugin-publish") version "1.3.0"
     id("junit-extensions.kotlin-common-convention")
     alias(libs.plugins.kover)
@@ -10,14 +10,14 @@ plugins {
 
 gradlePlugin {
     // Plugin Portal configuration
-    website.set("https://github.com/garry-jeromson/junit-request-blocker")
-    vcsUrl.set("https://github.com/garry-jeromson/junit-request-blocker.git")
+    website.set("https://github.com/garry-jeromson/junit-airgap")
+    vcsUrl.set("https://github.com/garry-jeromson/junit-airgap.git")
 
     plugins {
-        create("junitNoNetworkPlugin") {
-            id = "io.github.garryjeromson.junit-no-network"
-            implementationClass = "io.github.garryjeromson.junit.nonetwork.gradle.JunitNoNetworkPlugin"
-            displayName = "JUnit No-Network Plugin"
+        create("junitAirgapPlugin") {
+            id = "io.github.garryjeromson.junit-airgap"
+            implementationClass = "io.github.garryjeromson.junit.airgap.gradle.JunitAirgapPlugin"
+            displayName = "JUnit Airgap Plugin"
             description = "Automatically configure JUnit tests to block network requests"
             tags.set(listOf("testing", "junit", "junit5", "junit4", "network", "isolation", "test-isolation"))
         }
@@ -43,7 +43,7 @@ dependencies {
 // (allWarningsAsErrors is already configured by junit-extensions.kotlin-common)
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
-        // Suppress Beta warning for expect/actual classes (KMP standard pattern from junit-no-network dependency)
+        // Suppress Beta warning for expect/actual classes (KMP standard pattern from junit-airgap dependency)
         // Suppress experimental language version warning (Gradle 9.1.0 uses Kotlin 2.2.0)
         freeCompilerArgs.addAll(
             "-Xexpect-actual-classes",
@@ -60,7 +60,7 @@ tasks.test {
 // Native Agent Packaging
 // ============================================================================
 
-// Task to copy the native agent from the junit-no-network build to plugin resources
+// Task to copy the native agent from the junit-airgap build to plugin resources
 tasks.register<Copy>("packageNativeAgent") {
     description = "Copy native JVMTI agent into plugin resources for packaging"
     group = "native"
@@ -92,18 +92,18 @@ tasks.register<Copy>("packageNativeAgent") {
 
     val agentFileName =
         when (os) {
-            "darwin" -> "libjunit-no-network-agent.dylib"
-            "linux" -> "libjunit-no-network-agent.so"
-            "windows" -> "junit-no-network-agent.dll"
+            "darwin" -> "libjunit-airgap-agent.dylib"
+            "linux" -> "libjunit-airgap-agent.so"
+            "windows" -> "junit-airgap-agent.dll"
             else -> {
                 logger.warn("Unknown OS: $os")
                 return@register
             }
         }
 
-    // Source: built agent from junit-no-network module
+    // Source: built agent from junit-airgap module
     // Use layout.projectDirectory navigation for configuration cache compatibility
-    // gradle-plugin is a sibling of junit-no-network, so go up to parent, then into native/build
+    // gradle-plugin is a sibling of junit-airgap, so go up to parent, then into native/build
     from(layout.projectDirectory.dir("../native/build")) {
         include(agentFileName)
     }
@@ -111,8 +111,8 @@ tasks.register<Copy>("packageNativeAgent") {
     // Destination: plugin resources by platform
     into("src/main/resources/native/$os-$arch")
 
-    // Depend on the native build task from junit-no-network
-    dependsOn(":junit-no-network:buildNativeAgent")
+    // Depend on the native build task from junit-airgap
+    dependsOn(":junit-airgap:buildNativeAgent")
 
     // Capture agent file path at configuration time for configuration cache
     val agentFilePath = layout.projectDirectory.file("../native/build/$agentFileName").asFile
@@ -128,7 +128,7 @@ tasks.register<Copy>("packageNativeAgent") {
         if (!agentFilePath.exists()) {
             throw GradleException(
                 "Native agent not found at ${agentFilePath.absolutePath}. " +
-                    "Run ':junit-no-network:buildNativeAgent' first.",
+                    "Run ':junit-airgap:buildNativeAgent' first.",
             )
         }
     }
@@ -154,13 +154,13 @@ publishing {
     publications {
         create<MavenPublication>("pluginMaven") {
             // groupId and version are inherited from project
-            artifactId = "junit-no-network-gradle-plugin"
+            artifactId = "junit-airgap-gradle-plugin"
 
             // POM metadata for Maven Central
             pom {
-                name.set("JUnit No-Network Gradle Plugin")
+                name.set("JUnit Airgap Gradle Plugin")
                 description.set("Gradle plugin for automatically configuring JUnit tests to block network requests")
-                url.set("https://github.com/garry-jeromson/junit-request-blocker")
+                url.set("https://github.com/garry-jeromson/junit-airgap")
 
                 licenses {
                     license {
@@ -178,9 +178,9 @@ publishing {
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/garry-jeromson/junit-request-blocker.git")
-                    developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-request-blocker.git")
-                    url.set("https://github.com/garry-jeromson/junit-request-blocker")
+                    connection.set("scm:git:git://github.com/garry-jeromson/junit-airgap.git")
+                    developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-airgap.git")
+                    url.set("https://github.com/garry-jeromson/junit-airgap")
                 }
             }
         }
@@ -188,6 +188,8 @@ publishing {
 }
 
 // Signing configuration for Maven Central
+// Temporarily disabled for local development
+/*
 signing {
     // Only require signing if publishing to Maven Central (not for Maven Local)
     // This ensures publishToMavenLocal doesn't require signing credentials
@@ -212,6 +214,7 @@ signing {
         sign(publishing.publications)
     }
 }
+*/
 
 // ============================================================================
 // Code Coverage Configuration (Kover)

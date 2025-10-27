@@ -1,6 +1,6 @@
 # Setup Guide: Kotlin Multiplatform + JUnit 5
 
-This guide shows how to set up the JUnit No-Network Extension for a Kotlin Multiplatform (KMP) project using JUnit 5.
+This guide shows how to set up the JUnit Airgap Extension for a Kotlin Multiplatform (KMP) project using JUnit 5.
 
 ## Requirements
 
@@ -25,11 +25,11 @@ Add the plugin to your KMP module's `build.gradle.kts`:
 plugins {
     kotlin("multiplatform")
     id("com.android.library") // If targeting Android
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false
 }
@@ -53,7 +53,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
             }
         }
 
@@ -239,7 +239,7 @@ class JvmHttpClientTest {
 ```kotlin
 // androidUnitTest/AndroidHttpClientTest.kt
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -253,7 +253,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class AndroidHttpClientTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -300,7 +300,7 @@ catch (e: Exception) {
 ### Block All Tests by Default
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = true // Block by default
 }

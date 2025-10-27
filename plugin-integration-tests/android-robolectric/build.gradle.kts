@@ -3,11 +3,11 @@ plugins {
     kotlin("android")
     id("junit-extensions.kotlin-common-convention")
     id("junit-extensions.plugin-integration-test-convention")
-    alias(libs.plugins.junit.no.network)
+    alias(libs.plugins.junit.airgap)
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
@@ -15,7 +15,7 @@ junitNoNetwork {
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.test.androidrobolectric"
+    namespace = "io.github.garryjeromson.junit.airgap.test.androidrobolectric"
     compileSdk = 34
 
     defaultConfig {
@@ -45,7 +45,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
-    // Note: junit-no-network and junit-no-network-jvm are added automatically by the plugin
+    // Note: junit-airgap and junit-airgap-jvm are added automatically by the plugin
 
     // Test contracts for shared test behaviors
     testImplementation(projects.pluginIntegrationTests.testContracts)

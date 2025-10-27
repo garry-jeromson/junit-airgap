@@ -1,6 +1,6 @@
-# Claude Code Context for junit-no-network
+# Claude Code Context for junit-airgap
 
-This document provides essential context for working on the junit-no-network project.
+This document provides essential context for working on the junit-airgap project.
 
 ## Critical Requirements
 
@@ -30,7 +30,7 @@ Always follow test-first principles:
 
 This is a Kotlin Multiplatform (KMP) project with three main components:
 
-1. **`junit-no-network/`** - Core library (JVM + Android targets)
+1. **`junit-airgap/`** - Core library (JVM + Android targets)
 2. **`gradle-plugin/`** - Gradle plugin for zero-configuration setup
 3. **`plugin-integration-tests/`** - Integration tests for different project configurations
 
@@ -81,10 +81,10 @@ Always prefix with `JAVA_HOME`:
 
 ```bash
 # Run JVM tests
-JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :junit-no-network:jvmTest
+JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :junit-airgap:jvmTest
 
 # Run Android tests
-JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :junit-no-network:testDebugUnitTest
+JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :junit-airgap:testDebugUnitTest
 
 # Run specific integration test
 JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew :plugin-integration-tests:jvm-junit4:test
@@ -120,7 +120,7 @@ The plugin provides two integration paths:
 
 #### JUnit 4 Bytecode Injection
 
-- Uses ByteBuddy to inject `@Rule NoNetworkRule` field into test classes
+- Uses ByteBuddy to inject `@Rule AirgapRule` field into test classes
 - Scans compiled test classes and adds the rule automatically
 - Resolves Test task's classpath at execution time (not configuration time)
 - **Known Issue**: Android/KMP projects currently have task wiring challenges
@@ -131,7 +131,7 @@ The project uses Kover (Kotlin-focused coverage tool) to measure code coverage f
 
 ### Coverage is Enabled For
 
-- **`:junit-no-network`** - Core Kotlin Multiplatform library (JVM and Android targets)
+- **`:junit-airgap`** - Core Kotlin Multiplatform library (JVM and Android targets)
 - **`:gradle-plugin`** - Gradle plugin
 
 ### Generating Coverage Reports
@@ -154,11 +154,11 @@ JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/
 
 After running coverage, reports are available at:
 
-- **junit-no-network**: `junit-no-network/build/reports/kover/html/index.html`
+- **junit-airgap**: `junit-airgap/build/reports/kover/html/index.html`
 - **gradle-plugin**: `gradle-plugin/build/reports/kover/html/index.html`
 
 XML reports (for CI integration):
-- **junit-no-network**: `junit-no-network/build/reports/kover/report.xml`
+- **junit-airgap**: `junit-airgap/build/reports/kover/report.xml`
 - **gradle-plugin**: `gradle-plugin/build/reports/kover/report.xml`
 
 ### Coverage Notes
@@ -206,7 +206,7 @@ The library uses JVMTI (JVM Tool Interface) for network blocking on all JVM plat
 - Platform-agnostic: same implementation for JVM and Android (Robolectric)
 
 **How it works**:
-1. JVMTI agent (`libjunit-no-network-agent.dylib` / `.so` / `.dll`) packaged in JAR
+1. JVMTI agent (`libjunit-airgap-agent.dylib` / `.so` / `.dll`) packaged in JAR
 2. At test time, agent extracted to temporary directory
 3. Agent loaded via JVM attach API or agent command-line option
 4. Agent hooks native socket connection and DNS resolution functions
@@ -239,7 +239,7 @@ Set the system property to enable debug logging:
 
 ### Architecture
 
-**Location**: `junit-no-network/src/jvmMain/kotlin/.../DebugLogger.kt`
+**Location**: `junit-airgap/src/jvmMain/kotlin/.../DebugLogger.kt`
 
 The debug logging system provides:
 - **Zero overhead when disabled**: Uses lazy evaluation (`message: () -> String`)
@@ -279,7 +279,7 @@ fun `test debug output`() {
 }
 ```
 
-See `junit-no-network/src/jvmTest/kotlin/.../DebugLoggerTest.kt` for examples.
+See `junit-airgap/src/jvmTest/kotlin/.../DebugLoggerTest.kt` for examples.
 
 ## Test Contracts Module
 

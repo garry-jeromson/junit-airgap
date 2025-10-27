@@ -1,6 +1,6 @@
 # Ktor Client Guide
 
-Ktor is a modern, asynchronous HTTP client for Kotlin Multiplatform. This guide shows how to test Ktor clients with the JUnit No-Network Extension.
+Ktor is a modern, asynchronous HTTP client for Kotlin Multiplatform. This guide shows how to test Ktor clients with the JUnit Airgap Extension.
 
 ## Compatibility
 
@@ -122,7 +122,7 @@ fun testKtorDarwinNotBlocked() = runTest {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
+import io.github.garryjeromson.junit.nonetwork.AirgapExtension
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -131,7 +131,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertFailsWith
 
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 class KtorCioGetTest {
     @Test
     @BlockNetworkRequests
@@ -288,7 +288,7 @@ class ApiClientTest {
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -303,7 +303,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class KtorAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests

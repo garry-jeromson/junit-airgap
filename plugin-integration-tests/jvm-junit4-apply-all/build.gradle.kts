@@ -1,11 +1,11 @@
 plugins {
     id("junit-extensions.kotlin-jvm-convention")
     id("junit-extensions.plugin-integration-test-convention")
-    alias(libs.plugins.junit.no.network)
+    alias(libs.plugins.junit.airgap)
 }
 
 // Configure the plugin to apply network blocking to ALL tests by default (JUnit 4)
-junitNoNetwork {
+junitAirgap {
     enabled = true
     injectJUnit4Rule = true // Enable bytecode injection for JUnit 4
     applyToAllTests = true // Block network by default via bytecode-injected @Rule
@@ -15,7 +15,7 @@ junitNoNetwork {
 dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation("junit:junit:4.13.2")
-    testImplementation(libs.junit.no.network)
+    testImplementation(libs.junit.airgap)
 
     // Test contracts for shared test behaviors
     testImplementation(projects.pluginIntegrationTests.testContracts)

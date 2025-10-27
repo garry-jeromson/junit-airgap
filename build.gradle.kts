@@ -45,9 +45,9 @@ tasks.register("test") {
 
     // Depend on tests from core library and plugin
     dependsOn(
-        ":junit-no-network:test",
+        ":junit-airgap:test",
         ":gradle-plugin:test",
-        ":junit-no-network:integrationTest"
+        ":junit-airgap:integrationTest"
     )
 
     // Depend on all test tasks in this workspace (plugin-integration-tests)

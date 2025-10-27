@@ -3,7 +3,7 @@ plugins {
 }
 
 kotlin {
-    // Use Java 17 to match junit-no-network compatibility
+    // Use Java 17 to match junit-airgap compatibility
     jvmToolchain(17)
 
     // JVM target

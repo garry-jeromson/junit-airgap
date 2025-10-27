@@ -1,6 +1,6 @@
 # Setup Guide: JVM + JUnit 4
 
-This guide shows how to set up the JUnit No-Network Extension for a pure JVM project using JUnit 4.
+This guide shows how to set up the JUnit Airgap Extension for a pure JVM project using JUnit 4.
 
 ## Requirements
 
@@ -13,12 +13,12 @@ This guide shows how to set up the JUnit No-Network Extension for a pure JVM pro
 
 ### Option 1: Using the Gradle Plugin with Auto-Injection (Recommended)
 
-The plugin can automatically inject `NoNetworkRule` into your test classes using bytecode enhancement:
+The plugin can automatically inject `AirgapRule` into your test classes using bytecode enhancement:
 
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 kotlin {
@@ -26,7 +26,7 @@ kotlin {
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false // Use @BlockNetworkRequests explicitly
     injectJUnit4Rule = true // Enable automatic @Rule injection (experimental)
@@ -71,7 +71,7 @@ kotlin {
 }
 
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -82,7 +82,7 @@ tasks.withType<Test> {
 Then manually add `@Rule` to each test class:
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
@@ -90,7 +90,7 @@ import java.net.Socket
 
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -107,7 +107,7 @@ class MyTest {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -115,7 +115,7 @@ import kotlin.test.assertFailsWith
 
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -144,14 +144,14 @@ class MyTest {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
 
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule(applyToAllTests = true)
+    val noNetworkRule = AirgapRule(applyToAllTests = true)
 
     @Test
     fun testBlockedByDefault() {
@@ -173,7 +173,7 @@ class MyTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -182,7 +182,7 @@ import kotlin.test.assertTrue
 
 class OkHttpTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -208,7 +208,7 @@ class OkHttpTest {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -219,7 +219,7 @@ import kotlin.test.assertFailsWith
 
 class KtorCioTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -240,7 +240,7 @@ class KtorCioTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.Retrofit
@@ -255,7 +255,7 @@ interface ApiService {
 
 class RetrofitTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -284,7 +284,7 @@ class RetrofitTest {
 
 ```kotlin
 @get:Rule
-val noNetworkRule = NoNetworkRule(applyToAllTests = true)
+val noNetworkRule = AirgapRule(applyToAllTests = true)
 ```
 
 Then opt-out specific tests:
@@ -302,14 +302,14 @@ fun testCanMakeNetworkRequests() {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
 
 class LocalhostTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -394,7 +394,7 @@ tasks.withType<Test> {
 
 **Checklist**:
 1. Is `@BlockNetworkRequests` annotation present?
-2. Is `@Rule val noNetworkRule = NoNetworkRule()` declared?
+2. Is `@Rule val noNetworkRule = AirgapRule()` declared?
 3. Is the Gradle plugin applied correctly?
 4. Check with debug mode: `-Djunit.nonetwork.debug=true`
 
@@ -419,7 +419,7 @@ try {
 
 | Feature | JUnit 4 | JUnit 5 |
 |---------|---------|---------|
-| Configuration | `@Rule NoNetworkRule()` | `@ExtendWith(NoNetworkExtension::class)` |
+| Configuration | `@Rule AirgapRule()` | `@ExtendWith(AirgapExtension::class)` |
 | Auto-discovery | No (needs manual `@Rule`) | Yes (via `junit-platform.properties`) |
 | Plugin auto-injection | Yes (bytecode enhancement) | Yes (properties file) |
 | Test runner | JUnit 4 | JUnit Platform |

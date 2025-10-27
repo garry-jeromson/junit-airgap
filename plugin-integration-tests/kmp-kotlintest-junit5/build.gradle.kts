@@ -2,11 +2,11 @@ plugins {
     id("junit-extensions.kotlin-multiplatform-convention")
     id("junit-extensions.plugin-integration-test-convention")
     alias(libs.plugins.android.library)
-    alias(libs.plugins.junit.no.network)
+    alias(libs.plugins.junit.airgap)
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
@@ -23,7 +23,7 @@ kotlin {
             dependencies {
                 // kotlin.test - will run on JUnit 5 via useJUnitPlatform()
                 implementation(libs.kotlin.test)
-                implementation(libs.junit.no.network)
+                implementation(libs.junit.airgap)
                 // Test contracts for shared test behaviors
                 implementation(projects.pluginIntegrationTests.testContracts)
                 // Ktor HTTP client core (platform-independent)
@@ -48,14 +48,14 @@ kotlin {
                 // Ktor HTTP client for Android (OkHttp engine)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.kotlinx.coroutines.test)
-                // Note: junit-no-network-jvm is added automatically by the plugin for Robolectric support
+                // Note: junit-airgap-jvm is added automatically by the plugin for Robolectric support
             }
         }
     }
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.test.kmpkotlintestjunit5"
+    namespace = "io.github.garryjeromson.junit.airgap.test.kmpkotlintestjunit5"
     compileSdk = 34
 
     defaultConfig {

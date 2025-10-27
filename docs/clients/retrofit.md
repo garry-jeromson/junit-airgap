@@ -43,14 +43,14 @@ data class User(val id: Int, val name: String, val email: String)
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
+import io.github.garryjeromson.junit.nonetwork.AirgapExtension
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.test.assertTrue
 
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 class RetrofitTest {
     @Test
     @BlockNetworkRequests
@@ -80,7 +80,7 @@ class RetrofitTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -92,7 +92,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class RetrofitAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests

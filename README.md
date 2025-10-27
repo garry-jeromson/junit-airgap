@@ -1,4 +1,4 @@
-# JUnit No-Network Extension
+# JUnit Airgap Extension
 
 A JUnit extension that automatically fails tests attempting to make outgoing network requests. This helps ensure your unit tests are truly isolated and don't accidentally depend on external services.
 
@@ -32,10 +32,10 @@ A JUnit extension that automatically fails tests attempting to make outgoing net
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-beta.1"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
 }
 ```
@@ -44,7 +44,7 @@ junitNoNetwork {
 
 **JUnit 5:**
 ```kotlin
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 class MyTest {
     @Test
     @BlockNetworkRequests
@@ -59,7 +59,7 @@ class MyTest {
 ```kotlin
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -158,7 +158,7 @@ Choose your project type:
 ### Block Network by Default
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = true // Block by default
 }
 ```
@@ -274,10 +274,10 @@ See [HTTP Client Guides](docs/clients/) for details.
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-beta.1"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
 }
 ```
@@ -286,7 +286,7 @@ junitNoNetwork {
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-beta.1")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-beta.1")
 }
 ```
 
@@ -299,7 +299,7 @@ dependencies {
 ### Gradle Plugin
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = true // Enable plugin
     applyToAllTests = false // Block all tests by default
     libraryVersion = "0.1.0-beta.1" // Library version
@@ -428,8 +428,8 @@ Developed using TDD with comprehensive test coverage to ensure reliability and m
 
 2. **Verify Annotations Are Applied**
    - Check that `@BlockNetworkRequests` is on your test method/class
-   - For JUnit 5: Verify `@ExtendWith(NoNetworkExtension::class)` is present
-   - For JUnit 4: Verify `@Rule NoNetworkRule` field exists
+   - For JUnit 5: Verify `@ExtendWith(AirgapExtension::class)` is present
+   - For JUnit 4: Verify `@Rule AirgapRule` field exists
 
 3. **Check Configuration**
    - Ensure `allowedHosts` doesn't accidentally permit the request
@@ -444,13 +444,13 @@ WARNING: JVMTI agent not found at: /path/to/agent.dylib
 
 **Solution**: The Gradle plugin should automatically extract and load the agent. If you see this:
 - Run `./gradlew clean build` to rebuild
-- Check that `junitNoNetwork { enabled = true }` in build.gradle.kts
+- Check that `junitAirgap { enabled = true }` in build.gradle.kts
 - For manual setup, see [Gradle Plugin Guide](docs/setup-guides/gradle-plugin.md)
 
 **UnsatisfiedLinkError on Native Library**
 
 ```
-java.lang.UnsatisfiedLinkError: no junit-no-network-agent in java.library.path
+java.lang.UnsatisfiedLinkError: no junit-airgap-agent in java.library.path
 ```
 
 **Solution**: Agent file doesn't match your platform/architecture.
@@ -502,14 +502,14 @@ Or run tests with:
 Still stuck? Check:
 - [Compatibility Matrix](docs/compatibility-matrix.md) - Verify your setup is supported
 - [Setup Guides](docs/setup-guides/) - Follow step-by-step instructions
-- [GitHub Issues](https://github.com/garry-jeromson/junit-request-blocker/issues) - Report bugs or ask questions
+- [GitHub Issues](https://github.com/garry-jeromson/junit-airgap/issues) - Report bugs or ask questions
 
 ---
 
 ## 🆘 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/garry-jeromson/junit-request-blocker/issues)
+- **Issues**: [GitHub Issues](https://github.com/garry-jeromson/junit-airgap/issues)
 - **Compatibility**: [Compatibility Matrix](docs/compatibility-matrix.md)
 
 ---

@@ -1,6 +1,6 @@
 # Setup Guide: Kotlin Multiplatform + JUnit 4
 
-This guide shows how to set up the JUnit No-Network Extension for a Kotlin Multiplatform (KMP) project using JUnit 4.
+This guide shows how to set up the JUnit Airgap Extension for a Kotlin Multiplatform (KMP) project using JUnit 4.
 
 ## Requirements
 
@@ -25,11 +25,11 @@ Add the plugin to your KMP module's `build.gradle.kts`:
 plugins {
     kotlin("multiplatform")
     id("com.android.library") // If targeting Android
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false
     injectJUnit4Rule = true // Enable automatic @Rule injection
@@ -47,7 +47,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
             }
         }
 
@@ -117,7 +117,7 @@ If auto-injection doesn't work or you prefer explicit configuration:
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -125,7 +125,7 @@ import kotlin.test.assertFailsWith
 
 class ApiClientTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -144,7 +144,7 @@ class ApiClientTest {
 ```kotlin
 // commonTest/KtorClientTest.kt
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -152,7 +152,7 @@ import org.junit.Test
 
 class KtorClientTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -182,7 +182,7 @@ class KtorClientTest {
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -196,7 +196,7 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 class RobolectricKtorTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests

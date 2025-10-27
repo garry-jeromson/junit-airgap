@@ -13,7 +13,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlin.test)
-                implementation(libs.junit.no.network)
+                implementation(libs.junit.airgap)
             }
         }
 
@@ -43,7 +43,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.test.contracts"
+    namespace = "io.github.garryjeromson.junit.airgap.test.contracts"
     compileSdk = 34
 
     defaultConfig {

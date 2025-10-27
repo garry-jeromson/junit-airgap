@@ -1,5 +1,5 @@
 /**
- * Test to verify the agent sets junit.nonetwork.jvmti.loaded system property.
+ * Test to verify the agent sets junit.airgap.jvmti.loaded system property.
  *
  * Run with:
  *   javac PropertyTest.java
@@ -9,8 +9,8 @@ public class PropertyTest {
     public static void main(String[] args) {
         System.out.println("TEST: Checking if agent set system property...");
 
-        String loaded = System.getProperty("junit.nonetwork.jvmti.loaded");
-        System.out.println("TEST: junit.nonetwork.jvmti.loaded = " + loaded);
+        String loaded = System.getProperty("junit.airgap.jvmti.loaded");
+        System.out.println("TEST: junit.airgap.jvmti.loaded = " + loaded);
 
         if ("true".equals(loaded)) {
             System.out.println("TEST: ✅ Property test passed!");

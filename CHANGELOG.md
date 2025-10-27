@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial beta release of junit-no-network extension and Gradle plugin
 - JUnit 5 support via `@BlockNetworkRequests` and `@AllowNetworkRequests` annotations
-- JUnit 4 support via `NoNetworkRule` and bytecode-injected `@Rule` fields
+- JUnit 4 support via `AirgapRule` and bytecode-injected `@Rule` fields
 - Gradle plugin with zero-configuration setup
 - JVMTI-based network blocking for JVM and Android (Robolectric) platforms
 - Configuration options:

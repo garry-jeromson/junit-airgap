@@ -1,6 +1,6 @@
 # Gradle Plugin Configuration Guide
 
-This guide provides comprehensive documentation for the JUnit No-Network Gradle plugin.
+This guide provides comprehensive documentation for the JUnit Airgap Gradle plugin.
 
 ## Plugin Overview
 
@@ -14,10 +14,10 @@ The Gradle plugin simplifies setup by automatically:
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
 }
 ```
@@ -25,7 +25,7 @@ junitNoNetwork {
 ## Complete Configuration Reference
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     // Whether the plugin is enabled (default: true)
     enabled = true
 
@@ -49,7 +49,7 @@ junitNoNetwork {
     debug = false
 
     // Enable automatic @Rule injection for JUnit 4 (default: false)
-    // Uses ByteBuddy to inject NoNetworkRule into test classes
+    // Uses ByteBuddy to inject AirgapRule into test classes
     injectJUnit4Rule = false
 }
 ```
@@ -61,7 +61,7 @@ junitNoNetwork {
 Controls whether the plugin functionality is active.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = true // Plugin active
 }
 ```
@@ -75,7 +75,7 @@ junitNoNetwork {
 Changes the default behavior from opt-in to opt-out.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = true // Block by default
 }
 ```
@@ -102,7 +102,7 @@ fun test2() { }
 Specifies which version of the library to use.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     libraryVersion = "0.1.0-SNAPSHOT"
 }
 ```
@@ -116,7 +116,7 @@ junitNoNetwork {
 Globally configure allowed hosts for all tests.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     allowedHosts = listOf(
         "localhost",
         "127.0.0.1",
@@ -138,7 +138,7 @@ junitNoNetwork {
 Globally configure blocked hosts for all tests.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     allowedHosts = listOf("*") // Allow all
     blockedHosts = listOf(
         "evil.com",
@@ -155,7 +155,7 @@ junitNoNetwork {
 Enables debug logging for troubleshooting.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     debug = true
 }
 ```
@@ -169,10 +169,10 @@ NetworkBlocker: Configuration: allowedHosts=[localhost], blockedHosts=[]
 
 ### injectJUnit4Rule (Experimental)
 
-Automatically injects `@Rule val noNetworkRule = NoNetworkRule()` into JUnit 4 test classes using ByteBuddy.
+Automatically injects `@Rule val noNetworkRule = AirgapRule()` into JUnit 4 test classes using ByteBuddy.
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     injectJUnit4Rule = true
 }
 ```
@@ -193,7 +193,7 @@ Without injection:
 ```kotlin
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -219,10 +219,10 @@ class MyTest {
 ```kotlin
 plugins {
     kotlin("jvm")
-    id("io.github.garryjeromson.junit-no-network")
+    id("io.github.garryjeromson.junit-airgap")
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
 }
 
@@ -237,10 +237,10 @@ tasks.withType<Test> {
 plugins {
     id("com.android.library")
     kotlin("android")
-    id("io.github.garryjeromson.junit-no-network")
+    id("io.github.garryjeromson.junit-airgap")
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
     injectJUnit4Rule = true // Recommended for Android
 }
@@ -259,10 +259,10 @@ android {
 ```kotlin
 plugins {
     kotlin("multiplatform")
-    id("io.github.garryjeromson.junit-no-network")
+    id("io.github.garryjeromson.junit-airgap")
 }
 
-junitNoNetwork {
+junitAirgap {
     enabled = true
 }
 
@@ -274,7 +274,7 @@ kotlin {
     sourceSets {
         val commonTest by getting {
             dependencies {
-                implementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+                implementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
             }
         }
     }
@@ -286,7 +286,7 @@ kotlin {
 ### Development vs Production
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = !project.hasProperty("skipNoNetwork")
     debug = project.hasProperty("debugNoNetwork")
 }
@@ -299,8 +299,8 @@ Run with: `./gradlew test -PdebugNoNetwork`
 ```kotlin
 // Root build.gradle.kts
 allprojects {
-    pluginManager.withPlugin("io.github.garryjeromson.junit-no-network") {
-        configure<JunitNoNetworkExtension> {
+    pluginManager.withPlugin("io.github.garryjeromson.junit-airgap") {
+        configure<JunitAirgapExtension> {
             enabled = true
             allowedHosts = listOf("localhost", "*.test.local")
         }
@@ -308,7 +308,7 @@ allprojects {
 }
 
 // Specific module
-junitNoNetwork {
+junitAirgap {
     enabled = false // Disable for this module
 }
 ```
@@ -316,7 +316,7 @@ junitNoNetwork {
 ### Environment-Specific Hosts
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     allowedHosts = when {
         project.hasProperty("ci") -> listOf("localhost") // CI: strict
         else -> listOf("localhost", "*.staging.mycompany.com") // Local: relaxed
@@ -336,20 +336,20 @@ For JUnit 5 projects, the plugin creates `src/test/resources/junit-platform.prop
 junit.jupiter.extensions.autodetection.enabled=true
 ```
 
-This enables automatic discovery of `NoNetworkExtension`.
+This enables automatic discovery of `AirgapExtension`.
 
 ### JUnit 4 Bytecode Injection
 
 When `injectJUnit4Rule = true`, the plugin:
 1. Waits for test compilation to complete
 2. Uses ByteBuddy to scan compiled test classes
-3. Injects `@Rule val noNetworkRule = NoNetworkRule()` into classes with `@BlockNetworkRequests`
+3. Injects `@Rule val noNetworkRule = AirgapRule()` into classes with `@BlockNetworkRequests`
 
 ## Troubleshooting
 
 ### Issue: Plugin not found
 
-**Error**: `Plugin [id: 'io.github.garryjeromson.junit-no-network'] was not found`
+**Error**: `Plugin [id: 'io.github.garryjeromson.junit-airgap'] was not found`
 
 **Solution**: Ensure plugin is published to Maven Local or plugin portal:
 
@@ -360,8 +360,8 @@ When `injectJUnit4Rule = true`, the plugin:
 ### Issue: Configuration not applied
 
 **Checklist**:
-1. Is plugin applied? `plugins { id("io.github.garryjeromson.junit-no-network") }`
-2. Is plugin block present? `junitNoNetwork { enabled = true }`
+1. Is plugin applied? `plugins { id("io.github.garryjeromson.junit-airgap") }`
+2. Is plugin block present? `junitAirgap { enabled = true }`
 3. Check debug output: `debug = true`
 
 ### Issue: JUnit 4 injection not working
@@ -395,7 +395,7 @@ The plugin:
 ### Temporarily Disable
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = false
 }
 ```
@@ -405,7 +405,7 @@ junitNoNetwork {
 ```kotlin
 plugins {
     // Remove or comment out:
-    // id("io.github.garryjeromson.junit-no-network")
+    // id("io.github.garryjeromson.junit-airgap")
 }
 ```
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The junit-no-network library uses a JVMTI (JVM Tool Interface) native agent for network interception. Understanding the three-stage loading model helps clarify performance characteristics and dispel common misconceptions about overhead.
+The junit-airgap library uses a JVMTI (JVM Tool Interface) native agent for network interception. Understanding the three-stage loading model helps clarify performance characteristics and dispel common misconceptions about overhead.
 
 **Key Takeaway**: The agent loads ONCE at JVM startup. Per-test operations only set ThreadLocal configuration, resulting in negligible overhead (~nanoseconds) for real-world tests.
 
@@ -15,8 +15,8 @@ The junit-no-network library uses a JVMTI (JVM Tool Interface) native agent for 
 **Duration**: ~5-10 milliseconds
 
 **What happens**:
-1. Gradle plugin extracts native agent library to `build/junit-no-network/native/`
-2. Plugin adds `-agentpath:/path/to/libjunit-no-network-agent.dylib` to test JVM args
+1. Gradle plugin extracts native agent library to `build/junit-airgap/native/`
+2. Plugin adds `-agentpath:/path/to/libjunit-airgap-agent.dylib` to test JVM args
 3. JVM calls `Agent_OnLoad()` in native code during startup
 4. Agent initializes JVMTI environment and capabilities
 5. Agent registers callback for `JVMTI_EVENT_NATIVE_METHOD_BIND` events
@@ -53,7 +53,7 @@ The junit-no-network library uses a JVMTI (JVM Tool Interface) native agent for 
 **What happens**:
 
 **Before test** (`beforeEach`):
-1. `NoNetworkExtension.beforeEach()` called by JUnit
+1. `AirgapExtension.beforeEach()` called by JUnit
 2. Reads annotations (`@BlockNetworkRequests`, `@AllowRequestsToHosts`, etc.)
 3. Builds `NetworkConfiguration` object
 4. Calls `NetworkBlocker.install()`
@@ -67,7 +67,7 @@ The junit-no-network library uses a JVMTI (JVM Tool Interface) native agent for 
 - Connection allowed/blocked based on configuration
 
 **After test** (`afterEach`):
-1. `NoNetworkExtension.afterEach()` called by JUnit
+1. `AirgapExtension.afterEach()` called by JUnit
 2. Calls `NetworkBlocker.uninstall()`
 3. Clears `ThreadLocal<NetworkConfiguration>`
 4. Increments global generation counter (invalidates stale configs in worker threads)

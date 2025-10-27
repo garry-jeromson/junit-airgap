@@ -1,6 +1,6 @@
 # Advanced Configuration Guide
 
-This guide covers advanced configuration options and patterns for the JUnit No-Network Extension.
+This guide covers advanced configuration options and patterns for the JUnit Airgap Extension.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ The library supports multiple configuration methods that can be combined:
 When multiple configuration options are present, they are evaluated in priority order (highest to lowest):
 
 1. **@AllowNetworkRequests** - Always allows network (highest priority)
-2. **Constructor parameter** - `applyToAllTests = true/false` in `NoNetworkExtension` or `NoNetworkRule`
+2. **Constructor parameter** - `applyToAllTests = true/false` in `AirgapExtension` or `AirgapRule`
 3. **System property** - `-Djunit.nonetwork.applyToAllTests=true`
 4. **@NoNetworkByDefault** - Class-level default blocking
 5. **@BlockNetworkRequests** - Method/class-level explicit blocking
@@ -41,7 +41,7 @@ When multiple configuration options are present, they are evaluated in priority 
 class MyTest {
     @JvmField
     @RegisterExtension
-    val extension = NoNetworkExtension(applyToAllTests = true) // Priority 2
+    val extension = AirgapExtension(applyToAllTests = true) // Priority 2
 
     @Test
     fun test1() {
@@ -138,7 +138,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 class MyTest {
     @JvmField
     @RegisterExtension
-    val extension = NoNetworkExtension(applyToAllTests = true)
+    val extension = AirgapExtension(applyToAllTests = true)
 
     @Test
     fun test1() {
@@ -160,7 +160,7 @@ import org.junit.Rule
 
 class MyTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule(applyToAllTests = true)
+    val noNetworkRule = AirgapRule(applyToAllTests = true)
 
     @Test
     fun test1() {
@@ -178,7 +178,7 @@ class MyTest {
 ### Method 2: Class-Level Annotation
 
 ```kotlin
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 @NoNetworkByDefault
 class MyTest {
     @Test
@@ -215,7 +215,7 @@ tasks.test {
 ### Method 4: Gradle Plugin
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = true
 }
 ```
@@ -252,7 +252,7 @@ Enable debug logging to troubleshoot configuration issues.
 ### Method 2: Gradle Plugin
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     debug = true
 }
 ```
@@ -280,7 +280,7 @@ NetworkBlocker: Uninstalling network blocker
 ### Override Global Configuration
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = true // Global default: block all
     allowedHosts = listOf("localhost")
 }
@@ -320,7 +320,7 @@ fun testComplexRules() {
 Apply annotations at class level to affect all tests:
 
 ```kotlin
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 @BlockNetworkRequests
 @AllowRequestsToHosts(["localhost", "*.test.local"])
 class MyTest {
@@ -350,7 +350,7 @@ class MyTest {
     companion object {
         @JvmField
         @ClassRule
-        val classRule = NoNetworkRule(applyToAllTests = true)
+        val classRule = AirgapRule(applyToAllTests = true)
     }
 
     @Test
@@ -395,7 +395,7 @@ tasks.withType<Test> {
 Complete plugin configuration reference:
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     // Enable/disable plugin (default: true)
     enabled = true
 
@@ -430,7 +430,7 @@ junitNoNetwork {
 ### Conditional Configuration
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = !project.hasProperty("skipNoNetwork")
     debug = project.hasProperty("debugNoNetwork")
 
@@ -446,8 +446,8 @@ junitNoNetwork {
 ```kotlin
 // Root build.gradle.kts
 allprojects {
-    pluginManager.withPlugin("io.github.garryjeromson.junit-no-network") {
-        configure<JunitNoNetworkExtension> {
+    pluginManager.withPlugin("io.github.garryjeromson.junit-airgap") {
+        configure<JunitAirgapExtension> {
             enabled = true
             allowedHosts = listOf("localhost")
         }
@@ -455,7 +455,7 @@ allprojects {
 }
 
 // Specific module build.gradle.kts
-junitNoNetwork {
+junitAirgap {
     enabled = false // Disable for this module
 }
 ```
@@ -467,7 +467,7 @@ junitNoNetwork {
 Block everything except localhost:
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = true
     allowedHosts = listOf("localhost", "127.0.0.1")
 }
@@ -478,7 +478,7 @@ junitNoNetwork {
 Allow specific staging environments:
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     applyToAllTests = false
     allowedHosts = listOf(
         "localhost",
@@ -491,7 +491,7 @@ junitNoNetwork {
 ### Pattern 3: Development vs CI
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     val isCi = System.getenv("CI") == "true"
 
     applyToAllTests = isCi // Strict on CI, relaxed locally
@@ -508,7 +508,7 @@ junitNoNetwork {
 ### Pattern 4: Feature Flags
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = project.findProperty("enableNoNetwork") == "true"
 }
 ```
@@ -521,7 +521,7 @@ Run with: `./gradlew test -PenableNoNetwork=true`
 
 **Checklist**:
 1. Is plugin applied? Check `plugins { }`
-2. Is configuration block present? Check `junitNoNetwork { }`
+2. Is configuration block present? Check `junitAirgap { }`
 3. Is annotation present? Check `@BlockNetworkRequests`
 4. Check priority order (maybe another config is overriding)
 5. Enable debug mode: `debug = true`

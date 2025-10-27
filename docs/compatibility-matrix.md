@@ -1,6 +1,6 @@
 # Compatibility Matrix
 
-This document provides a comprehensive overview of which Java versions, JUnit versions, platforms, and HTTP clients are supported by the JUnit No-Network Extension.
+This document provides a comprehensive overview of which Java versions, JUnit versions, platforms, and HTTP clients are supported by the JUnit Airgap Extension.
 
 ## Java Version Compatibility
 
@@ -21,8 +21,8 @@ This library uses JVMTI (JVM Tool Interface) for network blocking:
 
 | JUnit Version | Status | Notes |
 |---------------|--------|-------|
-| JUnit 4.13.2 | ✅ Fully Supported | Use `NoNetworkRule` |
-| JUnit 5.11.3 | ✅ Fully Supported | Use `NoNetworkExtension` |
+| JUnit 4.13.2 | ✅ Fully Supported | Use `AirgapRule` |
+| JUnit 5.11.3 | ✅ Fully Supported | Use `AirgapExtension` |
 | JUnit 4 (older) | ⚠️ Should Work | Versions 4.12+ likely compatible but not tested |
 | JUnit 5 (older) | ⚠️ Should Work | Versions 5.8+ likely compatible but not tested |
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(junit-no-network-agent)
+project(junit-airgap-agent)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -38,45 +38,45 @@ set(AGENT_SOURCES
 )
 
 # Create shared library (agent)
-add_library(junit-no-network-agent SHARED ${AGENT_SOURCES})
+add_library(junit-airgap-agent SHARED ${AGENT_SOURCES})
 
 # Link against JNI
-target_link_libraries(junit-no-network-agent ${JNI_LIBRARIES})
+target_link_libraries(junit-airgap-agent ${JNI_LIBRARIES})
 
 # Platform-specific settings
 if(APPLE)
     # macOS: Create .dylib
-    set_target_properties(junit-no-network-agent PROPERTIES
+    set_target_properties(junit-airgap-agent PROPERTIES
         SUFFIX ".dylib"
         PREFIX "lib"
     )
 elseif(UNIX)
     # Linux: Create .so
-    set_target_properties(junit-no-network-agent PROPERTIES
+    set_target_properties(junit-airgap-agent PROPERTIES
         SUFFIX ".so"
         PREFIX "lib"
     )
 elseif(WIN32)
     # Windows: Create .dll
-    set_target_properties(junit-no-network-agent PROPERTIES
+    set_target_properties(junit-airgap-agent PROPERTIES
         SUFFIX ".dll"
         PREFIX ""
     )
 endif()
 
 # Enable position-independent code
-set_target_properties(junit-no-network-agent PROPERTIES
+set_target_properties(junit-airgap-agent PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
 # Install target
-install(TARGETS junit-no-network-agent
+install(TARGETS junit-airgap-agent
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
 )
 
 # Print configuration
-message(STATUS "Building JVMTI agent for junit-no-network")
+message(STATUS "Building JVMTI agent for junit-airgap")
 message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "  CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")

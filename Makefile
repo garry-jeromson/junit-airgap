@@ -19,7 +19,7 @@ GRADLEW := ./gradlew
 ## help: Display this help message
 help:
 	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "  JUnit No-Network Extension - Development Commands"
+	@echo "  JUnit Airgap Extension - Development Commands"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
 	@echo "Usage: make <target>"
@@ -149,10 +149,10 @@ coverage:
 ## coverage-report: Open HTML coverage report in browser
 coverage-report: coverage
 	@echo "Opening coverage report..."
-	@open junit-no-network/build/reports/kover/html/index.html || \
+	@open junit-airgap/build/reports/kover/html/index.html || \
 	 open gradle-plugin/build/reports/kover/html/index.html || \
 	 echo "Coverage reports generated. Check:"
-	@echo "  - junit-no-network/build/reports/kover/html/index.html"
+	@echo "  - junit-airgap/build/reports/kover/html/index.html"
 	@echo "  - gradle-plugin/build/reports/kover/html/index.html"
 
 ## verify: Run all tests and checks
@@ -243,7 +243,7 @@ setup-native:
 build-native: setup-native
 	@echo "Building JVMTI native agent..."
 	@cd native && mkdir -p build && cd build && cmake .. && $(MAKE)
-	@echo "✅ Native agent built: native/build/libjunit-no-network-agent.dylib"
+	@echo "✅ Native agent built: native/build/libjunit-airgap-agent.dylib"
 
 ## test-native: Run native agent tests
 test-native: build-native
@@ -253,13 +253,13 @@ test-native: build-native
 	@echo "─────────────────────────────────────────────"
 	@cd native/test && \
 		$(JAVA_HOME)/bin/javac AgentLoadTest.java && \
-		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-no-network-agent.dylib AgentLoadTest
+		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-airgap-agent.dylib AgentLoadTest
 	@echo ""
 	@echo "Test 2: SocketInterceptTest (verify Socket interception)"
 	@echo "─────────────────────────────────────────────────────────────"
 	@cd native/test && \
 		$(JAVA_HOME)/bin/javac SocketInterceptTest.java && \
-		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-no-network-agent.dylib SocketInterceptTest
+		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-airgap-agent.dylib SocketInterceptTest
 	@echo ""
 	@echo "✅ All native tests passed!"
 

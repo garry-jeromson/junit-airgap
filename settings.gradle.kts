@@ -6,8 +6,13 @@ pluginManagement {
     // Include build-logic for convention plugins
     includeBuild("build-logic")
 
+    // Include gradle-plugin as a composite build
+    // This allows plugin-integration-tests and benchmarks to use the plugin
+    // without requiring it to be published to Maven Local first
+    includeBuild("gradle-plugin")
+
     repositories {
-        mavenLocal() // For plugin-integration-test to consume locally published plugin
+        mavenLocal() // Fallback for external testing
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -22,9 +27,9 @@ dependencyResolutionManagement {
     }
 }
 
-// Core library and plugin
-include(":junit-no-network")
-include(":gradle-plugin")
+// Core library
+include(":junit-airgap")
+// gradle-plugin is now an included build (see pluginManagement above)
 
 // Benchmark projects
 include(":benchmarks:benchmark-common")

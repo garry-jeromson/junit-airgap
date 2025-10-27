@@ -1,6 +1,6 @@
 # OkHttp Client Guide
 
-OkHttp is one of the most popular HTTP clients for JVM and Android. This guide shows how to test OkHttp with the JUnit No-Network Extension.
+OkHttp is one of the most popular HTTP clients for JVM and Android. This guide shows how to test OkHttp with the JUnit Airgap Extension.
 
 ## Compatibility
 
@@ -65,14 +65,14 @@ try {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkExtension
+import io.github.garryjeromson.junit.nonetwork.AirgapExtension
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertTrue
 
-@ExtendWith(NoNetworkExtension::class)
+@ExtendWith(AirgapExtension::class)
 class OkHttpGetTest {
     @Test
     @BlockNetworkRequests
@@ -153,7 +153,7 @@ fun testCustomClientBlocked() {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -165,7 +165,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class OkHttpAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests

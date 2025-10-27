@@ -2,7 +2,7 @@ plugins {
     id("junit-extensions.kotlin-multiplatform-convention")
     id("com.android.library")
     // Use plugin from composite build without version
-    alias(libs.plugins.junit.no.network)
+    alias(libs.plugins.junit.airgap)
 }
 
 kotlin {
@@ -26,7 +26,7 @@ kotlin {
         // JVM source sets
         val jvmTest by getting {
             dependencies {
-                // Plugin will add junit-no-network dependency automatically
+                // Plugin will add junit-airgap dependency automatically
 
                 // JUnit 5
                 implementation(libs.junit.jupiter.engine)
@@ -39,7 +39,7 @@ kotlin {
         // Android source sets
         val androidUnitTest by getting {
             dependencies {
-                // Plugin will add junit-no-network dependency automatically
+                // Plugin will add junit-airgap dependency automatically
 
                 // JUnit 4 for Android
                 implementation(libs.junit4)
@@ -55,7 +55,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.benchmark"
+    namespace = "io.github.garryjeromson.junit.airgap.benchmark"
     compileSdk = 35
 
     defaultConfig {
@@ -76,8 +76,8 @@ android {
     }
 }
 
-// Configure the junit-no-network plugin
-junitNoNetwork {
+// Configure the junit-airgap plugin
+junitAirgap {
     enabled = true
     debug = false
 }

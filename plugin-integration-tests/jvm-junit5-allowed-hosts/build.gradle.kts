@@ -1,11 +1,11 @@
 plugins {
     id("junit-extensions.kotlin-jvm-convention")
     id("junit-extensions.plugin-integration-test-convention")
-    alias(libs.plugins.junit.no.network)
+    alias(libs.plugins.junit.airgap)
 }
 
 // Configure the plugin with allowed hosts
-junitNoNetwork {
+junitAirgap {
     enabled = true
     allowedHosts = listOf("localhost", "127.0.0.1", "*.local")
     debug = false
@@ -14,7 +14,7 @@ junitNoNetwork {
 dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.junit.jupiter.engine)
-    testImplementation(libs.junit.no.network)
+    testImplementation(libs.junit.airgap)
 
     // Test contracts for shared test behaviors
     testImplementation(projects.pluginIntegrationTests.testContracts)

@@ -1,6 +1,6 @@
 # Setup Guide: JVM + JUnit 5
 
-This guide shows how to set up the JUnit No-Network Extension for a pure JVM project using JUnit 5.
+This guide shows how to set up the JUnit Airgap Extension for a pure JVM project using JUnit 5.
 
 ## Requirements
 
@@ -18,7 +18,7 @@ Add the plugin to your `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 kotlin {
@@ -26,7 +26,7 @@ kotlin {
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false // Use @BlockNetworkRequests explicitly
 }
@@ -51,7 +51,7 @@ kotlin {
 }
 
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
 }
@@ -216,7 +216,7 @@ class ApacheHttpClientTest {
 Use `applyToAllTests = true` to block network for all tests:
 
 ```kotlin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = true // Block by default
 }

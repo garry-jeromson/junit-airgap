@@ -1,6 +1,6 @@
 # Setup Guide: Android + JUnit 4 + Robolectric
 
-This guide shows how to set up the JUnit No-Network Extension for an Android project using JUnit 4 with Robolectric.
+This guide shows how to set up the JUnit Airgap Extension for an Android project using JUnit 4 with Robolectric.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ Robolectric allows Android unit tests to run on the JVM without requiring an And
 - **CI-friendly**: No emulator setup required
 - **Debuggable**: Standard JVM debugging works
 
-The JUnit No-Network Extension works with Robolectric tests to block network requests while still providing Android framework APIs.
+The JUnit Airgap Extension works with Robolectric tests to block network requests while still providing Android framework APIs.
 
 ## Installation
 
@@ -31,11 +31,11 @@ Add the plugin to your Android module's `build.gradle.kts`:
 plugins {
     id("com.android.library") // or com.android.application
     kotlin("android")
-    id("io.github.garryjeromson.junit-no-network") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 // Configure the plugin
-junitNoNetwork {
+junitAirgap {
     enabled = true
     applyToAllTests = false // Use @BlockNetworkRequests explicitly
     injectJUnit4Rule = true // Enable automatic @Rule injection
@@ -71,7 +71,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
 
     // Test dependencies
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14")
     testImplementation("androidx.test:core:1.5.0")
@@ -82,7 +82,7 @@ dependencies {
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14")
     testImplementation("androidx.test:core:1.5.0")
@@ -100,7 +100,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
 import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -112,7 +112,7 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 class MyAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -136,7 +136,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -146,7 +146,7 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class SharedPreferencesTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -173,7 +173,7 @@ class SharedPreferencesTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -185,7 +185,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class OkHttpAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -210,7 +210,7 @@ class OkHttpAndroidTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -228,7 +228,7 @@ interface ApiService {
 @RunWith(RobolectricTestRunner::class)
 class RetrofitAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -255,7 +255,7 @@ class RetrofitAndroidTest {
 
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -269,7 +269,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class KtorOkHttpAndroidTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -298,7 +298,7 @@ class KtorOkHttpAndroidTest {
 
 ```kotlin
 @get:Rule
-val noNetworkRule = NoNetworkRule(applyToAllTests = true)
+val noNetworkRule = AirgapRule(applyToAllTests = true)
 ```
 
 Then opt-out specific tests:
@@ -316,7 +316,7 @@ fun testCanMakeNetworkRequests() {
 ```kotlin
 import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
 import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NoNetworkRule
+import io.github.garryjeromson.junit.nonetwork.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -326,7 +326,7 @@ import java.net.Socket
 @RunWith(RobolectricTestRunner::class)
 class LocalServerTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests
@@ -418,7 +418,7 @@ class UserRepository(private val apiService: ApiService) {
 @RunWith(RobolectricTestRunner::class)
 class UserRepositoryTest {
     @get:Rule
-    val noNetworkRule = NoNetworkRule()
+    val noNetworkRule = AirgapRule()
 
     @Test
     @BlockNetworkRequests

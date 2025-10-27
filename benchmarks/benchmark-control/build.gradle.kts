@@ -24,9 +24,9 @@ kotlin {
         // JVM source sets
         val jvmTest by getting {
             dependencies {
-                // Depend on the published junit-no-network library from Maven Local
+                // Depend on the published junit-airgap library from Maven Local
                 // Use root artifact for proper platform variant matching
-                implementation(libs.junit.no.network)
+                implementation(libs.junit.airgap)
 
                 // JUnit 5
                 implementation(libs.junit.jupiter.engine)
@@ -39,9 +39,9 @@ kotlin {
         // Android source sets
         val androidUnitTest by getting {
             dependencies {
-                // Depend on the published junit-no-network library from Maven Local
+                // Depend on the published junit-airgap library from Maven Local
                 // Use root artifact for proper Android variant matching
-                implementation(libs.junit.no.network)
+                implementation(libs.junit.airgap)
 
                 // JUnit 4 for Android
                 implementation(libs.junit4)
@@ -52,18 +52,18 @@ kotlin {
 
                 implementation(libs.kotlin.test)
 
-                // Note: junit-no-network-jvm would be added automatically by the plugin,
+                // Note: junit-airgap-jvm would be added automatically by the plugin,
                 // but benchmark doesn't use the plugin, so we need the JVM variant explicitly
                 // Using the catalog reference which resolves to the multiplatform artifact
                 // that includes the JVM variant
-                implementation(libs.junit.no.network)
+                implementation(libs.junit.airgap)
             }
         }
     }
 }
 
 android {
-    namespace = "io.github.garryjeromson.junit.nonetwork.benchmark"
+    namespace = "io.github.garryjeromson.junit.airgap.benchmark"
     compileSdk = 35
 
     defaultConfig {
