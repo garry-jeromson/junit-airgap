@@ -126,7 +126,7 @@ class AirgapExtension(
         // Priority 2: JUnit configuration parameter (from junit-platform.properties)
         val configParam =
             context
-                .getConfigurationParameter(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                .getConfigurationParameter(APPLY_TO_ALL_TESTS_PROPERTY)
                 .orElse(null)
         if (configParam != null && configParam.toBoolean()) {
             return true
