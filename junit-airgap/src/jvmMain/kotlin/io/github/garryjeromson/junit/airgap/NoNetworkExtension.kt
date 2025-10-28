@@ -65,7 +65,7 @@ class AirgapExtension(
 ) : BeforeEachCallback,
     AfterEachCallback {
     companion object {
-        private const val BLOCKER_KEY = "junit-no-network-blocker"
+        private const val BLOCKER_KEY = "junit-airgap-blocker"
 
         init {
             // Force NetworkBlockerContext to initialize early.
@@ -193,15 +193,36 @@ class AirgapExtension(
         // Build configuration from annotations
         val annotationConfig = NetworkConfiguration.fromAnnotations(annotations)
 
-        // Read global configuration from system properties
+        // Read global configuration from JUnit Platform configuration parameters (preferred)
+        // or fall back to system properties. This matches how applyToAllTests is handled.
+        val allowedHostsStr =
+            context
+                .getConfigurationParameter(ExtensionConfiguration.ALLOWED_HOSTS_PROPERTY)
+                .orElse(System.getProperty(ExtensionConfiguration.ALLOWED_HOSTS_PROPERTY, ""))
+
+        val blockedHostsStr =
+            context
+                .getConfigurationParameter(ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY)
+                .orElse(System.getProperty(ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY, ""))
+
         val globalConfig =
             NetworkConfiguration(
-                allowedHosts = ExtensionConfiguration.getAllowedHosts(),
-                blockedHosts = ExtensionConfiguration.getBlockedHosts(),
+                allowedHosts = parseHostList(allowedHostsStr),
+                blockedHosts = parseHostList(blockedHostsStr),
             )
 
         // Merge configurations - annotation-level takes precedence for blocked hosts,
         // but allowed hosts are combined
         return globalConfig.merge(annotationConfig)
     }
+
+    /**
+     * Parses a comma-separated list of host patterns into a Set.
+     */
+    private fun parseHostList(hostsStr: String): Set<String> =
+        hostsStr
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
 }
