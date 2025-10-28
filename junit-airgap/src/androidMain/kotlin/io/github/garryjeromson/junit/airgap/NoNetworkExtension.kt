@@ -65,7 +65,7 @@ class AirgapExtension(
 ) : BeforeEachCallback,
     AfterEachCallback {
     companion object {
-        private const val BLOCKER_KEY = "junit-no-network-blocker"
+        private const val BLOCKER_KEY = "junit-airgap-blocker"
     }
 
     override fun beforeEach(context: ExtensionContext) {

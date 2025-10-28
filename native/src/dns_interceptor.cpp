@@ -1,5 +1,5 @@
 /**
- * DNS Resolution Interception Logic for junit-no-network JVMTI Agent
+ * DNS Resolution Interception Logic for junit-airgapJVMTI Agent
  *
  * This file contains the wrapper functions for DNS resolution native methods.
  *

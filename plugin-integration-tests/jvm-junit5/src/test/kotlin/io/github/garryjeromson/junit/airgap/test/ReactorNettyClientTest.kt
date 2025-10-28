@@ -16,7 +16,7 @@ import java.time.Duration
  *
  * IMPORTANT: Reactor Netty caches DNS results globally with a very long TTL by default.
  * To ensure proper test isolation, we configure HttpClient with DNS caching disabled.
- * This is the recommended configuration when using Reactor Netty with junit-no-network
+ * This is the recommended configuration when using Reactor Netty with junit-airgap
  * to ensure network blocking works reliably.
  */
 class ReactorNettyClientTest {

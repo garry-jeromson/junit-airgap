@@ -1,6 +1,6 @@
 # Publishing Guide
 
-This document describes how to publish the JUnit No-Network Extension to Maven Central and Gradle Plugin Portal.
+This document describes how to publish the JUnit Airgap Extension to Maven Central and Gradle Plugin Portal.
 
 ## Table of Contents
 
@@ -19,14 +19,14 @@ This document describes how to publish the JUnit No-Network Extension to Maven C
 
 ## Overview
 
-The JUnit No-Network Extension is published to two repositories:
+The JUnit Airgap Extension is published to two repositories:
 
 1. **Maven Central** - For the core library artifacts
-   - `io.github.garryjeromson:junit-no-network` (JVM)
-   - `io.github.garryjeromson:junit-no-network-android` (Android)
+   - `io.github.garryjeromson:junit-airgap` (JVM)
+   - `io.github.garryjeromson:junit-airgap-android` (Android)
 
 2. **Gradle Plugin Portal** - For the Gradle plugin
-   - `io.github.garryjeromson.junit-no-network` plugin
+   - `io.github.garryjeromson.junit-airgap` plugin
 
 The GitHub Actions workflow automates publishing to both repositories simultaneously.
 
@@ -310,9 +310,9 @@ git push origin v1.0.0
 - Gradle/Maven can download artifacts
 
 **Gradle Plugin Portal - Within 30 minutes:**
-- Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-no-network
+- Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap
 - Plugin should appear in search results
-- Users can apply the plugin with `id("io.github.garryjeromson.junit-no-network")`
+- Users can apply the plugin with `id("io.github.garryjeromson.junit-airgap")`
 
 **Test Maven Central artifacts:**
 ```gradle
@@ -321,14 +321,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-no-network:1.0.0")
+    testImplementation("io.github.garryjeromson:junit-airgap:1.0.0")
 }
 ```
 
 **Test Gradle Plugin:**
 ```gradle
 plugins {
-    id("io.github.garryjeromson.junit-no-network") version "1.0.0"
+    id("io.github.garryjeromson.junit-airgap") version "1.0.0"
 }
 ```
 

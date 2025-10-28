@@ -22,8 +22,8 @@ Ktor is a modern, asynchronous HTTP client for Kotlin Multiplatform. This guide 
 **Exception handling**: Throws `NetworkRequestAttemptedException` directly
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -120,9 +120,9 @@ fun testKtorDarwinNotBlocked() = runTest {
 ### GET Request with CIO
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.AirgapExtension
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.AirgapExtension
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -251,7 +251,7 @@ actual object HttpClientFactory {
 
 ```kotlin
 // commonTest/ApiClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import io.ktor.client.request.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -287,8 +287,8 @@ class ApiClientTest {
 ```kotlin
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -331,7 +331,7 @@ class KtorAndroidTest {
 ### Allow Localhost for Testing
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
 
 @Test
 @BlockNetworkRequests

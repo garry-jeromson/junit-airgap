@@ -134,7 +134,7 @@ class DebugLoggerTest {
 
                 override fun debug(message: () -> String) {
                     // Simulate what SystemPropertyDebugLogger does when debug is enabled
-                    val msg = "[junit-no-network] ${message()}"
+                    val msg = "[junit-airgap] ${message()}"
                     messages.add(msg)
                 }
             }
@@ -145,8 +145,8 @@ class DebugLoggerTest {
         logger.debug { "Test debug message" }
 
         assertEquals(1, debugLogger.messages.size)
-        assertTrue(debugLogger.messages[0].contains("[junit-no-network]")) {
-            "Output should contain [junit-no-network] prefix"
+        assertTrue(debugLogger.messages[0].contains("[junit-airgap]")) {
+            "Output should contain [junit-airgap] prefix"
         }
         assertTrue(debugLogger.messages[0].contains("Test debug message")) {
             "Output should contain the debug message"

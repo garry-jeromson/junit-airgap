@@ -61,8 +61,8 @@ actual fun assertRequestBlocked(block: () -> Unit) {
 ### Basic Usage
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
-import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.airgap.test.contracts.assertRequestBlocked
+import io.github.garryjeromson.junit.airgap.test.contracts.assertRequestAllowed
 
 @Test
 @BlockNetworkRequests
@@ -276,8 +276,8 @@ dependencies {
 ### Import
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestBlocked
-import io.github.garryjeromson.junit.nonetwork.test.contracts.assertRequestAllowed
+import io.github.garryjeromson.junit.airgap.test.contracts.assertRequestBlocked
+import io.github.garryjeromson.junit.airgap.test.contracts.assertRequestAllowed
 ```
 
 ## API Reference

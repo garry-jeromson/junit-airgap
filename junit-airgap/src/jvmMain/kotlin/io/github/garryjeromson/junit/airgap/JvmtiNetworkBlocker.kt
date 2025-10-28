@@ -13,7 +13,7 @@ import io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext
  *
  * The agent MUST be loaded at JVM startup using `-agentpath`:
  * ```
- * java -agentpath:/path/to/libjunit-no-network-agent.dylib MyTest
+ * java -agentpath:/path/to/libjunit-airgap-agent.dylib MyTest
  * ```
  *
  * ## Target Coverage: 95%+ of tests
@@ -65,15 +65,15 @@ import io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext
  *
  * **CRITICAL**: The JVMTI agent MUST be loaded at JVM startup:
  * ```
- * java -agentpath:/path/to/libjunit-no-network-agent.dylib YourTest
+ * java -agentpath:/path/to/libjunit-airgap-agent.dylib YourTest
  * ```
  *
  * This class does NOT load the agent - it only configures the already-loaded agent.
  *
  * ### Platform-specific library names:
- * - macOS: `libjunit-no-network-agent.dylib`
- * - Linux: `libjunit-no-network-agent.so`
- * - Windows: `junit-no-network-agent.dll`
+ * - macOS: `libjunit-airgap-agent.dylib`
+ * - Linux: `libjunit-airgap-agent.so`
+ * - Windows: `junit-airgap-agent.dll`
  *
  * ### Why can't we load the agent at runtime?
  * JVMTI agents can ONLY be loaded at JVM startup (via -agentpath or -agentlib).
@@ -82,7 +82,7 @@ import io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext
  *
  * ## Gradle Integration
  *
- * The junit-no-network Gradle plugin automatically:
+ * The junit-airgapGradle plugin automatically:
  * 1. Builds the native agent for your platform (via CMake)
  * 2. Adds -agentpath to test JVM args
  * 3. Packages the agent in your test resources

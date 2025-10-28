@@ -18,7 +18,7 @@ OkHttp is one of the most popular HTTP clients for JVM and Android. This guide s
 ### Recommended Pattern
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.Test
@@ -64,8 +64,8 @@ try {
 ### Basic GET Request
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapExtension
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapExtension
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.Test
@@ -152,8 +152,8 @@ fun testCustomClientBlocked() {
 ### Basic Usage with Robolectric (Android)
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -190,8 +190,8 @@ class OkHttpAndroidTest {
 ### Allow Localhost for Testing
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 
 @Test
 @BlockNetworkRequests

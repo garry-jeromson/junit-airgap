@@ -54,9 +54,9 @@ object NativeAgentExtractor {
         // Determine agent file name
         val agentFileName =
             when (os) {
-                "darwin" -> "libjunit-no-network-agent.dylib"
-                "linux" -> "libjunit-no-network-agent.so"
-                "windows" -> "junit-no-network-agent.dll"
+                "darwin" -> "libjunit-airgap-agent.dylib"
+                "linux" -> "libjunit-airgap-agent.so"
+                "windows" -> "junit-airgap-agent.dll"
                 else -> return null
             }
 
@@ -79,7 +79,7 @@ object NativeAgentExtractor {
         val platform = detectPlatform()
         if (platform == null) {
             logger.warn(
-                "JUnit No-Network: Unsupported platform (os=${System.getProperty("os.name")}, " +
+                "JUnit Airgap: Unsupported platform (os=${System.getProperty("os.name")}, " +
                     "arch=${System.getProperty("os.arch")}). JVMTI agent will not be loaded.",
             )
             return null
@@ -89,8 +89,8 @@ object NativeAgentExtractor {
             logger.debug("Detected platform: ${platform.os}-${platform.arch}")
         }
 
-        // Extract to build/junit-no-network/native/
-        val extractDir = File(buildDir, "junit-no-network/native")
+        // Extract to build/junit-airgap/native/
+        val extractDir = File(buildDir, "junit-airgap/native")
         val extractedAgent = File(extractDir, platform.agentFileName)
 
         // Skip extraction if agent already exists and is up-to-date
@@ -108,7 +108,7 @@ object NativeAgentExtractor {
 
         if (resourceStream == null) {
             logger.warn(
-                "JUnit No-Network: Native agent not found in plugin resources at '$resourcePath'. " +
+                "JUnit Airgap: Native agent not found in plugin resources at '$resourcePath'. " +
                     "This may indicate the agent was not packaged correctly for ${platform.os}-${platform.arch}. " +
                     "Tests will run without network blocking.",
             )

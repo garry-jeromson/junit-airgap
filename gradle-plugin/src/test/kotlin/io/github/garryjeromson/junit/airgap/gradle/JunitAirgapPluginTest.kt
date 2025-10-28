@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Gradle TestKit tests for the JUnit No-Network plugin.
+ * Gradle TestKit tests for the JUnit Airgap plugin.
  */
 class JunitAirgapPluginTest {
     @TempDir
@@ -38,7 +38,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -65,7 +65,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -108,7 +108,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -140,7 +140,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -164,8 +164,8 @@ class JunitAirgapPluginTest {
 
         // Check that the dependency was added
         assertTrue(
-            result.output.contains("io.github.garryjeromson:junit-no-network"),
-            "Should add junit-no-network dependency",
+            result.output.contains("io.github.garryjeromson:junit-airgap"),
+            "Should add junit-airgap dependency",
         )
     }
 
@@ -175,7 +175,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -227,7 +227,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -265,7 +265,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-no-network")
+                id("io.github.garryjeromson.junit-airgap")
             }
 
             repositories {
@@ -289,7 +289,7 @@ class JunitAirgapPluginTest {
                 .build()
 
         assertTrue(
-            result.output.contains("junit-no-network:0.2.0-CUSTOM") ||
+            result.output.contains("airgap:0.2.0-CUSTOM") ||
                 result.output.contains("Could not find"),
             "Should use custom version (or fail to find it if not published)",
         )

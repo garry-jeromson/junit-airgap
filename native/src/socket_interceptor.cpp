@@ -1,5 +1,5 @@
 /**
- * Socket Interception Logic for junit-no-network JVMTI Agent
+ * Socket Interception Logic for junit-airgapJVMTI Agent
  *
  * This file contains the wrapper functions for Socket and SocketChannel native methods.
  *

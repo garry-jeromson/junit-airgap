@@ -422,7 +422,7 @@ Developed using TDD with comprehensive test coverage to ensure reliability and m
 **Tests Pass But Network Requests Go Through**
 
 1. **Check JVMTI Agent is Loaded**
-   - Enable debug logging: `-Djunit.nonetwork.debug=true`
+   - Enable debug logging: `-Djunit.airgap.debug=true`
    - Look for "JVMTI agent installed" messages
    - Agent must be loaded at JVM startup via `-agentpath` or auto-extraction
 
@@ -488,13 +488,13 @@ To see detailed information about network blocking:
 ```kotlin
 // Gradle
 tasks.test {
-    systemProperty("junit.nonetwork.debug", "true")
+    systemProperty("junit.airgap.debug", "true")
 }
 ```
 
 Or run tests with:
 ```bash
-./gradlew test -Djunit.nonetwork.debug=true
+./gradlew test -Djunit.airgap.debug=true
 ```
 
 ### Getting Help

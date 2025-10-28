@@ -14,7 +14,7 @@ import org.gradle.api.tasks.TaskAction
  *
  * This task creates the junit-platform.properties file at execution time (not configuration time)
  * to support Gradle configuration cache. The generated file enables JUnit Jupiter extension
- * auto-detection and configures the junit-no-network extension behavior.
+ * auto-detection and configures the junit-airgapextension behavior.
  *
  * Configuration cache compatible: All inputs use Property/ListProperty APIs.
  */
@@ -53,7 +53,7 @@ abstract class GenerateJunitPlatformPropertiesTask : DefaultTask() {
 
     init {
         group = "verification"
-        description = "Generate junit-platform.properties for JUnit No-Network extension configuration"
+        description = "Generate junit-platform.properties for JUnit Airgap extension configuration"
     }
 
     @TaskAction
@@ -62,7 +62,7 @@ abstract class GenerateJunitPlatformPropertiesTask : DefaultTask() {
             // Enable JUnit Jupiter extension auto-detection
             appendLine("junit.jupiter.extensions.autodetection.enabled=true")
 
-            // Configure junit-no-network extension
+            // Configure junit-airgapextension
             appendLine("junit.airgap.applyToAllTests=${applyToAllTests.get()}")
 
             // Add allowed hosts if configured

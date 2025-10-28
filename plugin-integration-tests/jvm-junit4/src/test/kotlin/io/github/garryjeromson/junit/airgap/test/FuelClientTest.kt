@@ -8,7 +8,7 @@ import org.junit.Test
 /**
  * Tests that verify Fuel HTTP client works with @AllowNetworkRequests.
  * Note: Fuel blocking tests are covered comprehensively in the main
- * integration test suite (junit-no-network/src/jvmIntegrationTest).
+ * integration test suite (junit-airgap/src/jvmIntegrationTest).
  * These plugin integration tests verify the plugin works correctly.
  */
 class FuelClientTest {

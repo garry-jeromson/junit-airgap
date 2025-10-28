@@ -4,7 +4,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 
 /**
- * DSL extension for configuring the JUnit No-Network plugin.
+ * DSL extension for configuring the JUnit Airgap plugin.
  *
  * Example usage:
  * ```kotlin
@@ -31,7 +31,7 @@ abstract class JunitAirgapExtension {
     abstract val applyToAllTests: Property<Boolean>
 
     /**
-     * Version of the junit-no-network library to use.
+     * Version of the junit-airgaplibrary to use.
      * Default: matches the plugin version
      */
     abstract val libraryVersion: Property<String>

@@ -31,8 +31,8 @@ tasks.register("test") {
     // Depend on tests from core library and plugin (main workspace)
     dependsOn(
         ":junit-airgap:test",
+        ":junit-airgap:integrationTest",
         ":gradle-plugin:test",
-        ":junit-airgap:integrationTest"
     )
 
     // Publish plugin to Maven Local before running integration tests

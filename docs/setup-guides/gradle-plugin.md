@@ -378,7 +378,7 @@ When `injectJUnit4Rule = true`, the plugin:
 1. Is `@BlockNetworkRequests` annotation present?
 2. For JUnit 4 without injection: Is `@Rule` declared?
 3. For JUnit 5: Is `junit-platform.properties` present?
-4. Check with system property: `-Djunit.nonetwork.debug=true`
+4. Check with system property: `-Djunit.airgap.debug=true`
 
 
 ## Plugin Architecture

@@ -66,7 +66,7 @@ jmethodID GetIsExplicitlyBlockedMethod();
 
 // Registration function called from Java to cache class/method references
 extern "C" {
-    JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_NetworkBlockerContext_registerWithAgent(
+    JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_NetworkBlockerContext_registerWithAgent(
         JNIEnv* env,
         jclass clazz
     );

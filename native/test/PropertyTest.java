@@ -3,7 +3,7 @@
  *
  * Run with:
  *   javac PropertyTest.java
- *   java -agentpath:../build/libjunit-no-network-agent.dylib PropertyTest
+ *   java -agentpath:../build/libjunit-airgap-agent.dylib PropertyTest
  */
 public class PropertyTest {
     public static void main(String[] args) {

@@ -47,7 +47,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
         // Suppress experimental language version warning (Gradle 9.1.0 uses Kotlin 2.2.0)
         freeCompilerArgs.addAll(
             "-Xexpect-actual-classes",
-            "-Xsuppress-version-warnings"
+            "-Xsuppress-version-warnings",
         )
     }
 }
@@ -188,6 +188,7 @@ publishing {
 }
 
 // Signing configuration for Maven Central
+
 // Temporarily disabled for local development
 /*
 signing {

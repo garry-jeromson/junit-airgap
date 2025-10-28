@@ -1,7 +1,7 @@
 package io.github.garryjeromson.junit.airgap
 
 /**
- * Internal debug logger for junit-no-network.
+ * Internal debug logger for junit-airgap.
  *
  * This logger provides a testable abstraction over debug logging, allowing:
  * - Single source of truth for debug mode check
@@ -84,7 +84,7 @@ private class SystemPropertyDebugLogger : DebugLogger {
 
     override fun debug(message: () -> String) {
         if (debugEnabled) {
-            println("[junit-no-network] ${message()}")
+            println("[junit-airgap] ${message()}")
         }
     }
 }

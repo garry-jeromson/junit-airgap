@@ -3,8 +3,11 @@ package io.github.garryjeromson.junit.airgap.gradle
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.description.modifier.Visibility
 import org.junit.Rule
+import org.junit.experimental.runners.Enclosed
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.runner.RunWith
 import java.io.File
 import java.net.URLClassLoader
 import kotlin.reflect.full.declaredMemberFunctions
@@ -18,6 +21,7 @@ import kotlin.test.assertTrue
  * These tests verify the bytecode injection functionality in isolation
  * for faster feedback compared to full integration tests.
  */
+@RunWith(Enclosed::class)
 class JUnit4RuleInjectionTest {
     @TempDir
     lateinit var tempDir: File
@@ -67,6 +71,7 @@ class JUnit4RuleInjectionTest {
     /**
      * Test fixture: JUnit 5 test class (should NOT be detected as JUnit 4)
      */
+    @Nested
     class JUnit5Test {
         @org.junit.jupiter.api.Test
         fun testMethod() {

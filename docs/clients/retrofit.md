@@ -42,8 +42,8 @@ data class User(val id: Int, val name: String, val email: String)
 ### Test with Network Blocking (JUnit 5)
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapExtension
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapExtension
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import retrofit2.Retrofit
@@ -79,8 +79,8 @@ class RetrofitTest {
 ### Test with Network Blocking (JUnit 4 + Robolectric)
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -285,7 +285,7 @@ fun testWithMock() {
 ### Allow Localhost
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
 
 @Test
 @BlockNetworkRequests

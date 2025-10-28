@@ -42,7 +42,7 @@ tasks.withType<Test> {
 With auto-injection enabled, you don't need to manually add `@Rule` fields - just use `@BlockNetworkRequests`:
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import org.junit.Test
 import java.net.Socket
 
@@ -82,8 +82,8 @@ tasks.withType<Test> {
 Then manually add `@Rule` to each test class:
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -105,9 +105,9 @@ class MyTest {
 ### Simple Network Blocking Test
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -142,9 +142,9 @@ class MyTest {
 ### Using @AllowNetworkRequests
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.AllowNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -172,8 +172,8 @@ class MyTest {
 ### OkHttp Client
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -206,9 +206,9 @@ class OkHttpTest {
 ### Ktor CIO Client
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -239,8 +239,8 @@ class KtorCioTest {
 ### Retrofit
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.Retrofit
@@ -300,9 +300,9 @@ fun testCanMakeNetworkRequests() {
 ### Allow Specific Hosts
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -353,7 +353,7 @@ fun testAllowsSubdomains() {
 ./gradlew test --tests NetworkBlockingTest
 
 # Run with debug output
-./gradlew test --info -Djunit.nonetwork.debug=true
+./gradlew test --info -Djunit.airgap.debug=true
 ```
 
 ### IntelliJ IDEA
@@ -396,7 +396,7 @@ tasks.withType<Test> {
 1. Is `@BlockNetworkRequests` annotation present?
 2. Is `@Rule val noNetworkRule = AirgapRule()` declared?
 3. Is the Gradle plugin applied correctly?
-4. Check with debug mode: `-Djunit.nonetwork.debug=true`
+4. Check with debug mode: `-Djunit.airgap.debug=true`
 
 ### Issue: OkHttp exception message is unclear
 

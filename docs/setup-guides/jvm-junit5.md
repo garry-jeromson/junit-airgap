@@ -72,8 +72,8 @@ junit.jupiter.extensions.autodetection.enabled=true
 ### Simple Network Blocking Test
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import org.junit.jupiter.api.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
@@ -104,8 +104,8 @@ class MyTest {
 ### Using @AllowNetworkRequests
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AllowNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import java.net.Socket
 
@@ -130,7 +130,7 @@ class MyTest {
 ### OkHttp Client
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.Test
@@ -159,8 +159,8 @@ class OkHttpTest {
 ### Ktor CIO Client
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -187,8 +187,8 @@ class KtorCioTest {
 ### Apache HttpClient 5
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import org.apache.hc.client5.http.classic.methods.HttpGet
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.junit.jupiter.api.Test
@@ -235,8 +235,8 @@ fun `this test can make network requests`() {
 ### Allow Specific Hosts
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import org.junit.jupiter.api.Test
 import java.net.Socket
 
@@ -297,7 +297,7 @@ fun `blocks specific hosts`() {
 ./gradlew test --tests NetworkBlockingTest
 
 # Run with debug output
-./gradlew test --info -Djunit.nonetwork.debug=true
+./gradlew test --info -Djunit.airgap.debug=true
 ```
 
 ### IntelliJ IDEA
@@ -332,7 +332,7 @@ tasks.withType<Test> {
 1. Is `@BlockNetworkRequests` annotation present?
 2. Is the Gradle plugin applied correctly?
 3. Is `junit-platform.properties` configured (if not using plugin)?
-4. Check with debug mode: `-Djunit.nonetwork.debug=true`
+4. Check with debug mode: `-Djunit.airgap.debug=true`
 
 ### Issue: OkHttp exception message is unclear
 

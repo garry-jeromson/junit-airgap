@@ -30,7 +30,7 @@ When multiple configuration options are present, they are evaluated in priority 
 
 1. **@AllowNetworkRequests** - Always allows network (highest priority)
 2. **Constructor parameter** - `applyToAllTests = true/false` in `AirgapExtension` or `AirgapRule`
-3. **System property** - `-Djunit.nonetwork.applyToAllTests=true`
+3. **System property** - `-Djunit.airgap.applyToAllTests=true`
 4. **@NoNetworkByDefault** - Class-level default blocking
 5. **@BlockNetworkRequests** - Method/class-level explicit blocking
 6. **Default** - No blocking (lowest priority)
@@ -198,17 +198,17 @@ class MyTest {
 
 ```bash
 # Gradle
-./gradlew test -Djunit.nonetwork.applyToAllTests=true
+./gradlew test -Djunit.airgap.applyToAllTests=true
 
 # Maven
-mvn test -Djunit.nonetwork.applyToAllTests=true
+mvn test -Djunit.airgap.applyToAllTests=true
 ```
 
 **Gradle configuration:**
 
 ```kotlin
 tasks.test {
-    systemProperty("junit.nonetwork.applyToAllTests", "true")
+    systemProperty("junit.airgap.applyToAllTests", "true")
 }
 ```
 
@@ -246,7 +246,7 @@ Enable debug logging to troubleshoot configuration issues.
 ### Method 1: System Property
 
 ```bash
-./gradlew test -Djunit.nonetwork.debug=true
+./gradlew test -Djunit.airgap.debug=true
 ```
 
 ### Method 2: Gradle Plugin
@@ -372,9 +372,9 @@ All system properties can be set via:
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `junit.nonetwork.applyToAllTests` | boolean | false | Block all tests by default |
-| `junit.nonetwork.implementation` | string | securitymanager | Implementation to use |
-| `junit.nonetwork.debug` | boolean | false | Enable debug logging |
+| `junit.airgap.applyToAllTests` | boolean | false | Block all tests by default |
+| `junit.airgap.implementation` | string | securitymanager | Implementation to use |
+| `junit.airgap.debug` | boolean | false | Enable debug logging |
 
 ### Gradle Configuration
 
@@ -384,9 +384,9 @@ tasks.withType<Test> {
     jvmArgs("-Djava.security.manager=allow")
 
     // Library configuration
-    systemProperty("junit.nonetwork.applyToAllTests", "true")
-    systemProperty("junit.nonetwork.implementation", "securitymanager")
-    systemProperty("junit.nonetwork.debug", "false")
+    systemProperty("junit.airgap.applyToAllTests", "true")
+    systemProperty("junit.airgap.implementation", "securitymanager")
+    systemProperty("junit.airgap.debug", "false")
 }
 ```
 

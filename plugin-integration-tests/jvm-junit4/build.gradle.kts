@@ -8,7 +8,7 @@ plugins {
 junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = false
+    debug = true
     injectJUnit4Rule = true // Enable automatic @Rule injection for JUnit 4
 }
 

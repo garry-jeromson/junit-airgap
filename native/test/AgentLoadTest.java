@@ -7,7 +7,7 @@
  *
  * Run with:
  *   javac AgentLoadTest.java
- *   java -agentpath:../build/libjunit-no-network-agent.dylib AgentLoadTest
+ *   java -agentpath:../build/libjunit-airgap-agent.dylib AgentLoadTest
  */
 public class AgentLoadTest {
     public static void main(String[] args) {

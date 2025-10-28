@@ -98,9 +98,9 @@ Then manually add `@Rule` to each test class (see Basic Usage section).
 ```kotlin
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -135,8 +135,8 @@ class MyAndroidTest {
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -172,8 +172,8 @@ class SharedPreferencesTest {
 ### OkHttp (Recommended for Android)
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Rule
@@ -209,8 +209,8 @@ class OkHttpAndroidTest {
 ### Retrofit with OkHttp
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -254,8 +254,8 @@ class RetrofitAndroidTest {
 ### Ktor Client with OkHttp Engine
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
@@ -314,9 +314,9 @@ fun testCanMakeNetworkRequests() {
 ### Testing with Local Server (Localhost)
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.AllowRequestsToHosts
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -371,7 +371,7 @@ fun testInternalApisAllowed() {
 ./gradlew test --tests MyAndroidTest
 
 # Run with debug output
-./gradlew test --info -Djunit.nonetwork.debug=true
+./gradlew test --info -Djunit.airgap.debug=true
 ```
 
 ### Android Studio

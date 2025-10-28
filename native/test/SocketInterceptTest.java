@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
  *
  * Run with:
  *   javac SocketInterceptTest.java
- *   java -agentpath:../build/libjunit-no-network-agent.dylib SocketInterceptTest
+ *   java -agentpath:../build/libjunit-airgap-agent.dylib SocketInterceptTest
  */
 public class SocketInterceptTest {
     public static void main(String[] args) {

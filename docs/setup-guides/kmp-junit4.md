@@ -93,7 +93,7 @@ With `injectJUnit4Rule = true`, you don't need manual `@Rule` declarations:
 
 ```kotlin
 // commonTest/ApiClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import org.junit.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
@@ -116,8 +116,8 @@ class ApiClientTest {
 If auto-injection doesn't work or you prefer explicit configuration:
 
 ```kotlin
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
@@ -143,8 +143,8 @@ class ApiClientTest {
 
 ```kotlin
 // commonTest/KtorClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -181,8 +181,8 @@ class KtorClientTest {
 // androidUnitTest/RobolectricKtorTest.kt
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*

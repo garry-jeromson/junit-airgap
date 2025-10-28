@@ -180,8 +180,8 @@ Write tests in `commonTest` that work across all platforms:
 
 ```kotlin
 // commonTest/ApiClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import io.ktor.client.request.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -209,8 +209,8 @@ class ApiClientTest {
 
 ```kotlin
 // jvmTest/JvmHttpClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.NetworkRequestAttemptedException
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -238,8 +238,8 @@ class JvmHttpClientTest {
 
 ```kotlin
 // androidUnitTest/AndroidHttpClientTest.kt
-import io.github.garryjeromson.junit.nonetwork.BlockNetworkRequests
-import io.github.garryjeromson.junit.nonetwork.AirgapRule
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import io.github.garryjeromson.junit.airgap.AirgapRule
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*

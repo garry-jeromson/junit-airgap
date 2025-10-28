@@ -1,5 +1,5 @@
 /**
- * JVMTI Agent for junit-no-network
+ * JVMTI Agent for junit-airgap
  *
  * This agent intercepts network connections at the JVM-native boundary
  * by replacing native method implementations for Socket and SocketChannel.
@@ -404,7 +404,7 @@ jmethodID GetIsExplicitlyBlockedMethod() {
  * @param env JNI environment
  * @param clazz NetworkBlockerContext class
  */
-JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_nonetwork_bytebuddy_NetworkBlockerContext_registerWithAgent(
+JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_NetworkBlockerContext_registerWithAgent(
     JNIEnv* env,
     jclass clazz
 ) {
