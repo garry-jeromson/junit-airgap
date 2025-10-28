@@ -11,7 +11,7 @@ junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
-    injectJUnit4Rule = true // Enable automatic @Rule injection for JUnit 4
+    // injectJUnit4Rule is auto-detected (Robolectric uses JUnit 4)
 }
 
 android {

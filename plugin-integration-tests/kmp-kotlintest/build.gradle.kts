@@ -10,7 +10,7 @@ junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
     debug = false
-    injectJUnit4Rule = true // Enable automatic @Rule injection (kotlin.test uses JUnit 4 on Android)
+    // injectJUnit4Rule is auto-detected (kotlin.test uses JUnit 4 on JVM/Android)
 }
 
 kotlin {

@@ -7,7 +7,7 @@ plugins {
 // Configure the plugin to apply network blocking to ALL tests by default (JUnit 4)
 junitAirgap {
     enabled = true
-    injectJUnit4Rule = true // Enable bytecode injection for JUnit 4
+    // injectJUnit4Rule is auto-detected (JUnit 4 dependency + useJUnit())
     applyToAllTests = true // Block network by default via bytecode-injected @Rule
     debug = false
 }
