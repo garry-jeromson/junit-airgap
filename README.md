@@ -414,16 +414,7 @@ Complete working examples in `plugin-integration-tests/`:
 
 ## Contributing
 
-Contributions welcome!
-
-**Process:**
-1. Fork the repository
-2. Add tests for your feature or fix
-3. Implement your changes
-4. Ensure all tests pass
-5. Submit a pull request
-
-Please include tests with your contributions to ensure quality and prevent regressions.
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
