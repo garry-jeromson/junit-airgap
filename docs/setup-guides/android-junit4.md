@@ -38,7 +38,7 @@ plugins {
 junitAirgap {
     enabled = true
     applyToAllTests = false // Use @BlockNetworkRequests explicitly
-    injectJUnit4Rule = true // Enable automatic @Rule injection
+    // injectJUnit4Rule is auto-detected (no manual configuration needed!)
 }
 
 android {
@@ -479,10 +479,12 @@ android {
 ### Issue: Auto-injection not working
 
 **Checklist**:
-1. Is `injectJUnit4Rule = true` in plugin configuration?
-2. Are test classes compiled before injection?
-3. Try manual `@Rule` configuration as fallback
-4. Check with debug mode: `debug = true`
+1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4 project" message
+2. Is `junit:junit` dependency present in test configuration?
+3. Are test classes compiled before injection?
+4. Try manual override: `injectJUnit4Rule = true` in plugin configuration
+5. Try manual `@Rule` configuration as fallback
+6. Check with debug mode: `debug = true`
 
 ### Issue: OkHttp exception message unclear
 

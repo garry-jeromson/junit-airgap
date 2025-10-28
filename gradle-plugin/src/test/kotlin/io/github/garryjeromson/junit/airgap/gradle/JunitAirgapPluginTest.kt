@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -116,22 +117,50 @@ class JunitAirgapPluginTest {
                 mavenCentral()
             }
 
+            dependencies {
+                testImplementation("junit:junit:4.13.2")
+            }
+
             junitAirgap {
                 enabled = false
+            }
+
+            // Task to inspect test task configuration
+            tasks.register("printTestConfig") {
+                doLast {
+                    tasks.withType<Test>().forEach { testTask ->
+                        println("Test task: ${'$'}{testTask.name}")
+                        println("JVM args: ${'$'}{testTask.allJvmArgs.joinToString(" ")}")
+                        println("System properties: ${'$'}{testTask.systemProperties}")
+                    }
+                }
             }
             """.trimIndent(),
         )
 
-        GradleRunner
-            .create()
-            .withProjectDir(testProjectDir)
-            .withArguments("help", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("printTestConfig", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         // Check that junit-platform.properties was NOT created when disabled
         val propsFile = File(testProjectDir, "build/generated/junit-platform/test/resources/junit-platform.properties")
         assertTrue(!propsFile.exists(), "junit-platform.properties should not be created when disabled")
+
+        // Check that JVMTI agent is NOT loaded when disabled
+        assertFalse(
+            result.output.contains("-agentpath"),
+            "JVMTI agent should not be loaded when plugin is disabled",
+        )
+
+        // Check that junit.airgap.enabled system property is set to false
+        assertTrue(
+            result.output.contains("junit.airgap.enabled=false"),
+            "System property junit.airgap.enabled should be set to false",
+        )
     }
 
     @Test

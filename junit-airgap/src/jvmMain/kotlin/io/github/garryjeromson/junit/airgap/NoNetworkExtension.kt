@@ -141,7 +141,7 @@ class AirgapExtension(
         // Priority 2: JUnit configuration parameter (from junit-platform.properties)
         val configParam =
             context
-                .getConfigurationParameter(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                .getConfigurationParameter(APPLY_TO_ALL_TESTS_PROPERTY)
                 .orElse(null)
         if (configParam != null && configParam.toBoolean()) {
             return true
@@ -197,13 +197,13 @@ class AirgapExtension(
         // or fall back to system properties. This matches how applyToAllTests is handled.
         val allowedHostsStr =
             context
-                .getConfigurationParameter(ExtensionConfiguration.ALLOWED_HOSTS_PROPERTY)
-                .orElse(System.getProperty(ExtensionConfiguration.ALLOWED_HOSTS_PROPERTY, ""))
+                .getConfigurationParameter(ALLOWED_HOSTS_PROPERTY)
+                .orElse(System.getProperty(ALLOWED_HOSTS_PROPERTY, ""))
 
         val blockedHostsStr =
             context
-                .getConfigurationParameter(ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY)
-                .orElse(System.getProperty(ExtensionConfiguration.BLOCKED_HOSTS_PROPERTY, ""))
+                .getConfigurationParameter(BLOCKED_HOSTS_PROPERTY)
+                .orElse(System.getProperty(BLOCKED_HOSTS_PROPERTY, ""))
 
         val globalConfig =
             NetworkConfiguration(

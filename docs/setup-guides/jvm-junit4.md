@@ -29,13 +29,12 @@ kotlin {
 junitAirgap {
     enabled = true
     applyToAllTests = false // Use @BlockNetworkRequests explicitly
-    injectJUnit4Rule = true // Enable automatic @Rule injection (experimental)
+    // injectJUnit4Rule is auto-detected (no manual configuration needed!)
 }
 
 // Configure test tasks
 tasks.withType<Test> {
     // NOTE: Do NOT use useJUnitPlatform() for pure JUnit 4 projects
-
 }
 ```
 
@@ -385,10 +384,13 @@ tasks.withType<Test> {
 ### Issue: Auto-injection not working
 
 **Checklist**:
-1. Is `injectJUnit4Rule = true` in plugin configuration?
-2. Are test classes compiled before injection task runs? (Should be automatic)
-3. Try manual `@Rule` configuration as fallback
-4. Check with debug mode: `debug = true` in plugin configuration
+1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4 project" message
+2. Is `junit:junit` dependency present in `testImplementation`?
+3. Are you using `useJUnitPlatform()` in test tasks? (This enables JUnit 5 mode)
+4. Are test classes compiled before injection task runs? (Should be automatic)
+5. Try manual override: `injectJUnit4Rule = true` in plugin configuration
+6. Try manual `@Rule` configuration as fallback
+7. Check with debug mode: `debug = true` in plugin configuration
 
 ### Issue: Tests pass when they should fail
 

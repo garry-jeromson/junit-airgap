@@ -20,16 +20,16 @@ class SystemPropertyConfigurationTest {
     @BeforeEach
     fun setUp() {
         // Save original property value
-        originalPropertyValue = System.getProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+        originalPropertyValue = System.getProperty(APPLY_TO_ALL_TESTS_PROPERTY)
     }
 
     @AfterEach
     fun tearDown() {
         // Restore original property value
         if (originalPropertyValue != null) {
-            System.setProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY, originalPropertyValue!!)
+            System.setProperty(APPLY_TO_ALL_TESTS_PROPERTY, originalPropertyValue!!)
         } else {
-            System.clearProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+            System.clearProperty(APPLY_TO_ALL_TESTS_PROPERTY)
         }
     }
 
@@ -46,13 +46,13 @@ class SystemPropertyConfigurationTest {
             @JvmStatic
             @BeforeAll
             fun enableSystemProperty() {
-                System.setProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY, "true")
+                System.setProperty(APPLY_TO_ALL_TESTS_PROPERTY, "true")
             }
 
             @JvmStatic
             @AfterAll
             fun cleanup() {
-                System.clearProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                System.clearProperty(APPLY_TO_ALL_TESTS_PROPERTY)
             }
         }
 
@@ -89,7 +89,7 @@ class SystemPropertyConfigurationTest {
             @JvmStatic
             @BeforeAll
             fun disableSystemProperty() {
-                System.clearProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                System.clearProperty(APPLY_TO_ALL_TESTS_PROPERTY)
             }
         }
 
@@ -128,13 +128,13 @@ class SystemPropertyConfigurationTest {
             @JvmStatic
             @BeforeAll
             fun enableSystemProperty() {
-                System.setProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY, "true")
+                System.setProperty(APPLY_TO_ALL_TESTS_PROPERTY, "true")
             }
 
             @JvmStatic
             @AfterAll
             fun cleanup() {
-                System.clearProperty(ExtensionConfiguration.APPLY_TO_ALL_TESTS_PROPERTY)
+                System.clearProperty(APPLY_TO_ALL_TESTS_PROPERTY)
             }
         }
 

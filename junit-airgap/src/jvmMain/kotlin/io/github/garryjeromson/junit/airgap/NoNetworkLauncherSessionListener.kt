@@ -41,6 +41,13 @@ class AirgapLauncherSessionListener : LauncherSessionListener {
     override fun launcherSessionOpened(session: LauncherSession) {
         logger.debug { "LauncherSessionListener.launcherSessionOpened() called" }
 
+        // Check if the plugin is disabled via system property
+        val enabled = System.getProperty(ENABLED_PROPERTY, "true").toBoolean()
+        if (!enabled) {
+            logger.debug { "JUnit Airgap is disabled (${ENABLED_PROPERTY}=false), skipping initialization" }
+            return
+        }
+
         // Force NetworkBlockerContext to initialize by accessing it.
         // This triggers its init block, which calls registerWithAgent() (if JVMTI agent is loaded).
         // We call getConfiguration() because it's a simple getter with no side effects.

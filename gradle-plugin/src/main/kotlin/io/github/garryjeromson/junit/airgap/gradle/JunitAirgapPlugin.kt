@@ -78,22 +78,14 @@ class JunitAirgapPlugin : Plugin<Project> {
     /**
      * Determines whether to inject JUnit 4 @Rule fields into test classes.
      *
-     * Uses hybrid detection strategy:
-     * 1. If explicitly configured, use that value (override)
-     * 2. Auto-detect by checking:
-     *    - If test tasks use useJUnitPlatform() (indicates JUnit 5)
-     *    - If junit:junit:4.x dependency is present (indicates JUnit 4)
-     * 3. Decision logic:
-     *    - Pure JUnit 5 → Don't inject
-     *    - Pure JUnit 4 → Inject (auto-detected)
-     *    - Mixed (JUnit Vintage) → Inject for JUnit 4 tests
-     *    - Unknown → Don't inject (safe default)
+     * If explicitly configured, uses that value (override).
+     * Otherwise, uses JUnitVersionDetector to auto-detect based on project configuration.
      */
     private fun shouldInjectJUnit4Rule(
         project: Project,
         extension: JunitAirgapExtension,
     ): Boolean {
-        // 1. Explicit configuration takes precedence
+        // Explicit configuration takes precedence
         if (extension.injectJUnit4Rule.isPresent) {
             val explicitValue = extension.injectJUnit4Rule.get()
             if (extension.debug.get()) {
@@ -102,117 +94,14 @@ class JunitAirgapPlugin : Plugin<Project> {
             return explicitValue
         }
 
-        // 2. Auto-detect: Check if any Test task uses JUnit Platform
-        val usesJUnitPlatform =
-            project.tasks.withType<Test>().any { testTask ->
-                try {
-                    // JUnit Platform is used if the test task has JUnitPlatformOptions
-                    testTask.options is org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
-                } catch (e: Exception) {
-                    false
-                }
-            }
-
-        // 3. Check for JUnit 4 and JUnit 5 dependencies
-        val hasJUnit4 = hasJUnit4Dependency(project)
-        val hasJUnit5 = hasJUnit5Dependency(project)
-
-        // 4. Decision logic
-        return when {
-            // Pure JUnit 5 (with JUnit Platform) - no injection needed
-            usesJUnitPlatform && hasJUnit5 && !hasJUnit4 -> {
-                if (extension.debug.get()) {
-                    project.logger.debug("Auto-detected pure JUnit 5 project - skipping @Rule injection")
-                }
-                false
-            }
-
-            // Pure JUnit 4 (no JUnit Platform) - needs injection
-            !usesJUnitPlatform && hasJUnit4 -> {
-                project.logger.info("Auto-detected JUnit 4 project - enabling @Rule injection")
-                true
-            }
-
-            // Mixed (JUnit Vintage) - inject for JUnit 4 tests
-            usesJUnitPlatform && hasJUnit4 -> {
-                project.logger.info("Auto-detected mixed JUnit 4 + JUnit 5 project - enabling @Rule injection for JUnit 4 tests")
-                true
-            }
-
-            // Unknown or no JUnit - don't inject (safe default)
-            else -> {
-                if (extension.debug.get()) {
-                    project.logger.debug(
-                        "Could not auto-detect JUnit version " +
-                            "(usesJUnitPlatform=$usesJUnitPlatform, hasJUnit4=$hasJUnit4, hasJUnit5=$hasJUnit5) " +
-                            "- skipping @Rule injection",
-                    )
-                }
-                false
-            }
-        }
-    }
-
-    /**
-     * Checks if the project has a JUnit 4 dependency.
-     * Looks for org.junit:junit:4.x in test dependencies (without resolving configurations).
-     *
-     * This uses incoming.dependencies instead of resolving the configuration to avoid
-     * configuration-time resolution issues.
-     */
-    private fun hasJUnit4Dependency(project: Project): Boolean {
-        // Try different configuration names based on project type
-        val configNames =
-            listOf(
-                "testImplementation", // Standard JVM
-                "testRuntimeClasspath", // Standard JVM (fallback)
-                "jvmTestImplementation", // KMP JVM target
-                "testDebugImplementation", // Android
+        // Auto-detect using JUnitVersionDetector
+        val detector =
+            JUnitVersionDetector(
+                project = project,
+                logger = project.logger,
+                debugEnabled = extension.debug.get(),
             )
-
-        return configNames.any { configName ->
-            try {
-                val config = project.configurations.findByName(configName)
-                // Check declared dependencies without resolving the configuration
-                config?.allDependencies?.any { dep ->
-                    dep.group == "junit" && dep.name == "junit"
-                } ?: false
-            } catch (e: Exception) {
-                // Configuration might not exist
-                false
-            }
-        }
-    }
-
-    /**
-     * Checks if the project has a JUnit 5 (Jupiter) dependency.
-     * Looks for org.junit.jupiter:junit-jupiter* in test dependencies (without resolving configurations).
-     *
-     * This uses incoming.dependencies instead of resolving the configuration to avoid
-     * configuration-time resolution issues.
-     */
-    private fun hasJUnit5Dependency(project: Project): Boolean {
-        // Try different configuration names based on project type
-        val configNames =
-            listOf(
-                "testImplementation", // Standard JVM
-                "testRuntimeClasspath", // Standard JVM (fallback)
-                "jvmTestImplementation", // KMP JVM target
-                "testDebugImplementation", // Android
-            )
-
-        return configNames.any { configName ->
-            try {
-                val config = project.configurations.findByName(configName)
-                // Check declared dependencies without resolving the configuration
-                config?.allDependencies?.any { dep ->
-                    dep.group == "org.junit.jupiter" && dep.name?.startsWith("junit-jupiter") == true
-                } ?: false
-            } catch (e: Exception) {
-                // Configuration might not exist
-                false
-            }
-        }
+        return detector.shouldInjectJUnit4Rule()
     }
 
     private fun addDependencies(
@@ -354,6 +243,7 @@ class JunitAirgapPlugin : Plugin<Project> {
             // Set system properties at configuration time (resolved lazily via Provider.get())
             // Note: These are also set again in doFirst to handle special cases, but setting them here
             // allows tests to inspect systemProperties at configuration time
+            systemProperty("junit.airgap.enabled", extension.enabled.get().toString())
             systemProperty("junit.airgap.applyToAllTests", extension.applyToAllTests.get().toString())
             systemProperty("junit.airgap.debug", extension.debug.get().toString())
 
@@ -370,7 +260,16 @@ class JunitAirgapPlugin : Plugin<Project> {
             // This ensures everything is resolved when the test JVM starts
             // Note: We use task's logger and captured build directory to avoid capturing project reference
             doFirst {
+                // Check if plugin is enabled before configuring agent
+                if (!extension.enabled.get()) {
+                    logger.info("JUnit Airgap plugin is disabled for test task '$testTaskName', skipping agent configuration")
+                    // Set system properties to communicate disabled state
+                    systemProperty("junit.airgap.enabled", "false")
+                    return@doFirst
+                }
+
                 // Set system properties with resolved values (must be done in doFirst for config cache)
+                systemProperty("junit.airgap.enabled", "true")
                 systemProperty("junit.airgap.applyToAllTests", extension.applyToAllTests.get().toString())
                 systemProperty("junit.airgap.debug", extension.debug.get().toString())
 

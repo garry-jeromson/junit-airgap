@@ -32,7 +32,7 @@ plugins {
 junitAirgap {
     enabled = true
     applyToAllTests = false
-    injectJUnit4Rule = true // Enable automatic @Rule injection
+    // injectJUnit4Rule is auto-detected (no manual configuration needed!)
 }
 
 kotlin {
@@ -89,7 +89,7 @@ tasks.withType<Test> {
 
 ### With Plugin Auto-Injection
 
-With `injectJUnit4Rule = true`, you don't need manual `@Rule` declarations:
+With auto-detection enabled (automatic for JUnit 4 projects), you don't need manual `@Rule` declarations:
 
 ```kotlin
 // commonTest/ApiClientTest.kt
@@ -278,9 +278,11 @@ src/
 ### Issue: Auto-injection not working
 
 **Solution**:
-1. Ensure `injectJUnit4Rule = true` in plugin configuration
-2. Try manual `@Rule` configuration as fallback
-3. Enable debug: `debug = true` in plugin configuration
+1. Check if JUnit 4 is auto-detected: Look for "Auto-detected JUnit 4 project" in build output
+2. Verify `junit:junit` dependency is present in test configuration
+3. Try manual override: `injectJUnit4Rule = true` in plugin configuration
+4. Try manual `@Rule` configuration as fallback
+5. Enable debug: `debug = true` in plugin configuration
 
 ### Issue: Android tests not using Robolectric
 
