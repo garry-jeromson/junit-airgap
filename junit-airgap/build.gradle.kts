@@ -271,11 +271,6 @@ tasks.withType<Test>().configureEach {
 
         jvmArgs("-agentpath:$agentPath")
 
-        testLogging {
-            events("passed", "skipped", "failed")
-            showStandardStreams = false
-        }
-
         // Pass junit.airgap system properties to test JVM
         // Capture system property at configuration time for configuration cache compatibility
         val debugProperty = System.getProperty("junit.airgap.debug") ?: "false"
@@ -468,6 +463,7 @@ publishing {
 
 // Signing configuration for Maven Central
 // Temporarily disabled for local development
+
 /*
 signing {
     // Only require signing if publishing to Maven Central (not for local builds)
