@@ -1,6 +1,6 @@
-# Gradle Plugin Configuration Guide
+# Gradle Plugin Reference
 
-This guide provides comprehensive documentation for the JUnit Airgap Gradle plugin.
+Complete configuration reference for the JUnit Airgap Gradle plugin.
 
 ## Plugin Overview
 
@@ -14,43 +14,41 @@ The Gradle plugin simplifies setup by automatically:
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
-}
-
-junitAirgap {
-    enabled = true
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
-## Complete Configuration Reference
+That's it! The plugin auto-configures with sensible defaults.
+
+## Configuration
+
+All configuration properties with defaults:
 
 ```kotlin
 junitAirgap {
-    // Whether the plugin is enabled (default: true)
+    // Enable/disable plugin (default: true)
     enabled = true
 
-    // Apply network blocking to all tests by default (default: false)
-    // When true: tests block network unless annotated with @AllowNetworkRequests
-    // When false: tests only block when annotated with @BlockNetworkRequests
+    // Block all tests by default (default: false)
+    // false: opt-in with @BlockNetworkRequests
+    // true: opt-out with @AllowNetworkRequests
     applyToAllTests = false
 
-    // Library version to use (default: matches plugin version)
-    libraryVersion = "0.1.0-SNAPSHOT"
+    // Library version (default: matches plugin version)
+    libraryVersion = "0.1.0-beta.1"
 
-    // List of allowed host patterns (optional)
-    // Supports wildcards: "*.example.com", "*.test.local"
+    // Global allowed hosts (default: empty)
     allowedHosts = listOf("localhost", "127.0.0.1")
 
-    // List of blocked host patterns (optional)
-    // Blocked hosts take precedence over allowed hosts
-    blockedHosts = listOf("evil.com", "*.tracking.com")
+    // Global blocked hosts (default: empty)
+    // Blocked hosts take precedence
+    blockedHosts = listOf("*.tracking.com")
 
-    // Enable debug logging (default: false)
+    // Debug logging (default: false)
     debug = false
 
-    // Enable automatic @Rule injection for JUnit 4 (default: false)
-    // Uses ByteBuddy to inject AirgapRule into test classes
-    injectJUnit4Rule = false
+    // Auto-inject @Rule for JUnit 4 (default: auto-detected)
+    injectJUnit4Rule = null // null = auto-detect, true/false = force
 }
 ```
 
@@ -58,101 +56,73 @@ junitAirgap {
 
 ### enabled
 
-Controls whether the plugin functionality is active.
+Disable plugin for specific modules:
 
 ```kotlin
 junitAirgap {
-    enabled = true // Plugin active
+    enabled = false // Skip this module
 }
 ```
 
-**Use cases**:
-- Disable for specific modules: `enabled = false`
-- Conditional activation: `enabled = project.hasProperty("enableNoNetwork")`
+Or conditionally:
+
+```kotlin
+junitAirgap {
+    enabled = project.hasProperty("enableNoNetwork")
+}
+```
 
 ### applyToAllTests
 
-Changes the default behavior from opt-in to opt-out.
+**Default behavior (false)**: Opt-in with `@BlockNetworkRequests`
 
-```kotlin
-junitAirgap {
-    applyToAllTests = true // Block by default
-}
-```
-
-**When false (default)**:
 ```kotlin
 @Test
-@BlockNetworkRequests // Explicit opt-in
+@BlockNetworkRequests
 fun test() { }
 ```
 
-**When true**:
-```kotlin
-@Test // Network blocked by default
-fun test1() { }
-
-@Test
-@AllowNetworkRequests // Explicit opt-out
-fun test2() { }
-```
-
-### libraryVersion
-
-Specifies which version of the library to use.
+**Opt-out behavior (true)**: Block all by default
 
 ```kotlin
 junitAirgap {
-    libraryVersion = "0.1.0-SNAPSHOT"
+    applyToAllTests = true
 }
 ```
 
-**Use cases**:
-- Pin to specific version: `libraryVersion = "1.2.3"`
-- Use different version than plugin: `libraryVersion = "0.2.0"`
+```kotlin
+@Test // Blocked by default
+fun test1() { }
 
-### allowedHosts
+@Test
+@AllowNetworkRequests // Opt-out
+fun test2() { }
+```
 
-Globally configure allowed hosts for all tests.
+### allowedHosts / blockedHosts
+
+Global host filtering:
 
 ```kotlin
 junitAirgap {
     allowedHosts = listOf(
         "localhost",
         "127.0.0.1",
-        "*.test.local",
-        "*.staging.mycompany.com"
+        "*.staging.example.com" // Wildcards supported
     )
-}
-```
 
-**Features**:
-- Wildcard support: `*.example.com` matches all subdomains
-- IPv4 and IPv6: `127.0.0.1`, `::1`
-- Hostname and domain patterns
-
-**Note**: Individual tests can override with `@AllowRequestsToHosts` annotation.
-
-### blockedHosts
-
-Globally configure blocked hosts for all tests.
-
-```kotlin
-junitAirgap {
-    allowedHosts = listOf("*") // Allow all
     blockedHosts = listOf(
-        "evil.com",
         "*.tracking.com",
-        "analytics.example.com"
+        "evil.com"
     )
 }
 ```
 
-**Priority**: Blocked hosts **always** take precedence over allowed hosts.
+**Important**: Blocked hosts always take precedence over allowed hosts.
 
 ### debug
 
-Enables debug logging for troubleshooting.
+Enable detailed logging:
 
 ```kotlin
 junitAirgap {
@@ -160,95 +130,52 @@ junitAirgap {
 }
 ```
 
-**Output examples**:
-```
-NetworkBlocker: Using SECURITY_MANAGER implementation
-NetworkBlocker: Installing network blocker
-NetworkBlocker: Configuration: allowedHosts=[localhost], blockedHosts=[]
+Or via command line:
+
+```bash
+./gradlew test -Djunit.airgap.debug=true
 ```
 
-### injectJUnit4Rule (Experimental)
+### injectJUnit4Rule
 
-Automatically injects `@Rule val noNetworkRule = AirgapRule()` into JUnit 4 test classes using ByteBuddy.
+**Auto-detection (default)**: Plugin detects JUnit 4 projects automatically
+
+```kotlin
+// No configuration needed - auto-detects
+```
+
+**Manual override**:
 
 ```kotlin
 junitAirgap {
-    injectJUnit4Rule = true
+    injectJUnit4Rule = true // Force enable
 }
 ```
 
-**Benefits**:
-- No manual `@Rule` declarations needed
-- Works with `@BlockNetworkRequests` annotation directly
-- Cleaner test code
+## Project Types
 
-**Limitations**:
-- Experimental feature
-- May not work with all build configurations
-- Fallback: Use manual `@Rule` configuration
-
-**Example**:
-
-Without injection:
-```kotlin
-class MyTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun test() { }
-}
-```
-
-With injection:
-```kotlin
-class MyTest {
-    // No @Rule needed!
-
-    @Test
-    @BlockNetworkRequests
-    fun test() { }
-}
-```
-
-## Project Type-Specific Configuration
-
-### Pure JVM Project
+### Pure JVM
 
 ```kotlin
 plugins {
     kotlin("jvm")
-    id("io.github.garryjeromson.junit-airgap")
-}
-
-junitAirgap {
-    enabled = true
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform() // For JUnit 5
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
-### Android Library/App
+### Android
 
 ```kotlin
 plugins {
     id("com.android.library")
     kotlin("android")
-    id("io.github.garryjeromson.junit-airgap")
-}
-
-junitAirgap {
-    enabled = true
-    injectJUnit4Rule = true // Recommended for Android
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 android {
     testOptions {
         unitTests {
-            isIncludeAndroidResources = true
+            isIncludeAndroidResources = true // For Robolectric
         }
     }
 }
@@ -259,55 +186,53 @@ android {
 ```kotlin
 plugins {
     kotlin("multiplatform")
-    id("io.github.garryjeromson.junit-airgap")
-}
-
-junitAirgap {
-    enabled = true
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {
     jvm()
     androidTarget()
     iosSimulatorArm64()
+}
+```
 
-    sourceSets {
-        val commonTest by getting {
-            dependencies {
-                implementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
-            }
-        }
+## Common Patterns
+
+### Development vs CI
+
+```kotlin
+junitAirgap {
+    val isCi = System.getenv("CI") == "true"
+
+    applyToAllTests = isCi // Strict on CI
+    debug = !isCi // Debug locally
+
+    allowedHosts = if (isCi) {
+        listOf("localhost")
+    } else {
+        listOf("localhost", "*.staging.example.com")
     }
 }
 ```
 
-## Configuration Patterns
-
-### Development vs Production
-
-```kotlin
-junitAirgap {
-    enabled = !project.hasProperty("skipNoNetwork")
-    debug = project.hasProperty("debugNoNetwork")
-}
-```
-
-Run with: `./gradlew test -PdebugNoNetwork`
-
 ### Per-Module Configuration
 
+**Root build.gradle.kts:**
+
 ```kotlin
-// Root build.gradle.kts
 allprojects {
     pluginManager.withPlugin("io.github.garryjeromson.junit-airgap") {
         configure<JunitAirgapExtension> {
             enabled = true
-            allowedHosts = listOf("localhost", "*.test.local")
+            allowedHosts = listOf("localhost")
         }
     }
 }
+```
 
-// Specific module
+**Specific module:**
+
+```kotlin
 junitAirgap {
     enabled = false // Disable for this module
 }
@@ -317,107 +242,53 @@ junitAirgap {
 
 ```kotlin
 junitAirgap {
-    allowedHosts = when {
-        project.hasProperty("ci") -> listOf("localhost") // CI: strict
-        else -> listOf("localhost", "*.staging.mycompany.com") // Local: relaxed
+    allowedHosts = when (System.getenv("ENV")) {
+        "staging" -> listOf("localhost", "*.staging.example.com")
+        "production" -> listOf("localhost")
+        else -> listOf("localhost", "*.dev.example.com")
     }
 }
 ```
 
 ## Plugin Tasks
 
-The plugin doesn't create user-facing tasks. It hooks into existing Gradle test tasks.
+The plugin automatically configures test tasks. No manual task configuration needed.
 
-### JUnit 5 Auto-Detection
-
-For JUnit 5 projects, the plugin creates `src/test/resources/junit-platform.properties`:
-
-```properties
-junit.jupiter.extensions.autodetection.enabled=true
-```
-
-This enables automatic discovery of `AirgapExtension`.
-
-### JUnit 4 Bytecode Injection
-
-When `injectJUnit4Rule = true`, the plugin:
-1. Waits for test compilation to complete
-2. Uses ByteBuddy to scan compiled test classes
-3. Injects `@Rule val noNetworkRule = AirgapRule()` into classes with `@BlockNetworkRequests`
+**What the plugin does:**
+- Adds library to `testImplementation`
+- Configures test tasks with system properties
+- Creates `junit-platform.properties` for JUnit 5
+- Injects `@Rule` fields for JUnit 4 (if enabled)
 
 ## Troubleshooting
 
-### Issue: Plugin not found
+### Plugin Not Applied
 
-**Error**: `Plugin [id: 'io.github.garryjeromson.junit-airgap'] was not found`
-
-**Solution**: Ensure plugin is published to Maven Local or plugin portal:
-
-```bash
-./gradlew :gradle-plugin:publishToMavenLocal
-```
-
-### Issue: Configuration not applied
-
-**Checklist**:
-1. Is plugin applied? `plugins { id("io.github.garryjeromson.junit-airgap") }`
-2. Is plugin block present? `junitAirgap { enabled = true }`
-3. Check debug output: `debug = true`
-
-### Issue: JUnit 4 injection not working
-
-**Solution**:
-1. Verify `injectJUnit4Rule = true`
-2. Check if test classes are compiled before injection
-3. Fallback to manual `@Rule` configuration
-4. Enable debug: `debug = true`
-
-### Issue: Tests still make network requests
-
-**Checklist**:
-1. Is `@BlockNetworkRequests` annotation present?
-2. For JUnit 4 without injection: Is `@Rule` declared?
-3. For JUnit 5: Is `junit-platform.properties` present?
-4. Check with system property: `-Djunit.airgap.debug=true`
-
-
-## Plugin Architecture
-
-The plugin:
-
-1. **Applies to Test Source Sets**: Adds library dependency to test compile and runtime classpaths
-2. **JUnit 5**: Creates `junit-platform.properties` for auto-detection
-3. **JUnit 4**: Optionally injects `@Rule` fields using ByteBuddy
-4. **System Properties**: Configures test tasks with appropriate properties
-
-## Disabling the Plugin
-
-### Temporarily Disable
-
-```kotlin
-junitAirgap {
-    enabled = false
-}
-```
-
-### Remove Plugin
+Check plugin block:
 
 ```kotlin
 plugins {
-    // Remove or comment out:
-    // id("io.github.garryjeromson.junit-airgap")
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
-Then remove manual configurations:
-- Delete `junit-platform.properties` (JUnit 5)
-- Remove `@Rule` fields (JUnit 4)
-- Remove test annotations
+### Configuration Not Working
+
+1. Is `junitAirgap { }` block present?
+2. Check property values with debug mode
+3. Verify plugin version matches library version
+
+### JUnit 4 Auto-Injection Not Working
+
+1. Is `junit:junit` in `testImplementation`?
+2. Check build output for "Auto-detected JUnit 4" message
+3. Try manual override: `injectJUnit4Rule = true`
+4. Enable debug logging
 
 ## See Also
 
-- [JVM + JUnit 5 Setup Guide](jvm-junit5.md)
-- [JVM + JUnit 4 Setup Guide](jvm-junit4.md)
-- [Android + JUnit 4 Setup Guide](android-junit4.md)
-- [KMP Setup Guides](kmp-junit5.md)
-- [Compatibility Matrix](../compatibility-matrix.md)
+- [JVM + JUnit 5 Setup](jvm-junit5.md)
+- [JVM + JUnit 4 Setup](jvm-junit4.md)
+- [Android Setup](android-junit4.md)
+- [KMP Setup](kmp-junit5.md)
+- [Advanced Configuration](../advanced-configuration.md)
