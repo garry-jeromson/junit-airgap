@@ -80,16 +80,11 @@ fun `test with no network access`() {
 
 **JUnit 4:**
 ```kotlin
-class MyTest {
-    @get:Rule
-    val airgap = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testWithNoNetworkAccess() {
-        // Network requests will fail
-        Socket("example.com", 80)
-    }
+@Test
+@BlockNetworkRequests
+fun testWithNoNetworkAccess() {
+    // This will throw NetworkRequestAttemptedException
+    Socket("example.com", 80)
 }
 ```
 
@@ -347,8 +342,7 @@ make test-plugin-integration      # Plugin integration tests
 **Checklist:**
 1. ✅ Is `@BlockNetworkRequests` annotation present?
 2. ✅ For JUnit 5: Is `@ExtendWith(AirgapExtension::class)` on class?
-3. ✅ For JUnit 4: Is `@Rule val airgap = AirgapRule()` field declared?
-4. ✅ Is JVMTI agent loaded? (check with `-Djunit.airgap.debug=true`)
+3. ✅ Is JVMTI agent loaded? (check with `-Djunit.airgap.debug=true`)
 
 ### JVMTI Agent Not Found
 
