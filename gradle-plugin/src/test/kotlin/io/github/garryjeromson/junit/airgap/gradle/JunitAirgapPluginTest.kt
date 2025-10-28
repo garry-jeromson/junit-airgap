@@ -294,4 +294,223 @@ class JunitAirgapPluginTest {
             "Should use custom version (or fail to find it if not published)",
         )
     }
+
+    @Test
+    fun `auto-detects JUnit 4 and enables injection`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garryjeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("junit:junit:4.13.2")
+            }
+
+            junitAirgap {
+                enabled = true
+                // injectJUnit4Rule not set - should auto-detect
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("tasks", "--stacktrace", "--info")
+                .withPluginClasspath()
+                .build()
+
+        assertTrue(
+            result.output.contains("Auto-detected JUnit 4 project"),
+            "Should log auto-detection of JUnit 4",
+        )
+        assertTrue(
+            result.output.contains("injectJUnit4NetworkRule") ||
+                result.output.contains("JUnit4RuleInjectionTask"),
+            "Should register JUnit 4 injection task",
+        )
+    }
+
+    @Test
+    fun `auto-detects JUnit 5 and skips injection`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garryjeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+            }
+
+            tasks.withType<Test> {
+                useJUnitPlatform()
+            }
+
+            junitAirgap {
+                enabled = true
+                // injectJUnit4Rule not set - should auto-detect JUnit 5
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("tasks", "--stacktrace", "--debug")
+                .withPluginClasspath()
+                .build()
+
+        assertTrue(
+            result.output.contains("pure JUnit 5 project") ||
+                !result.output.contains("Auto-detected JUnit 4"),
+            "Should detect JUnit 5 and skip injection",
+        )
+    }
+
+    @Test
+    fun `respects explicit injectJUnit4Rule = true override`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garryjeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+            }
+
+            tasks.withType<Test> {
+                useJUnitPlatform()
+            }
+
+            junitAirgap {
+                enabled = true
+                injectJUnit4Rule = true // Explicit override
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("tasks", "--stacktrace", "--debug")
+                .withPluginClasspath()
+                .build()
+
+        assertTrue(
+            result.output.contains("injection explicitly set to: true") ||
+                result.output.contains("injectJUnit4NetworkRule"),
+            "Should respect explicit injectJUnit4Rule = true",
+        )
+    }
+
+    @Test
+    fun `respects explicit injectJUnit4Rule = false override`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garryjeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("junit:junit:4.13.2")
+            }
+
+            junitAirgap {
+                enabled = true
+                debug = true
+                injectJUnit4Rule = false // Explicit override to disable
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("tasks", "--stacktrace", "--debug")
+                .withPluginClasspath()
+                .build()
+
+        assertTrue(
+            result.output.contains("injection explicitly set to: false") ||
+                !result.output.contains("Auto-detected JUnit 4"),
+            "Should respect explicit injectJUnit4Rule = false",
+        )
+    }
+
+    @Test
+    fun `detects mixed JUnit 4 and JUnit 5 project`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garryjeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("junit:junit:4.13.2")
+                testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+                testImplementation("org.junit.vintage:junit-vintage-engine:5.10.0")
+            }
+
+            tasks.withType<Test> {
+                useJUnitPlatform()
+            }
+
+            junitAirgap {
+                enabled = true
+                // injectJUnit4Rule not set - should auto-detect mixed project
+            }
+            """.trimIndent(),
+        )
+
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("tasks", "--stacktrace", "--info")
+                .withPluginClasspath()
+                .build()
+
+        assertTrue(
+            result.output.contains("mixed JUnit 4 + JUnit 5 project") ||
+                result.output.contains("Auto-detected JUnit 4"),
+            "Should detect mixed project and enable injection",
+        )
+    }
 }
