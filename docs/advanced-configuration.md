@@ -1,6 +1,6 @@
-# Advanced Configuration Guide
+# Advanced Configuration
 
-This guide covers advanced configuration options and patterns for the JUnit Airgap Extension.
+Complete reference for configuring the JUnit Airgap Extension.
 
 ## Table of Contents
 
@@ -8,35 +8,31 @@ This guide covers advanced configuration options and patterns for the JUnit Airg
 - [Priority Order](#priority-order)
 - [Host Filtering](#host-filtering)
 - [Default Blocking Mode](#default-blocking-mode)
-- [Implementation Selection](#implementation-selection)
 - [Debug Mode](#debug-mode)
-- [Per-Test Configuration](#per-test-configuration)
-- [Class-Level Configuration](#class-level-configuration)
-- [System Properties](#system-properties)
-- [Gradle Plugin Configuration](#gradle-plugin-configuration)
+- [Gradle Plugin](#gradle-plugin)
+- [Common Patterns](#common-patterns)
 
 ## Configuration Methods
 
-The library supports multiple configuration methods that can be combined:
+Four ways to configure network blocking (can be combined):
 
-1. **Annotations** (method or class level)
-2. **Constructor parameters** (JUnit 5 `@RegisterExtension` or JUnit 4 `@Rule`)
-3. **System properties** (JVM arguments or Gradle configuration)
-4. **Gradle plugin** (project-wide defaults)
+1. **Annotations** - `@BlockNetworkRequests`, `@AllowNetworkRequests`, `@AllowRequestsToHosts`, `@BlockRequestsToHosts`
+2. **Constructor parameters** - `AirgapExtension(applyToAllTests = true)` or `AirgapRule(applyToAllTests = true)`
+3. **System properties** - `-Djunit.airgap.applyToAllTests=true`
+4. **Gradle plugin** - `junitAirgap { applyToAllTests = true }`
 
 ## Priority Order
 
-When multiple configuration options are present, they are evaluated in priority order (highest to lowest):
+When multiple configurations are present (highest to lowest priority):
 
-1. **@AllowNetworkRequests** - Always allows network (highest priority)
-2. **Constructor parameter** - `applyToAllTests = true/false` in `AirgapExtension` or `AirgapRule`
-3. **System property** - `-Djunit.airgap.applyToAllTests=true`
-4. **@NoNetworkByDefault** - Class-level default blocking
-5. **@BlockNetworkRequests** - Method/class-level explicit blocking
-6. **Default** - No blocking (lowest priority)
+1. **@AllowNetworkRequests** - Always allows network (opt-out)
+2. **Constructor parameter** - `applyToAllTests = true/false`
+3. **JUnit Platform config** - `junit-platform.properties`
+4. **System property** - `-Djunit.airgap.applyToAllTests=true`
+5. **@BlockNetworkRequests** - Explicit blocking
+6. **Default** - No blocking
 
-### Example: Priority Demonstration
-
+**Example:**
 ```kotlin
 class MyTest {
     @JvmField
@@ -51,14 +47,7 @@ class MyTest {
     @Test
     @AllowNetworkRequests // Priority 1 (highest)
     fun test2() {
-        // Network ALLOWED (@AllowNetworkRequests overrides applyToAllTests)
-    }
-
-    @Test
-    @BlockNetworkRequests // Priority 5
-    @AllowNetworkRequests // Priority 1 (highest)
-    fun test3() {
-        // Network ALLOWED (@AllowNetworkRequests wins)
+        // Network ALLOWED (@AllowNetworkRequests overrides)
     }
 }
 ```
@@ -72,28 +61,24 @@ class MyTest {
 @BlockNetworkRequests
 @AllowRequestsToHosts(["localhost", "127.0.0.1", "*.test.local"])
 fun testLocalServers() {
-    // ✅ localhost - allowed
-    // ✅ 127.0.0.1 - allowed
-    // ✅ api.test.local - allowed (matches *.test.local)
+    // ✅ localhost, 127.0.0.1, api.test.local - allowed
     // ❌ example.com - blocked
 }
 ```
 
 ### Wildcard Patterns
 
-Wildcards support subdomain matching:
+Supports subdomain matching:
 
 ```kotlin
 @AllowRequestsToHosts(["*.example.com", "*.staging.mycompany.com"])
 ```
 
-**Matches**:
-- ✅ `api.example.com`
-- ✅ `www.example.com`
-- ✅ `auth.staging.mycompany.com`
+**Matches:**
+- ✅ `api.example.com`, `www.example.com`, `auth.staging.mycompany.com`
 
-**Does NOT match**:
-- ❌ `example.com` (root domain, doesn't match `*.example.com`)
+**Does NOT match:**
+- ❌ `example.com` (root domain doesn't match `*.example.com`)
 - ❌ `api.production.mycompany.com`
 
 ### Block Specific Hosts
@@ -105,36 +90,32 @@ Wildcards support subdomain matching:
 @BlockRequestsToHosts(["evil.com", "*.tracking.com"]) // Except these
 fun testBlockList() {
     // ✅ Most hosts - allowed
-    // ❌ evil.com - blocked
-    // ❌ analytics.tracking.com - blocked (matches *.tracking.com)
+    // ❌ evil.com, analytics.tracking.com - blocked
 }
 ```
 
-**Important**: Blocked hosts ALWAYS take precedence over allowed hosts.
+**Important:** Blocked hosts ALWAYS take precedence over allowed hosts.
 
-### IPv6 Support
+### Platform-Specific Hosts
 
+**IPv6:**
 ```kotlin
 @AllowRequestsToHosts(["::1", "[0:0:0:0:0:0:0:1]"])
 ```
 
-### Android Emulator Localhost
-
-The Android emulator uses `10.0.2.2` to access the host machine:
-
+**Android Emulator:**
 ```kotlin
-@AllowRequestsToHosts(["localhost", "127.0.0.1", "10.0.2.2"])
+@AllowRequestsToHosts(["localhost", "127.0.0.1", "10.0.2.2"]) // 10.0.2.2 = host machine
 ```
 
 ## Default Blocking Mode
 
-### Method 1: Constructor Parameter
+Block all tests by default, opt-out as needed.
+
+### Via Constructor
 
 **JUnit 5:**
-
 ```kotlin
-import org.junit.jupiter.api.extension.RegisterExtension
-
 class MyTest {
     @JvmField
     @RegisterExtension
@@ -154,65 +135,29 @@ class MyTest {
 ```
 
 **JUnit 4:**
-
 ```kotlin
-import org.junit.Rule
-
 class MyTest {
     @get:Rule
     val noNetworkRule = AirgapRule(applyToAllTests = true)
 
-    @Test
-    fun test1() {
-        // Network BLOCKED by default
-    }
-
-    @Test
-    @AllowNetworkRequests
-    fun test2() {
-        // Network ALLOWED (opt-out)
-    }
+    // Same behavior as JUnit 5
 }
 ```
 
-### Method 2: Class-Level Annotation
-
-```kotlin
-@ExtendWith(AirgapExtension::class)
-@NoNetworkByDefault
-class MyTest {
-    @Test
-    fun test1() {
-        // Network BLOCKED by default
-    }
-
-    @Test
-    @AllowNetworkRequests
-    fun test2() {
-        // Network ALLOWED (opt-out)
-    }
-}
-```
-
-### Method 3: System Property
+### Via System Property
 
 ```bash
-# Gradle
 ./gradlew test -Djunit.airgap.applyToAllTests=true
-
-# Maven
-mvn test -Djunit.airgap.applyToAllTests=true
 ```
 
 **Gradle configuration:**
-
 ```kotlin
 tasks.test {
     systemProperty("junit.airgap.applyToAllTests", "true")
 }
 ```
 
-### Method 4: Gradle Plugin
+### Via Gradle Plugin
 
 ```kotlin
 junitAirgap {
@@ -220,36 +165,17 @@ junitAirgap {
 }
 ```
 
-## Implementation
-
-This library uses **JVMTI (JVM Tool Interface)** for network blocking on all JVM platforms.
-
-### How It Works
-
-- C++ JVMTI agent intercepts socket and DNS operations at the native level
-- Agent automatically packaged with library and extracted at runtime
-- Works on Java 21+ (no SecurityManager dependency)
-- Single unified implementation for both JVM and Android (Robolectric)
-
-### Platform Support
-
-| Platform | Status | Implementation |
-|----------|--------|----------------|
-| JVM | ✅ Fully Supported | JVMTI Agent |
-| Android (Robolectric) | ✅ Fully Supported | JVMTI Agent |
-| iOS | ⚠️ API Structure Only | No-op (Kotlin/Native doesn't support JVMTI) |
-
 ## Debug Mode
 
-Enable debug logging to troubleshoot configuration issues.
+Enable detailed logging for troubleshooting.
 
-### Method 1: System Property
+### System Property
 
 ```bash
 ./gradlew test -Djunit.airgap.debug=true
 ```
 
-### Method 2: Gradle Plugin
+### Gradle Plugin
 
 ```kotlin
 junitAirgap {
@@ -257,38 +183,58 @@ junitAirgap {
 }
 ```
 
-### Method 3: Environment Variable
-
-```bash
-export JUNIT_NONETWORK_DEBUG=true
-./gradlew test
-```
-
-### Debug Output Examples
+### Sample Output
 
 ```
-NetworkBlocker: Using SECURITY_MANAGER implementation
 NetworkBlocker: Installing network blocker
 NetworkBlocker: Configuration: allowedHosts=[localhost], blockedHosts=[]
 NetworkBlocker: Checking connection to example.com:443
 NetworkBlocker: Blocked connection to example.com:443
-NetworkBlocker: Uninstalling network blocker
 ```
 
-## Per-Test Configuration
+## Gradle Plugin
 
-### Override Global Configuration
+Complete plugin configuration:
 
 ```kotlin
 junitAirgap {
-    applyToAllTests = true // Global default: block all
+    // Enable/disable plugin (default: true)
+    enabled = true
+
+    // Block all tests by default (default: false)
+    applyToAllTests = false
+
+    // Global allowed hosts (default: empty)
+    allowedHosts = listOf(
+        "localhost",
+        "127.0.0.1",
+        "*.test.local"
+    )
+
+    // Global blocked hosts (default: empty)
+    blockedHosts = listOf(
+        "evil.com",
+        "*.tracking.com"
+    )
+
+    // Debug logging (default: false)
+    debug = false
+}
+```
+
+### Per-Test Override
+
+```kotlin
+// Global: block all, allow localhost
+junitAirgap {
+    applyToAllTests = true
     allowedHosts = listOf("localhost")
 }
 ```
 
 ```kotlin
 @Test
-@AllowNetworkRequests // Override: allow for this test only
+@AllowNetworkRequests // Override: allow all for this test
 fun testNeedsNetwork() {
     // Network allowed
 }
@@ -301,23 +247,7 @@ fun testSpecificHosts() {
 }
 ```
 
-### Combine Annotations
-
-```kotlin
-@Test
-@BlockNetworkRequests
-@AllowRequestsToHosts(["localhost", "127.0.0.1"])
-@BlockRequestsToHosts(["evil.com"])
-fun testComplexRules() {
-    // ✅ localhost - allowed
-    // ❌ evil.com - blocked (even if in allowedHosts)
-    // ❌ example.com - blocked (not in allowedHosts)
-}
-```
-
-## Class-Level Configuration
-
-Apply annotations at class level to affect all tests:
+### Class-Level Configuration
 
 ```kotlin
 @ExtendWith(AirgapExtension::class)
@@ -330,113 +260,9 @@ class MyTest {
     }
 
     @Test
+    @AllowNetworkRequests // Override class-level
     fun test2() {
-        // Same configuration
-    }
-
-    @Test
-    @AllowNetworkRequests // Override class-level configuration
-    fun test3() {
         // Network fully allowed
-    }
-}
-```
-
-### JUnit 4 Class-Level Configuration
-
-```kotlin
-@RunWith(JUnit4::class)
-class MyTest {
-    companion object {
-        @JvmField
-        @ClassRule
-        val classRule = AirgapRule(applyToAllTests = true)
-    }
-
-    @Test
-    fun test1() {
-        // Network blocked for all tests
-    }
-}
-```
-
-## System Properties
-
-All system properties can be set via:
-
-1. **Command line**: `-Dproperty=value`
-2. **Gradle configuration**: `systemProperty("property", "value")`
-3. **Environment variables**: Some properties support env vars
-
-### Available Properties
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `junit.airgap.applyToAllTests` | boolean | false | Block all tests by default |
-| `junit.airgap.implementation` | string | securitymanager | Implementation to use |
-| `junit.airgap.debug` | boolean | false | Enable debug logging |
-
-### Gradle Configuration
-
-```kotlin
-tasks.withType<Test> {
-    // Java 21+ requirement
-    jvmArgs("-Djava.security.manager=allow")
-
-    // Library configuration
-    systemProperty("junit.airgap.applyToAllTests", "true")
-    systemProperty("junit.airgap.implementation", "securitymanager")
-    systemProperty("junit.airgap.debug", "false")
-}
-```
-
-## Gradle Plugin Configuration
-
-Complete plugin configuration reference:
-
-```kotlin
-junitAirgap {
-    // Enable/disable plugin (default: true)
-    enabled = true
-
-    // Block all tests by default (default: false)
-    applyToAllTests = false
-
-    // Library version (default: matches plugin version)
-    libraryVersion = "0.1.0-SNAPSHOT"
-
-    // Global allowed hosts (default: empty)
-    allowedHosts = listOf(
-        "localhost",
-        "127.0.0.1",
-        "*.test.local",
-        "*.staging.mycompany.com"
-    )
-
-    // Global blocked hosts (default: empty)
-    blockedHosts = listOf(
-        "evil.com",
-        "*.tracking.com"
-    )
-
-    // Debug logging (default: false)
-    debug = false
-
-    // JUnit 4 automatic @Rule injection (default: false, experimental)
-    injectJUnit4Rule = false
-}
-```
-
-### Conditional Configuration
-
-```kotlin
-junitAirgap {
-    enabled = !project.hasProperty("skipNoNetwork")
-    debug = project.hasProperty("debugNoNetwork")
-
-    allowedHosts = when {
-        project.hasProperty("ci") -> listOf("localhost") // CI: strict
-        else -> listOf("localhost", "*.staging.mycompany.com") // Local: relaxed
     }
 }
 ```
@@ -454,15 +280,15 @@ allprojects {
     }
 }
 
-// Specific module build.gradle.kts
+// Specific module
 junitAirgap {
     enabled = false // Disable for this module
 }
 ```
 
-## Configuration Patterns
+## Common Patterns
 
-### Pattern 1: Strict Unit Tests
+### Strict Unit Tests
 
 Block everything except localhost:
 
@@ -473,22 +299,7 @@ junitAirgap {
 }
 ```
 
-### Pattern 2: Integration Tests
-
-Allow specific staging environments:
-
-```kotlin
-junitAirgap {
-    applyToAllTests = false
-    allowedHosts = listOf(
-        "localhost",
-        "*.staging.mycompany.com",
-        "*.test.mycompany.com"
-    )
-}
-```
-
-### Pattern 3: Development vs CI
+### Development vs CI
 
 ```kotlin
 junitAirgap {
@@ -505,7 +316,7 @@ junitAirgap {
 }
 ```
 
-### Pattern 4: Feature Flags
+### Feature Flags
 
 ```kotlin
 junitAirgap {
@@ -519,19 +330,16 @@ Run with: `./gradlew test -PenableNoNetwork=true`
 
 ### Configuration Not Applied
 
-**Checklist**:
 1. Is plugin applied? Check `plugins { }`
-2. Is configuration block present? Check `junitAirgap { }`
-3. Is annotation present? Check `@BlockNetworkRequests`
-4. Check priority order (maybe another config is overriding)
-5. Enable debug mode: `debug = true`
+2. Is annotation present? Check `@BlockNetworkRequests`
+3. Check priority order (higher priority configs override)
+4. Enable debug mode: `debug = true`
 
 ### Unexpected Blocking Behavior
 
-**Solution**: Check priority order. Higher priority configs override lower ones.
+Check priority order - higher priority configs always win:
 
 ```kotlin
-// Example: @AllowNetworkRequests always wins
 @Test
 @BlockNetworkRequests // Lower priority
 @AllowNetworkRequests // Higher priority - WINS
@@ -542,94 +350,24 @@ fun test() {
 
 ### Host Filtering Not Working
 
-**Checklist**:
 1. Check wildcard syntax: `*.example.com` (not `*.example.*`)
-2. Check blocked hosts (they take precedence)
-3. Enable debug to see which hosts are checked
-4. Remember: `*.example.com` does NOT match `example.com`
+2. Blocked hosts take precedence over allowed hosts
+3. Enable debug to see host checks
+4. `*.example.com` does NOT match `example.com` (root domain)
 
-## Performance & Overhead
+## Performance
 
-The JVMTI agent provides comprehensive network blocking with minimal performance impact.
+The JVMTI agent loads once at JVM startup with minimal overhead:
 
-### Quick Summary
-
-- **Agent loading**: ONE TIME at JVM startup (~5-10ms)
-- **Per-test overhead**: ~100-500 nanoseconds (ThreadLocal configuration)
+- **Agent loading**: ONE TIME at startup (~5-10ms)
+- **Per-test overhead**: ~100-500 nanoseconds
 - **Real-world impact**: <10% for tests doing meaningful work
 
-### Performance Measurements
-
-From benchmark suite (100 iterations, Java 21, macOS ARM64):
-
-| Test Type | Overhead | Notes |
-|-----------|----------|-------|
-| Empty Test | +458 ns (+183%) | High % but negligible absolute time |
-| Simple Assertion | -80 ns (-3.6%) | Measurement noise |
-| Array Sorting (4.2ms) | +270 μs (+6.4%) | Realistic test - low overhead |
-| String Operations | -56 μs (-6.6%) | Negative = measurement variance |
-
-### Key Insights
-
-1. **Small constant overhead**: ~250-500ns for ThreadLocal operations per test
-2. **High % for tiny tests**: 183% overhead on 250ns operation = only 458ns absolute
-3. **Low % for real tests**: 6.4% overhead on 4.2ms operation = 270μs absolute
-4. **Negligible for I/O tests**: Any test doing I/O will have <1% overhead
-
-### Understanding the Numbers
-
-**Why high percentages for small tests?**
-
-The overhead is a small constant (~500ns) that becomes a high percentage of very fast operations:
-- Empty test: 250ns → 708ns = +183% (but only 458ns absolute)
-- Real test: 4.2ms → 4.5ms = +6.4% (270μs absolute, negligible)
-
-**When does overhead matter?**
-
-Overhead is negligible if your test:
-- ✅ Makes any I/O operations (file, network, database)
-- ✅ Performs computation (>1ms)
-- ✅ Allocates objects or uses reflection
-
-Overhead might be noticeable if your test:
-- ⚠️ Is a microbenchmark measuring nanoseconds
-- ⚠️ Runs thousands of times in tight loop
-
-### Three-Stage Loading Model
-
-The "loading" process has three distinct stages:
-
-1. **Agent Loading** (JVM Startup)
-   - **When**: JVM process starts
-   - **Frequency**: ONE TIME per JVM
-   - **Duration**: ~5-10ms
-   - **What**: Gradle plugin adds `-agentpath`, JVM loads native agent
-
-2. **Native Method Replacement** (First Call)
-   - **When**: First time socket method is called
-   - **Frequency**: ONCE per native method
-   - **Duration**: ~microseconds
-   - **What**: Agent replaces function pointers with wrappers
-
-3. **Configuration Setting** (Per-Test)
-   - **When**: Before/after each test
-   - **Frequency**: EVERY TEST
-   - **Duration**: ~100-500ns
-   - **What**: Set/clear ThreadLocal configuration
-
-**Common misconception**: "The agent loads/unloads every test"
-**Reality**: Only step 3 happens per-test. The agent loads once at startup.
-
-### Detailed Documentation
-
-For a comprehensive explanation of the loading model, performance characteristics, and benchmark methodology, see:
-
-**[JVMTI Agent Loading & Performance](architecture/jvmti-loading.md)**
+For detailed performance analysis and benchmark results, see **[JVMTI Agent Loading & Performance](architecture/jvmti-loading.md)**.
 
 ## See Also
 
 - [Compatibility Matrix](compatibility-matrix.md)
 - [Setup Guides](setup-guides/)
-- [Gradle Plugin Guide](setup-guides/gradle-plugin.md)
-- [Migration Guide: Java 24+](migration-java24.md)
-- [JVMTI Agent Loading & Performance](architecture/jvmti-loading.md)
+- [Gradle Plugin Reference](setup-guides/gradle-plugin.md)
+- [JVMTI Performance Deep Dive](architecture/jvmti-loading.md)

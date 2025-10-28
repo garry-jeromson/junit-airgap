@@ -1,44 +1,25 @@
 # Setup Guide: Android + JUnit 4 + Robolectric
 
-This guide shows how to set up the JUnit Airgap Extension for an Android project using JUnit 4 with Robolectric.
+Block network requests in Android unit tests using Robolectric.
 
 ## Requirements
 
-- Java 21+ (uses JVMTI agent for network blocking)
-- Android Gradle Plugin 7.x or later (tested with 8.7.3)
-- Android SDK: Min API 26 (Android 8.0), Compile SDK 34+
+- Java 21+ (uses JVMTI agent)
+- Android Gradle Plugin 7.x+ (tested with 8.7.3)
+- Android SDK: Min API 26, Compile SDK 34+
 - JUnit 4.12+ (tested with 4.13.2)
 - Robolectric 4.x (tested with 4.14)
 - Kotlin 1.9+ (tested with 2.1.0)
 
-## Why Robolectric?
-
-Robolectric allows Android unit tests to run on the JVM without requiring an Android device or emulator. This makes tests:
-- **Fast**: Run in seconds, not minutes
-- **Reliable**: No device/emulator flakiness
-- **CI-friendly**: No emulator setup required
-- **Debuggable**: Standard JVM debugging works
-
-The JUnit Airgap Extension works with Robolectric tests to block network requests while still providing Android framework APIs.
-
 ## Installation
 
-### Using the Gradle Plugin (Recommended)
-
-Add the plugin to your Android module's `build.gradle.kts`:
+### Gradle Plugin (Recommended)
 
 ```kotlin
 plugins {
     id("com.android.library") // or com.android.application
     kotlin("android")
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
-}
-
-// Configure the plugin
-junitAirgap {
-    enabled = true
-    applyToAllTests = false // Use @BlockNetworkRequests explicitly
-    // injectJUnit4Rule is auto-detected (no manual configuration needed!)
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 android {
@@ -47,7 +28,6 @@ android {
 
     defaultConfig {
         minSdk = 26
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -67,41 +47,33 @@ android {
 }
 
 dependencies {
-    // Production dependencies
-    implementation("androidx.core:core-ktx:1.12.0")
-
-    // Test dependencies
-    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14")
     testImplementation("androidx.test:core:1.5.0")
 }
 ```
 
-### Manual Configuration (Without Plugin)
+### Manual Configuration
 
 ```kotlin
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-beta.1")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14")
-    testImplementation("androidx.test:core:1.5.0")
 }
 ```
 
-Then manually add `@Rule` to each test class (see Basic Usage section).
+Then manually add `@Rule` to each test class.
 
 ## Basic Usage
 
-### Simple Robolectric Test with Network Blocking
+### Simple Test with Network Blocking
 
 ```kotlin
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -111,9 +83,6 @@ import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class MyAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
     @Test
     @BlockNetworkRequests
     fun testNetworkBlockedWithAndroidContext() {
@@ -129,15 +98,12 @@ class MyAndroidTest {
 }
 ```
 
-### Using Android APIs with Network Blocking
+### Using Android APIs
 
 ```kotlin
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -145,160 +111,37 @@ import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class SharedPreferencesTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
     @Test
     @BlockNetworkRequests
     fun testSharedPreferences() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val prefs = context.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
 
-        // Write data
         prefs.edit().putString("key", "value").apply()
 
-        // Read data back
         val value = prefs.getString("key", null)
         assertEquals("value", value)
 
-        // Network is still blocked
-        // Socket("example.com", 80) // Would throw NetworkRequestAttemptedException
+        // Network is blocked: Socket("example.com", 80) would throw
     }
 }
 ```
 
-## Testing Android HTTP Clients
+## HTTP Client Testing
 
-### OkHttp (Recommended for Android)
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertTrue
-
-@RunWith(RobolectricTestRunner::class)
-class OkHttpAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testOkHttpBlocked() {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("https://api.example.com/data")
-            .build()
-
-        try {
-            client.newCall(request).execute()
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // OkHttp wraps NetworkRequestAttemptedException in IOException
-            assertTrue(e.message?.contains("Network request blocked") == true)
-        }
-    }
-}
-```
-
-### Retrofit with OkHttp
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import retrofit2.http.GET
-import kotlin.test.assertTrue
-
-interface ApiService {
-    @GET("users")
-    fun getUsers(): retrofit2.Call<String>
-}
-
-@RunWith(RobolectricTestRunner::class)
-class RetrofitAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testRetrofitBlocked() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.example.com/")
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(ApiService::class.java)
-
-        try {
-            service.getUsers().execute()
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // Retrofit wraps the exception
-            assertTrue(e.message?.contains("Network request blocked") == true)
-        }
-    }
-}
-```
-
-### Ktor Client with OkHttp Engine
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.runBlocking
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertTrue
-
-@RunWith(RobolectricTestRunner::class)
-class KtorOkHttpAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testKtorOkHttpBlocked() = runBlocking {
-        val client = HttpClient(OkHttp)
-
-        try {
-            client.get("https://api.example.com")
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // OkHttp engine wraps NetworkRequestAttemptedException
-            assertTrue(
-                e.message?.contains("Network request blocked") == true ||
-                e.cause?.javaClass?.simpleName == "NetworkRequestAttemptedException"
-            )
-        } finally {
-            client.close()
-        }
-    }
-}
-```
+For testing with OkHttp, Retrofit, or Ktor, see the **[HTTP Client Guides](../clients/)**:
+- **[OkHttp](../clients/okhttp.md)** - Android's most popular HTTP client
+- **[Retrofit](../clients/retrofit.md)** - Type-safe API client
+- **[Ktor](../clients/ktor.md)** - Multiplatform HTTP client
 
 ## Advanced Configuration
 
 ### Block All Tests by Default
 
 ```kotlin
-@get:Rule
-val noNetworkRule = AirgapRule(applyToAllTests = true)
+junitAirgap {
+    applyToAllTests = true
+}
 ```
 
 Then opt-out specific tests:
@@ -311,13 +154,11 @@ fun testCanMakeNetworkRequests() {
 }
 ```
 
-### Testing with Local Server (Localhost)
+### Allow Localhost
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -325,9 +166,6 @@ import java.net.Socket
 
 @RunWith(RobolectricTestRunner::class)
 class LocalServerTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(["localhost", "127.0.0.1", "10.0.2.2"]) // 10.0.2.2 = Android emulator host
@@ -343,28 +181,25 @@ class LocalServerTest {
 }
 ```
 
-### Wildcard Patterns for API Endpoints
+### Wildcard Patterns
 
 ```kotlin
 @Test
 @BlockNetworkRequests
 @AllowRequestsToHosts(["*.mycompany.com", "localhost"])
 fun testInternalApisAllowed() {
-    // ✅ api.mycompany.com - allowed
-    // ✅ staging.mycompany.com - allowed
+    // ✅ api.mycompany.com, staging.mycompany.com - allowed
     // ❌ external-api.com - blocked
 }
 ```
 
 ## Running Tests
 
-### Gradle Command Line
-
 ```bash
-# Run all unit tests (including Robolectric tests)
+# Run all unit tests
 ./gradlew test
 
-# Run tests for specific variant
+# Run specific variant
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -377,15 +212,14 @@ fun testInternalApisAllowed() {
 ### Android Studio
 
 1. Right-click on test class → "Run 'MyAndroidTest'"
-2. Add JVM args if needed:
-   - Run → Edit Configurations
-   - Add VM options: `-Djava.security.manager=allow` (Java 21+)
+2. For debug output, add VM options in Run Configuration:
+   - Run → Edit Configurations → Add VM options: `-Djunit.airgap.debug=true`
 
-## Android-Specific Considerations
+## Android-Specific Notes
 
-### Android Emulator Localhost (10.0.2.2)
+### Android Emulator Localhost
 
-The Android emulator uses `10.0.2.2` to access the host machine's localhost. Allow it explicitly:
+The Android emulator uses `10.0.2.2` to access the host machine's localhost:
 
 ```kotlin
 @AllowRequestsToHosts(["localhost", "127.0.0.1", "10.0.2.2"])
@@ -404,67 +238,13 @@ fun testHttpURLConnectionBlocked() {
 }
 ```
 
-### Testing Repository Pattern
-
-```kotlin
-// Production code
-class UserRepository(private val apiService: ApiService) {
-    fun getUsers(): List<User> {
-        return apiService.getUsers().execute().body() ?: emptyList()
-    }
-}
-
-// Test
-@RunWith(RobolectricTestRunner::class)
-class UserRepositoryTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testRepositoryDoesNotMakeNetworkCall() {
-        // This test will fail if repository tries real network call
-        // Force using mocks or fakes instead
-        val mockService = mock<ApiService>()
-        val repository = UserRepository(mockService)
-
-        // Test with mock - no real network calls
-        whenever(mockService.getUsers()).thenReturn(mockResponse)
-        val users = repository.getUsers()
-        // assertions...
-    }
-}
-```
-
 ## Troubleshooting
 
-### Issue: "UnsupportedOperationException: The Security Manager is deprecated"
-
-**Solution**: For Java 21+, configure test tasks:
-
-```kotlin
-tasks.withType<Test> {
-}
-```
-
-### Issue: "java.lang.NoClassDefFoundError: android/..."
-
-**Cause**: Missing Robolectric runner annotation.
-
-**Solution**: Add `@RunWith(RobolectricTestRunner::class)`:
-
-```kotlin
-@RunWith(RobolectricTestRunner::class)
-class MyTest {
-    // ...
-}
-```
-
-### Issue: "Resources$NotFoundException"
+### Resources$NotFoundException
 
 **Cause**: Android resources not loaded by Robolectric.
 
-**Solution**: Enable Android resources in `build.gradle.kts`:
+**Solution**: Enable Android resources:
 
 ```kotlin
 android {
@@ -476,19 +256,22 @@ android {
 }
 ```
 
-### Issue: Auto-injection not working
+### NoClassDefFoundError: android/...
 
-**Checklist**:
-1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4 project" message
-2. Is `junit:junit` dependency present in test configuration?
-3. Are test classes compiled before injection?
-4. Try manual override: `injectJUnit4Rule = true` in plugin configuration
-5. Try manual `@Rule` configuration as fallback
-6. Check with debug mode: `debug = true`
+**Cause**: Missing Robolectric runner annotation.
 
-### Issue: OkHttp exception message unclear
+**Solution**: Add `@RunWith(RobolectricTestRunner::class)` to test class.
 
-OkHttp wraps `NetworkRequestAttemptedException`. Check the message or cause:
+### Auto-injection Not Working
+
+1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4" message
+2. Is `junit:junit` dependency present?
+3. Try manual override: `injectJUnit4Rule = true` in plugin config
+4. Enable debug: `junitAirgap { debug = true }`
+
+### HTTP Client Exceptions
+
+HTTP clients wrap `NetworkRequestAttemptedException` in their own exception types. Check the exception message or cause:
 
 ```kotlin
 catch (e: Exception) {
@@ -500,43 +283,32 @@ catch (e: Exception) {
 }
 ```
 
-## JUnit 5 on Android
+## Limitations
 
-**Status**: Not officially supported, requires additional configuration.
+### JUnit 5 on Android
 
-JUnit 5 on Android requires:
-- `junit-vintage-engine` to run both JUnit 4 and JUnit 5
-- Additional Gradle configuration
-- Limited IDE support
+Not officially supported. Requires `junit-vintage-engine` and additional configuration. **Recommendation**: Stick with JUnit 4 for Android + Robolectric.
 
-**Recommendation**: Stick with JUnit 4 for Android projects with Robolectric.
+### Instrumentation Tests
 
-## Instrumentation Tests
+This library only works with Robolectric unit tests, not Android instrumentation tests (device/emulator tests). JVMTI agents cannot run on Android devices.
 
-**Not Supported**: This library only works with Robolectric unit tests, not Android instrumentation tests.
-
-**Why?** Instrumentation tests run on a real device/emulator where:
-- JVMTI agent cannot be loaded on Android devices
-- Different security restrictions apply
-- Network mocking requires different approaches
-
-**For instrumentation tests**, consider:
+For instrumentation tests, consider:
 - WireMock for API mocking
-- OkHttp Interceptors for request/response mocking
-- MockWebServer for fake server
+- OkHttp Interceptors
+- MockWebServer
 
-## Complete Example Project
+## Example Project
 
-See the `plugin-integration-tests/android-robolectric` module for a complete working example with:
+See `plugin-integration-tests/android-robolectric` for a complete working example with:
 - Gradle plugin configuration
 - Robolectric setup
 - Network blocking tests with Android APIs
-- HTTP client tests (OkHttp, Retrofit, Ktor)
-- Advanced configuration examples
+- HTTP client integration tests
 
 ## See Also
 
-- [Compatibility Matrix](../compatibility-matrix.md) - Full compatibility information
-- [HTTP Client Guides](../clients/) - Detailed guides for each HTTP client
-- [KMP + JUnit 4 Setup Guide](kmp-junit4.md) - Multiplatform projects
-- [Advanced Configuration](../advanced-configuration.md) - All configuration options
+- [Compatibility Matrix](../compatibility-matrix.md)
+- [HTTP Client Guides](../clients/)
+- [KMP + JUnit 4 Setup](kmp-junit4.md)
+- [Advanced Configuration](../advanced-configuration.md)

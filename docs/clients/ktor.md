@@ -1,6 +1,6 @@
 # Ktor Client Guide
 
-Ktor is a modern, asynchronous HTTP client for Kotlin Multiplatform. This guide shows how to test Ktor clients with the JUnit Airgap Extension.
+Test Ktor HTTP clients with automatic network blocking.
 
 ## Compatibility
 
@@ -13,13 +13,11 @@ Ktor is a modern, asynchronous HTTP client for Kotlin Multiplatform. This guide 
 
 **Tested Version**: Ktor 2.3.7
 
-## Engine-Specific Behavior
+## Basic Usage
 
 ### CIO Engine (JVM)
 
-**Best for**: JVM-only projects, testing
-
-**Exception handling**: Throws `NetworkRequestAttemptedException` directly
+Best for JVM-only projects. Throws exceptions directly:
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
@@ -36,7 +34,6 @@ import kotlin.test.assertFailsWith
 fun testKtorCioBlocked() = runTest {
     val client = HttpClient(CIO)
 
-    // CIO throws NetworkRequestAttemptedException directly
     assertFailsWith<NetworkRequestAttemptedException> {
         client.get("https://api.example.com/users")
     }
@@ -45,11 +42,9 @@ fun testKtorCioBlocked() = runTest {
 }
 ```
 
-### OkHttp Engine (JVM, Android)
+### OkHttp Engine (Android)
 
-**Best for**: Android, KMP projects targeting Android
-
-**Exception handling**: Wraps in `IOException` (check message)
+Best for Android and KMP projects. Wraps exceptions:
 
 ```kotlin
 import io.ktor.client.engine.okhttp.*
@@ -63,7 +58,7 @@ fun testKtorOkHttpBlocked() = runTest {
         client.get("https://api.example.com/users")
         throw AssertionError("Should have thrown exception")
     } catch (e: Exception) {
-        // OkHttp engine wraps NetworkRequestAttemptedException
+        // OkHttp wraps NetworkRequestAttemptedException
         assertTrue(
             e.message?.contains("Network request blocked") == true ||
             e.cause is NetworkRequestAttemptedException
@@ -76,9 +71,7 @@ fun testKtorOkHttpBlocked() = runTest {
 
 ### Java Engine (JVM)
 
-**Best for**: JVM projects, standard HttpClient
-
-**Exception handling**: Throws `NetworkRequestAttemptedException` directly
+Uses standard `java.net.http.HttpClient`. Throws exceptions directly:
 
 ```kotlin
 import io.ktor.client.engine.java.*
@@ -96,58 +89,7 @@ fun testKtorJavaBlocked() = runTest {
 }
 ```
 
-### Darwin Engine (iOS)
-
-**Status**: Not blocked (iOS limitation)
-
-```kotlin
-import io.ktor.client.engine.darwin.*
-
-@Test
-fun testKtorDarwinNotBlocked() = runTest {
-    val client = HttpClient(Darwin)
-
-    // iOS: Network requests are NOT blocked
-    // Use mocking or skip network blocking assertions
-    // ...
-
-    client.close()
-}
-```
-
-## JUnit 5 Examples
-
-### GET Request with CIO
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.airgap.AirgapExtension
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.test.assertFailsWith
-
-@ExtendWith(AirgapExtension::class)
-class KtorCioGetTest {
-    @Test
-    @BlockNetworkRequests
-    fun testGetBlocked() = runTest {
-        val client = HttpClient(CIO)
-
-        assertFailsWith<NetworkRequestAttemptedException> {
-            client.get("https://api.example.com/users")
-        }
-
-        client.close()
-    }
-}
-```
-
-### POST Request with JSON
+## POST Requests with JSON
 
 ```kotlin
 import io.ktor.client.plugins.contentnegotiation.*
@@ -175,82 +117,12 @@ fun testPostBlocked() = runTest {
 }
 ```
 
-### Custom Configuration
+## Kotlin Multiplatform
 
+For KMP projects, use platform-specific engines:
+
+**commonTest:**
 ```kotlin
-import io.ktor.client.plugins.*
-
-@Test
-@BlockNetworkRequests
-fun testCustomClientBlocked() = runTest {
-    val client = HttpClient(CIO) {
-        engine {
-            requestTimeout = 30_000
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = 30_000
-        }
-    }
-
-    assertFailsWith<NetworkRequestAttemptedException> {
-        client.get("https://api.example.com/users")
-    }
-
-    client.close()
-}
-```
-
-## Kotlin Multiplatform Usage
-
-### Expect/Actual Pattern
-
-Create platform-specific HTTP clients:
-
-#### commonMain/HttpClientFactory.kt
-
-```kotlin
-expect object HttpClientFactory {
-    fun create(): HttpClient
-}
-```
-
-#### jvmMain/HttpClientFactory.kt
-
-```kotlin
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-
-actual object HttpClientFactory {
-    actual fun create(): HttpClient = HttpClient(CIO)
-}
-```
-
-#### androidMain/HttpClientFactory.kt
-
-```kotlin
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-
-actual object HttpClientFactory {
-    actual fun create(): HttpClient = HttpClient(OkHttp)
-}
-```
-
-#### iosMain/HttpClientFactory.kt
-
-```kotlin
-import io.ktor.client.*
-import io.ktor.client.engine.darwin.*
-
-actual object HttpClientFactory {
-    actual fun create(): HttpClient = HttpClient(Darwin)
-}
-```
-
-### Shared Test (commonTest)
-
-```kotlin
-// commonTest/ApiClientTest.kt
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import io.ktor.client.request.*
 import kotlinx.coroutines.test.runTest
@@ -260,19 +132,16 @@ class ApiClientTest {
     @Test
     @BlockNetworkRequests
     fun testSharedClientBlocked() = runTest {
+        // Platform-specific client injected via expect/actual
         val client = HttpClientFactory.create()
 
         try {
             client.get("https://api.example.com/users")
         } catch (e: Exception) {
-            // Handle both CIO (JVM) and OkHttp (Android) exception types
+            // Handle both CIO (JVM) and OkHttp (Android) exceptions
             when {
-                e is NetworkRequestAttemptedException -> {
-                    // CIO/Java engine (JVM)
-                }
-                e.message?.contains("Network request blocked") == true -> {
-                    // OkHttp engine (Android)
-                }
+                e is NetworkRequestAttemptedException -> { /* CIO/Java */ }
+                e.message?.contains("Network request blocked") == true -> { /* OkHttp */ }
                 else -> throw e
             }
         } finally {
@@ -282,53 +151,26 @@ class ApiClientTest {
 }
 ```
 
-## Android with Robolectric
-
+**jvmMain:**
 ```kotlin
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.test.runTest
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+expect object HttpClientFactory {
+    fun create(): HttpClient
+}
 
-@RunWith(RobolectricTestRunner::class)
-class KtorAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
+// jvmMain
+actual object HttpClientFactory {
+    actual fun create() = HttpClient(CIO)
+}
 
-    @Test
-    @BlockNetworkRequests
-    fun testKtorWithAndroidContext() = runTest {
-        // Can use Android framework
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        assertNotNull(context)
-
-        // But network is blocked
-        val client = HttpClient(OkHttp)
-        try {
-            client.get("https://api.example.com/users")
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            assertTrue(e.message?.contains("Network request blocked") == true)
-        } finally {
-            client.close()
-        }
-    }
+// androidMain
+actual object HttpClientFactory {
+    actual fun create() = HttpClient(OkHttp)
 }
 ```
 
 ## Advanced Configuration
 
-### Allow Localhost for Testing
+### Allow Localhost
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
@@ -360,22 +202,22 @@ fun testCanConnectToLocalhost() = runTest {
 fun testStagingApisAllowed() = runTest {
     val client = HttpClient(CIO)
 
-    // ✅ https://api.staging.mycompany.com - allowed
-    // ✅ https://auth.staging.mycompany.com - allowed
-    // ❌ https://api.production.com - blocked
+    // ✅ api.staging.mycompany.com - allowed
+    // ✅ auth.staging.mycompany.com - allowed
+    // ❌ api.production.com - blocked
 
     client.close()
 }
 ```
 
-## Testing Production API Clients
+## Testing Production Code
 
-### Production Code
+### API Client Example
 
 ```kotlin
 class UserApiClient(
     private val baseUrl: String = "https://api.example.com",
-    private val client: HttpClient = HttpClientFactory.create()
+    private val client: HttpClient = HttpClient(CIO)
 ) {
     suspend fun getUser(id: Int): User {
         return client.get("$baseUrl/users/$id")
@@ -388,9 +230,7 @@ class UserApiClient(
         }
     }
 
-    fun close() {
-        client.close()
-    }
+    fun close() = client.close()
 }
 ```
 
@@ -412,7 +252,7 @@ fun testApiClientBlocked() = runTest {
 }
 ```
 
-### Test with Dependency Injection
+### Test with Mocked Client
 
 ```kotlin
 @Test
@@ -420,7 +260,7 @@ fun testWithMockedClient() = runTest {
     val mockClient = mock<HttpClient>()
     val apiClient = UserApiClient(client = mockClient)
 
-    // Test with mocked client - no real network calls
+    // No real network calls
     whenever(mockClient.get<User>(any())).thenReturn(User(id = 1, name = "John"))
 
     val user = apiClient.getUser(1)
@@ -430,36 +270,13 @@ fun testWithMockedClient() = runTest {
 }
 ```
 
-## Integration with MockWebServer
+## Troubleshooting
 
-```kotlin
-import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.MockResponse
+### Different Exceptions on Different Platforms
 
-@Test
-@AllowRequestsToHosts(["localhost", "127.0.0.1"])
-fun testWithMockWebServer() = runTest {
-    val server = MockWebServer()
-    server.enqueue(MockResponse().setBody("""{"id":1,"name":"John"}"""))
-    server.start()
+**Expected behavior:** CIO/Java throw `NetworkRequestAttemptedException`, OkHttp wraps it.
 
-    val client = HttpClient(OkHttp) // Use OkHttp engine for MockWebServer compatibility
-    val response = client.get<String>(server.url("/users").toString())
-
-    assertTrue(response.contains("John"))
-
-    client.close()
-    server.shutdown()
-}
-```
-
-## Common Issues
-
-### Issue: Different exceptions on different platforms
-
-**Expected**: CIO throws `NetworkRequestAttemptedException`, OkHttp wraps it.
-
-**Solution**: Handle both cases:
+**Solution:** Handle both cases:
 
 ```kotlin
 try {
@@ -472,30 +289,28 @@ try {
 }
 ```
 
-### Issue: iOS tests failing
+### iOS Tests Failing
 
-**Expected**: Darwin engine (iOS) doesn't block network requests.
+**Expected behavior:** Darwin engine (iOS) doesn't block network requests.
 
-**Solution**: Skip network blocking assertions for iOS or use conditional compilation:
+**Solution:** Use conditional compilation or skip iOS:
 
 ```kotlin
 @Test
 fun testNetworkBlocking() = runTest {
     if (Platform.isIOS) {
-        // Skip or use different assertion
-        return@runTest
+        return@runTest // Skip for iOS
     }
 
-    // Network blocking test for JVM/Android
     assertFailsWith<NetworkRequestAttemptedException> {
         client.get("https://example.com")
     }
 }
 ```
 
-### Issue: Coroutines not waiting for exception
+### Coroutines Not Waiting for Exception
 
-**Solution**: Use `runTest` from `kotlinx-coroutines-test`:
+**Solution:** Use `runTest` from `kotlinx-coroutines-test`:
 
 ```kotlin
 import kotlinx.coroutines.test.runTest
@@ -503,7 +318,7 @@ import kotlinx.coroutines.test.runTest
 @Test
 @BlockNetworkRequests
 fun test() = runTest { // Use runTest, not runBlocking
-    // ...
+    client.get("https://example.com")
 }
 ```
 
@@ -519,7 +334,7 @@ fun test() = runTest { // Use runTest, not runBlocking
 
 ## See Also
 
-- [OkHttp Client Guide](okhttp.md) - OkHttp engine uses this under the hood
-- [KMP Setup Guide](../setup-guides/kmp-junit5.md) - Multiplatform configuration
-- [JVM Setup Guide](../setup-guides/jvm-junit5.md) - JVM-specific details
-- [Android Setup Guide](../setup-guides/android-junit4.md) - Android-specific details
+- [OkHttp Client Guide](okhttp.md) - OkHttp engine details
+- [KMP Setup Guide](../setup-guides/kmp-junit5.md)
+- [JVM Setup Guide](../setup-guides/jvm-junit5.md)
+- [Android Setup Guide](../setup-guides/android-junit4.md)
