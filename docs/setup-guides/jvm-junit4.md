@@ -1,44 +1,34 @@
 # Setup Guide: JVM + JUnit 4
 
-This guide shows how to set up the JUnit Airgap Extension for a pure JVM project using JUnit 4.
+Block network requests in JVM unit tests using JUnit 4.
 
 ## Requirements
 
-- Java 21+ (uses JVMTI agent for network blocking)
-- Gradle 7.x or later (tested with 8.11.1)
+- Java 21+ (uses JVMTI agent)
+- Gradle 7.x+ (tested with 8.11.1)
 - JUnit 4.12+ (tested with 4.13.2)
 - Kotlin 1.9+ (tested with 2.1.0)
 
 ## Installation
 
-### Option 1: Using the Gradle Plugin with Auto-Injection (Recommended)
+### Gradle Plugin (Recommended)
 
-The plugin can automatically inject `AirgapRule` into your test classes using bytecode enhancement:
+With auto-injection, no manual `@Rule` fields needed:
 
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
+    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {
     jvmToolchain(21)
 }
 
-// Configure the plugin
-junitAirgap {
-    enabled = true
-    applyToAllTests = false // Use @BlockNetworkRequests explicitly
-    // injectJUnit4Rule is auto-detected (no manual configuration needed!)
-}
-
-// Configure test tasks
-tasks.withType<Test> {
-    // NOTE: Do NOT use useJUnitPlatform() for pure JUnit 4 projects
-}
+// Note: Do NOT use useJUnitPlatform() for JUnit 4 projects
 ```
 
-With auto-injection enabled, you don't need to manually add `@Rule` fields - just use `@BlockNetworkRequests`:
+Usage with auto-injection:
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
@@ -51,14 +41,14 @@ class MyTest {
     @Test
     @BlockNetworkRequests
     fun testNetworkBlocked() {
-        Socket("example.com", 80) // Will throw NetworkRequestAttemptedException
+        Socket("example.com", 80) // Throws NetworkRequestAttemptedException
     }
 }
 ```
 
-### Option 2: Manual @Rule Configuration
+### Manual Configuration
 
-If you prefer explicit configuration or auto-injection doesn't work for your setup:
+If you prefer explicit configuration:
 
 ```kotlin
 plugins {
@@ -70,15 +60,12 @@ kotlin {
 }
 
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-SNAPSHOT")
+    testImplementation("io.github.garryjeromson:junit-airgap:0.1.0-beta.1")
     testImplementation("junit:junit:4.13.2")
-}
-
-tasks.withType<Test> {
 }
 ```
 
-Then manually add `@Rule` to each test class:
+Then manually add `@Rule`:
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.AirgapRule
@@ -101,25 +88,19 @@ class MyTest {
 
 ## Basic Usage
 
-### Simple Network Blocking Test
+### Simple Test
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
 import kotlin.test.assertFailsWith
 
 class MyTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
     @Test
     @BlockNetworkRequests
     fun testNetworkBlocked() {
-        // This will throw NetworkRequestAttemptedException
         assertFailsWith<NetworkRequestAttemptedException> {
             Socket("example.com", 80).use { }
         }
@@ -131,18 +112,17 @@ class MyTest {
         try {
             Socket("example.com", 80).close()
         } catch (e: Exception) {
-            // Connection might fail for other reasons (no internet, etc.)
+            // Connection might fail for other reasons
             // but it won't throw NetworkRequestAttemptedException
         }
     }
 }
 ```
 
-### Using @AllowNetworkRequests
+### Opt-Out with @AllowNetworkRequests
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.AllowNetworkRequests
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
 import io.github.garryjeromson.junit.airgap.AirgapRule
 import org.junit.Rule
 import org.junit.Test
@@ -160,122 +140,18 @@ class MyTest {
     @Test
     @AllowNetworkRequests
     fun testExplicitlyAllowed() {
-        // Network is allowed even though applyToAllTests=true
+        // Network allowed even though applyToAllTests=true
         Socket("example.com", 80).close()
     }
 }
 ```
 
-## Testing HTTP Clients
+## HTTP Client Testing
 
-### OkHttp Client
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.junit.Rule
-import org.junit.Test
-import kotlin.test.assertTrue
-
-class OkHttpTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testOkHttpBlocked() {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("https://example.com")
-            .build()
-
-        try {
-            client.newCall(request).execute()
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // OkHttp wraps NetworkRequestAttemptedException in IOException
-            assertTrue(e.message?.contains("Network request blocked") == true)
-        }
-    }
-}
-```
-
-### Ktor CIO Client
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.runBlocking
-import org.junit.Rule
-import org.junit.Test
-import kotlin.test.assertFailsWith
-
-class KtorCioTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testKtorCioBlocked() = runBlocking {
-        val client = HttpClient(CIO)
-
-        // CIO engine throws NetworkRequestAttemptedException directly
-        assertFailsWith<NetworkRequestAttemptedException> {
-            client.get("https://example.com")
-        }
-
-        client.close()
-    }
-}
-```
-
-### Retrofit
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
-import org.junit.Test
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import retrofit2.http.GET
-import kotlin.test.assertTrue
-
-interface ApiService {
-    @GET("/")
-    fun getData(): retrofit2.Call<String>
-}
-
-class RetrofitTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testRetrofitBlocked() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://example.com")
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(ApiService::class.java)
-
-        try {
-            service.getData().execute()
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // Retrofit wraps the exception
-            assertTrue(e.message?.contains("Network request blocked") == true)
-        }
-    }
-}
-```
+For testing with popular HTTP clients, see the **[HTTP Client Guides](../clients/)**:
+- **[OkHttp](../clients/okhttp.md)** - Most popular JVM/Android HTTP client
+- **[Retrofit](../clients/retrofit.md)** - Type-safe API client
+- **[Ktor](../clients/ktor.md)** - Kotlin Multiplatform HTTP client
 
 ## Advanced Configuration
 
@@ -301,15 +177,10 @@ fun testCanMakeNetworkRequests() {
 ```kotlin
 import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
 import org.junit.Test
 import java.net.Socket
 
 class LocalhostTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
     @Test
     @BlockNetworkRequests
     @AllowRequestsToHosts(["localhost", "127.0.0.1"])
@@ -320,7 +191,7 @@ class LocalhostTest {
         } catch (e: NetworkRequestAttemptedException) {
             throw AssertionError("Localhost should be allowed", e)
         } catch (e: Exception) {
-            // Other exceptions (connection refused, etc.) are OK
+            // Connection refused is OK
         }
     }
 }
@@ -333,16 +204,13 @@ class LocalhostTest {
 @BlockNetworkRequests
 @AllowRequestsToHosts(["*.example.com", "*.test.local"])
 fun testAllowsSubdomains() {
-    // ✅ api.example.com - allowed
-    // ✅ www.example.com - allowed
+    // ✅ api.example.com, www.example.com - allowed
     // ❌ example.com - blocked (doesn't match *.example.com)
     // ❌ other.com - blocked
 }
 ```
 
 ## Running Tests
-
-### Gradle Command Line
 
 ```bash
 # Run all tests
@@ -357,52 +225,40 @@ fun testAllowsSubdomains() {
 
 ### IntelliJ IDEA
 
-1. Add JVM args to your test configuration:
-   - Run → Edit Configurations
-   - Add VM options: `-Djava.security.manager=allow`
+Add JVM args to test configuration:
+- Run → Edit Configurations
+- Add VM options: `-Djunit.airgap.debug=true`
 
-2. Or configure globally in `.idea/workspace.xml`:
+Or configure globally in `.idea/workspace.xml`:
 ```xml
 <component name="RunManager">
   <configuration default="true" type="JUnit">
-    <option name="VM_PARAMETERS" value="-Djava.security.manager=allow" />
+    <option name="VM_PARAMETERS" value="-Djunit.airgap.debug=true" />
   </configuration>
 </component>
 ```
 
 ## Troubleshooting
 
-### Issue: "UnsupportedOperationException: The Security Manager is deprecated and will be removed in a future release"
+### Auto-injection Not Working
 
-**Solution**: Add JVM arg `-Djava.security.manager=allow` for Java 21+:
-
-```kotlin
-tasks.withType<Test> {
-}
-```
-
-### Issue: Auto-injection not working
-
-**Checklist**:
-1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4 project" message
+1. Is JUnit 4 auto-detected? Check build output for "Auto-detected JUnit 4" message
 2. Is `junit:junit` dependency present in `testImplementation`?
-3. Are you using `useJUnitPlatform()` in test tasks? (This enables JUnit 5 mode)
-4. Are test classes compiled before injection task runs? (Should be automatic)
-5. Try manual override: `injectJUnit4Rule = true` in plugin configuration
-6. Try manual `@Rule` configuration as fallback
-7. Check with debug mode: `debug = true` in plugin configuration
+3. Are you using `useJUnitPlatform()`? (This enables JUnit 5 mode - remove it)
+4. Try manual override: `injectJUnit4Rule = true` in plugin config
+5. Try manual `@Rule` configuration as fallback
+6. Enable debug: `junitAirgap { debug = true }`
 
-### Issue: Tests pass when they should fail
+### Tests Pass When They Should Fail
 
-**Checklist**:
 1. Is `@BlockNetworkRequests` annotation present?
-2. Is `@Rule val noNetworkRule = AirgapRule()` declared?
+2. Is `@Rule val noNetworkRule = AirgapRule()` declared? (if not using plugin)
 3. Is the Gradle plugin applied correctly?
-4. Check with debug mode: `-Djunit.airgap.debug=true`
+4. Enable debug: `-Djunit.airgap.debug=true`
 
-### Issue: OkHttp exception message is unclear
+### HTTP Client Exceptions
 
-OkHttp wraps `NetworkRequestAttemptedException` in `IOException`. Check the message:
+HTTP clients wrap `NetworkRequestAttemptedException`. Check the exception message:
 
 ```kotlin
 try {
@@ -415,40 +271,17 @@ try {
 }
 ```
 
-## JUnit 4 vs JUnit 5
+## Example Project
 
-**Key Differences:**
-
-| Feature | JUnit 4 | JUnit 5 |
-|---------|---------|---------|
-| Configuration | `@Rule AirgapRule()` | `@ExtendWith(AirgapExtension::class)` |
-| Auto-discovery | No (needs manual `@Rule`) | Yes (via `junit-platform.properties`) |
-| Plugin auto-injection | Yes (bytecode enhancement) | Yes (properties file) |
-| Test runner | JUnit 4 | JUnit Platform |
-
-**When to use JUnit 4:**
-- Legacy projects already using JUnit 4
-- Android projects with Robolectric (better compatibility)
-- Projects that can't migrate to JUnit 5 yet
-
-**When to migrate to JUnit 5:**
-- New projects
-- Modern testing features needed (parameterized tests, nested tests, etc.)
-- Better IDE support
-
-See [JVM + JUnit 5 Setup Guide](jvm-junit5.md) for JUnit 5 migration.
-
-## Complete Example Project
-
-See the `plugin-integration-tests/jvm-junit4` module for a complete working example with:
+See `plugin-integration-tests/jvm-junit4` for a complete working example with:
 - Gradle plugin configuration with auto-injection
 - Network blocking tests
-- HTTP client tests (OkHttp, Ktor CIO, Retrofit, Apache HttpClient5, Reactor Netty, AsyncHttpClient)
+- HTTP client integration tests
 - Advanced configuration examples
 
 ## See Also
 
-- [Compatibility Matrix](../compatibility-matrix.md) - Full compatibility information
-- [HTTP Client Guides](../clients/) - Detailed guides for each HTTP client
-- [Advanced Configuration](../advanced-configuration.md) - All configuration options
+- [Compatibility Matrix](../compatibility-matrix.md)
+- [HTTP Client Guides](../clients/)
+- [Advanced Configuration](../advanced-configuration.md)
 - [JVM + JUnit 5 Setup Guide](jvm-junit5.md) - Migrating to JUnit 5
