@@ -31,29 +31,22 @@ import kotlin.test.fail
  * - Blocked hosts result in failed requests
  * - Allowed hosts complete successfully
  *
- * IMPORTANT: NSURLSession requires custom protocols to be added to the session configuration.
- * Global registration with [NSURLProtocol registerClass:] only works for NSURLConnection.
- *
+ * Uses the `installAirgap()` DSL extension for zero-configuration setup.
  * Uses embedded Ktor server on localhost to avoid external network dependencies.
  */
 class KtorDarwinIntegrationTest {
 
     /**
-     * Creates a Ktor HttpClient configured to use our custom URLProtocol.
+     * Creates a Ktor HttpClient configured to use Airgap network blocking.
      *
-     * NSURLSession requires the protocol class to be in the session configuration's
-     * protocolClasses array. This helper ensures all clients are properly configured.
+     * Uses the installAirgap() DSL extension which adds the AirgapURLProtocol
+     * to the NSURLSession's protocolClasses array.
+     *
+     * Note: The NetworkBlocker must be installed before creating the client.
      */
-    @OptIn(ExperimentalForeignApi::class)
-    private fun createConfiguredClient(): HttpClient {
+    private fun createAirgapClient(): HttpClient {
         return HttpClient(Darwin) {
-            engine {
-                configureSession {
-                    // Add our custom protocol to the session configuration
-                    // This is required for NSURLSession to use our protocol
-                    setProtocolClasses(listOf(AirgapURLProtocol))
-                }
-            }
+            installAirgap()
         }
     }
 
@@ -104,8 +97,8 @@ class KtorDarwinIntegrationTest {
             blocker.install()
 
             try {
-                // Create Ktor client with Darwin engine
-                val client = createConfiguredClient()
+                // Create Ktor client with Airgap support
+                val client = createAirgapClient()
 
                 try {
                     // Attempt to make a request - should be blocked
@@ -150,8 +143,8 @@ class KtorDarwinIntegrationTest {
             blocker.install()
 
             try {
-                // Create Ktor client with Darwin engine
-                val client = createConfiguredClient()
+                // Create Ktor client with Airgap support
+                val client = createAirgapClient()
 
                 try {
                     // Attempt to make a request to allowed host
@@ -197,7 +190,7 @@ class KtorDarwinIntegrationTest {
             blocker.install()
 
             try {
-                val client = createConfiguredClient()
+                val client = createAirgapClient()
 
                 try {
                     // Blocked host (127.0.0.1) should fail even though * is allowed
@@ -243,7 +236,7 @@ class KtorDarwinIntegrationTest {
             blocker.install()
 
             try {
-                val client = createConfiguredClient()
+                val client = createAirgapClient()
 
                 try {
                     // Wildcard should allow localhost
@@ -284,7 +277,7 @@ class KtorDarwinIntegrationTest {
             blocker.install()
 
             // Use configured client that has our protocol in protocolClasses
-            val client = createConfiguredClient()
+            val client = createAirgapClient()
 
             try {
                 // While installed, requests should be blocked
@@ -323,7 +316,7 @@ class KtorDarwinIntegrationTest {
             startTestServer(server)
 
             // Use configured client that has our protocol in protocolClasses
-            val client = createConfiguredClient()
+            val client = createAirgapClient()
 
             try {
                 // First configuration: block all

@@ -136,7 +136,9 @@ kotlin {
         // iOS source sets
         val iosSimulatorArm64Main by getting {
             dependencies {
-                // iOS-specific dependencies if needed
+                // Ktor client for iOS network blocking integration
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.darwin)
             }
         }
 
