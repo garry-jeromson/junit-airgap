@@ -1,6 +1,6 @@
 # iOS Network Blocking Implementation Progress
 
-## ✅ Completed (Phase 1 Foundation - 90%)
+## ✅ Completed (Phase 1 Foundation - 95%)
 
 ### 1. Objective-C URLProtocol Bridge ✅ COMPLETE
 - **Files Created**:
@@ -31,7 +31,7 @@
 
 - **Status**: ✅ Cinterop successfully compiles Objective-C code
 
-### 3. Kotlin Bridge Code ⚠️ 90% COMPLETE
+### 3. Kotlin Bridge Code ✅ COMPLETE
 - **Files Created**:
   - `junit-airgap/src/iosMain/kotlin/.../URLProtocolBridge.kt` - Kotlin ↔ Objective-C bridge
   - `junit-airgap/src/iosMain/kotlin/.../DebugLogger.kt` - iOS debug logging
@@ -44,10 +44,11 @@
   - iOS DebugLogger (simple println-based)
   - NetworkBlocker uses URLProtocol registration
 
-- **Remaining Issue**:
-  - NSDictionary API usage in `setURLProtocolConfiguration()`
-  - Need to properly convert Kotlin NetworkConfiguration to NSDictionary
-  - Kotlin/Native requires `NSString.create()` for dictionary keys and proper type casting
+- **Implementation Details**:
+  - Uses `staticCFunction` for Objective-C → Kotlin callbacks (proper pattern)
+  - Function pointer passed from Kotlin to Objective-C during configuration
+  - Simplified Objective-C API accepts primitive parameters instead of NSDictionary
+  - All 24 tests passing (6 bridge + 8 exception + 10 configuration)
 
 ### 4. Build Configuration ✅ COMPLETE
 - Updated `build.gradle.kts`:
@@ -58,18 +59,14 @@
 
 ---
 
-## ❌ Remaining Work
-
-### Immediate (Blocking Compilation)
-1. **Fix NSDictionary API usage** (1-2 hours)
-   - Current error: Type mismatch for dictionary keys/values
-   - Need to use correct Kotlin/Native Foundation API
-   - Alternative: Create Objective-C wrapper that takes primitive types
+## ⏳ Remaining Work
 
 ### Phase 1 Completion
-2. **Compile iOS tests successfully** (30 mins after fixing NSDictionary)
-3. **Run `iosSimulatorArm64Test`** (verify tests pass)
-4. **Integration test with Ktor Darwin engine** (Phase 1.4)
+1. **Integration test with Ktor Darwin engine** (Phase 1.4 - 1-2 days)
+   - Create test with actual Ktor Darwin client
+   - Verify URLSession requests are intercepted and blocked
+   - Test with allowed/blocked hosts
+   - Verify error messages
 
 ### Phase 2-5 (Future Work)
 - **Phase 2**: KSP processor for code generation (2-3 weeks)
@@ -119,37 +116,53 @@ If blocked: NSError returned → Ktor throws exception
 
 ---
 
-## Remaining NSDictionary Issue
+## ✅ Resolved: Callback Architecture Issue
 
-**Current Problem**:
+**Problem**:
+Initially tried to use `@CName` exports to have Objective-C call Kotlin directly:
 ```kotlin
-// This doesn't compile - type mismatch
-nsConfig.setObject(value as Any, forKey = NSString.create(string = "key"))
+@CName("airgap_should_block_host")
+fun shouldBlockHost(hostPtr: CPointer<ByteVar>?): Boolean
 ```
 
-**Possible Solutions**:
+This failed because:
+- Objective-C code compiled via `-Xcompile-source` runs before Kotlin linking
+- Kotlin export symbols not available during ObjC compilation
+- Linker error: "_airgap_should_block_host" undefined symbol
 
-### Option A: Use Correct Kotlin/Native API
-Research proper `NSMutableDictionary` usage in Kotlin/Native. May need to use different methods or casts.
+**Solution - staticCFunction Pattern**:
+Used the proper Kotlin/Native callback pattern documented for C interop:
 
-### Option B: Simplify Objective-C API
-Instead of NSDictionary, pass primitives:
-```objective-c
-+ (void)setConfigurationWithBlockByDefault:(BOOL)blockByDefault
-                              allowedHosts:(NSArray<NSString *> *)allowedHosts
-                              blockedHosts:(NSArray<NSString *> *)blockedHosts;
-```
-
-Then convert to NSDictionary internally in Objective-C.
-
-### Option C: Use JSON String
-Pass configuration as JSON string, parse in Objective-C:
+1. **Create C-compatible function pointer in Kotlin**:
 ```kotlin
-fun setURLProtocolConfiguration(config: NetworkConfiguration): Boolean {
-    val json = """{"blockByDefault": true, "allowedHosts": [...]}"""
-    AirgapURLProtocol.setConfigurationFromJSON(json)
+private val hostBlockingCallback = staticCFunction<CPointer<ByteVar>?, Boolean> { hostPtr ->
+    val config = NetworkBlocker.getSharedConfiguration()
+    val host = hostPtr?.toKString()
+    !config.isAllowed(host)  // Return true if blocked
 }
 ```
+
+2. **Pass callback to Objective-C**:
+```kotlin
+AirgapURLProtocol.setConfigurationWithBlockByDefault(
+    blockByDefault = true,
+    allowedHosts = listOf("localhost"),
+    blockedHosts = emptyList(),
+    callback = hostBlockingCallback  // Function pointer
+)
+```
+
+3. **Objective-C stores and invokes callback**:
+```objective-c
+static HostBlockingCallback _blockingCallback = NULL;
+
+- (BOOL)shouldBlockHost:(NSString *)host {
+    bool shouldBlock = _blockingCallback([host UTF8String]);
+    return shouldBlock ? YES : NO;
+}
+```
+
+**Result**: All tests passing, proper bidirectional interop working.
 
 ---
 
@@ -191,12 +204,14 @@ junit-extensions/airgap/
 
 ## Summary
 
-**Overall Progress**: Phase 1 is 90% complete. The foundation is solid:
-- ✅ Objective-C URLProtocol bridge works (tested with XCTest)
+**Overall Progress**: Phase 1 is 95% complete. The foundation is solid:
+- ✅ Objective-C URLProtocol bridge works
 - ✅ Cinterop configuration compiles successfully
-- ⚠️ Kotlin bridge code has one API usage issue (NSDictionary)
+- ✅ Kotlin bridge code working with staticCFunction callbacks
+- ✅ All 24 tests passing (6 bridge + 8 exception + 10 configuration)
+- ✅ Build system configured with `-Xcompile-source`
 
-**Estimated Time to Complete Phase 1**: 2-3 hours
-**Blocking Issue**: NSDictionary API type mismatches in Kotlin/Native
+**Estimated Time to Complete Phase 1**: 1-2 days (Ktor integration test)
+**Next Step**: Integration test with Ktor Darwin engine to verify end-to-end blocking
 
-Once the NSDictionary issue is resolved, tests should compile and run successfully.
+**Key Achievement**: Successfully implemented bidirectional Kotlin/Native ↔ Objective-C interop using the proper `staticCFunction` pattern for callbacks. This is the documented approach for C interop and works correctly with cinterop compilation.
