@@ -10,9 +10,7 @@
 // Private property key for marking requests we've already handled
 static NSString * const AirgapURLProtocolHandledKey = @"AirgapURLProtocolHandled";
 
-@implementation AirgapURLProtocol {
-    NSURLConnection *_connection;
-}
+@implementation AirgapURLProtocol
 
 // Store configuration and callback in static variables
 static NSDictionary *_configuration = nil;
@@ -69,7 +67,22 @@ static HostBlockingCallback _blockingCallback = NULL;
 
     // Only intercept HTTP and HTTPS requests
     NSString *scheme = request.URL.scheme.lowercaseString;
-    return [scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"];
+    if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) {
+        return NO;
+    }
+
+    // Get current configuration
+    NSDictionary *config = [[self class] getConfiguration];
+
+    // Check if this request should be blocked
+    NSString *host = request.URL.host;
+    if ([[self class] shouldBlockHost:host withConfiguration:config]) {
+        // YES - we will handle (block) this request
+        return YES;
+    }
+
+    // NO - let the system handle this request normally
+    return NO;
 }
 
 + (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request {
@@ -77,57 +90,27 @@ static HostBlockingCallback _blockingCallback = NULL;
 }
 
 - (void)startLoading {
-    // Get current configuration
-    NSDictionary *config = [[self class] getConfiguration];
+    // If we get here, canInitWithRequest returned YES, which means this request should be blocked
+    NSString *host = self.request.URL.host ?: @"<unknown>";
 
-    // Check if this request should be blocked
-    NSString *host = self.request.URL.host;
-    if ([self shouldBlockHost:host withConfiguration:config]) {
-        // Block the request
-        NSError *error = [NSError errorWithDomain:@"AirgapError"
-                                             code:1001
-                                         userInfo:@{
-            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Network request to %@ blocked by Airgap extension", host]
-        }];
+    // Block the request with an error
+    NSError *error = [NSError errorWithDomain:@"AirgapError"
+                                         code:1001
+                                     userInfo:@{
+        NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Network request to %@ blocked by Airgap extension", host]
+    }];
 
-        [self.client URLProtocol:self didFailWithError:error];
-        [self.client URLProtocolDidFinishLoading:self];
-        return;
-    }
-
-    // Allow the request - mark it and pass through
-    NSMutableURLRequest *newRequest = [self.request mutableCopy];
-    [NSURLProtocol setProperty:@YES forKey:AirgapURLProtocolHandledKey inRequest:newRequest];
-
-    _connection = [NSURLConnection connectionWithRequest:newRequest delegate:self];
-}
-
-- (void)stopLoading {
-    [_connection cancel];
-    _connection = nil;
-}
-
-#pragma mark - NSURLConnectionDelegate (for allowed requests)
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    [self.client URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [self.client URLProtocol:self didLoadData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    [self.client URLProtocol:self didFailWithError:error];
     [self.client URLProtocolDidFinishLoading:self];
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [self.client URLProtocol:self didFailWithError:error];
+- (void)stopLoading {
+    // Nothing to stop since we immediately fail blocked requests in startLoading
 }
 
 #pragma mark - Private Helpers
 
-- (BOOL)shouldBlockHost:(NSString *)host withConfiguration:(NSDictionary *)config {
++ (BOOL)shouldBlockHost:(NSString *)host withConfiguration:(NSDictionary *)config {
     if (!config) {
         // No configuration - don't block
         return NO;

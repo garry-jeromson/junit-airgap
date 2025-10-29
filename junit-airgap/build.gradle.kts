@@ -142,7 +142,9 @@ kotlin {
 
         val iosSimulatorArm64Test by getting {
             dependencies {
-                // iOS test dependencies
+                // Ktor client for integration testing with Darwin engine (URLSession)
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.darwin)
             }
         }
     }
