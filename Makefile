@@ -228,13 +228,17 @@ publish-local:
 		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey"; \
 		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase"; \
 		echo ""; \
+		echo "  # Gradle Plugin Portal Credentials"; \
+		echo "  export GRADLE_PUBLISH_KEY=YourPluginPortalKey"; \
+		echo "  export GRADLE_PUBLISH_SECRET=YourPluginPortalSecret"; \
+		echo ""; \
 		echo "Tip: Get your GPG key with: make gpg-export-private"; \
 		echo ""; \
 		exit 1; \
 	fi
 	@echo "Loading credentials from .env file..."
 	@echo ""
-	@echo "⚠️  WARNING: You are about to publish to Maven Central!"
+	@echo "⚠️  WARNING: You are about to publish to Maven Central and Gradle Plugin Portal!"
 	@echo "This will make the artifacts publicly available and cannot be undone."
 	@echo ""
 	@echo -n "Are you sure you want to continue? [y/N] " && read ans && [ $${ans:-N} = y ]
@@ -242,12 +246,17 @@ publish-local:
 	@echo "Publishing junit-airgap library..."
 	@bash -c 'source .env && JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-airgap:publishAndReleaseToMavenCentral --no-daemon --stacktrace'
 	@echo ""
-	@echo "Publishing gradle-plugin..."
+	@echo "Publishing gradle-plugin to Maven Central..."
 	@bash -c 'source .env && JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishAndReleaseToMavenCentral --no-daemon --stacktrace'
+	@echo ""
+	@echo "Publishing gradle-plugin to Gradle Plugin Portal..."
+	@bash -c 'source .env && JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishPlugins --no-daemon --stacktrace'
 	@echo ""
 	@echo "✅ Published successfully!"
 	@echo ""
-	@echo "Verify at: https://central.sonatype.com/publishing"
+	@echo "Verify at:"
+	@echo "  - Maven Central: https://central.sonatype.com/publishing"
+	@echo "  - Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap"
 
 ## publish: Publish to Maven Central via Central Portal API (CI only)
 publish:

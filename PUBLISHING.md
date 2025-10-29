@@ -264,12 +264,17 @@ export ORG_GRADLE_PROJECT_mavenCentralPassword=YourTokenPassword
 # GPG Signing Credentials
 export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey
 export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase
+
+# Gradle Plugin Portal Credentials
+export GRADLE_PUBLISH_KEY=YourPluginPortalKey
+export GRADLE_PUBLISH_SECRET=YourPluginPortalSecret
 ```
 
 **Get your credentials:**
-- Portal Token: Generate at https://central.sonatype.com/account
-- GPG Key: Run `make gpg-export-private`
-- GPG Passphrase: The passphrase you set when creating your GPG key
+- **Maven Central Portal Token**: Generate at https://central.sonatype.com/account
+- **GPG Key**: Run `make gpg-export-private`
+- **GPG Passphrase**: The passphrase you set when creating your GPG key
+- **Gradle Plugin Portal**: Login at https://plugins.gradle.org/ → API Keys
 
 **⚠️ Security:** Never commit the `.env` file! It's already in `.gitignore`.
 
@@ -285,7 +290,8 @@ This will:
 - Check that `.env` exists
 - Load your credentials
 - Prompt for confirmation (publishing is irreversible!)
-- Publish both `junit-airgap` and `gradle-plugin` to Maven Central
+- Publish `junit-airgap` library to Maven Central
+- Publish `gradle-plugin` to both Maven Central and Gradle Plugin Portal
 - Automatically release after validation
 
 ### Option B: Publish via GitHub Actions
