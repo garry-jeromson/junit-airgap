@@ -145,6 +145,10 @@ kotlin {
                 // Ktor client for integration testing with Darwin engine (URLSession)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.darwin)
+
+                // Ktor server for local test server (CIO engine supports native/iOS)
+                implementation(libs.ktor.server.core)
+                implementation(libs.ktor.server.cio)
             }
         }
     }
