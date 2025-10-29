@@ -155,8 +155,14 @@ mavenPublishing {
     // Publish to Central Portal with automatic release after validation
     publishToMavenCentral(automaticRelease = true)
 
-    // Sign all publications with GPG
-    signAllPublications()
+    // Sign all publications with GPG (only when signing credentials are available)
+    // Skip signing for publishToMavenLocal to allow tests without GPG setup
+    val hasSigningKey = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
+        .orElse(providers.gradleProperty("signingInMemoryKey"))
+        .isPresent
+    if (hasSigningKey) {
+        signAllPublications()
+    }
 
     // POM metadata for Maven Central
     pom {
