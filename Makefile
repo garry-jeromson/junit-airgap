@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
+.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish publish-local jar sources-jar all verify setup-native build-native test-native clean-native gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
 
 # Default Java version for the project
 JAVA_VERSION ?= 21
@@ -59,7 +59,8 @@ help:
 	@echo ""
 	@echo "Publishing Commands:"
 	@echo "  install            Install to local Maven repository (~/.m2/repository)"
-	@echo "  publish            Publish to Maven Central via Central Portal API"
+	@echo "  publish-local      Publish to Maven Central from local machine (uses .env file)"
+	@echo "  publish            Publish to Maven Central via Central Portal API (CI only)"
 	@echo "  publish-plugin     Publish Gradle plugin to Plugin Portal"
 	@echo ""
 	@echo "GPG Key Management Commands:"
@@ -208,7 +209,47 @@ install:
 	@echo "Installing to local Maven repository..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publishToMavenLocal
 
-## publish: Publish to Maven Central via Central Portal API
+## publish-local: Publish to Maven Central from local machine (uses .env file)
+publish-local:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Publishing to Maven Central from Local Machine"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if [ ! -f .env ]; then \
+		echo "❌ Error: .env file not found"; \
+		echo ""; \
+		echo "Create a .env file with your publishing credentials:"; \
+		echo ""; \
+		echo "  # Maven Central Portal Token (from https://central.sonatype.com/account)"; \
+		echo "  export ORG_GRADLE_PROJECT_mavenCentralUsername=YourTokenUsername"; \
+		echo "  export ORG_GRADLE_PROJECT_mavenCentralPassword=YourTokenPassword"; \
+		echo ""; \
+		echo "  # GPG Signing Credentials"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase"; \
+		echo ""; \
+		echo "Tip: Get your GPG key with: make gpg-export-private"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@echo "Loading credentials from .env file..."
+	@echo ""
+	@echo "⚠️  WARNING: You are about to publish to Maven Central!"
+	@echo "This will make the artifacts publicly available and cannot be undone."
+	@echo ""
+	@echo -n "Are you sure you want to continue? [y/N] " && read ans && [ $${ans:-N} = y ]
+	@echo ""
+	@echo "Publishing junit-airgap library..."
+	@bash -c 'source .env && JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-airgap:publishAndReleaseToMavenCentral --no-daemon --stacktrace'
+	@echo ""
+	@echo "Publishing gradle-plugin..."
+	@bash -c 'source .env && JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishAndReleaseToMavenCentral --no-daemon --stacktrace'
+	@echo ""
+	@echo "✅ Published successfully!"
+	@echo ""
+	@echo "Verify at: https://central.sonatype.com/publishing"
+
+## publish: Publish to Maven Central via Central Portal API (CI only)
 publish:
 	@echo "Publishing artifacts to Maven Central via Central Portal API..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-airgap:publishAndReleaseToMavenCentral :gradle-plugin:publishAndReleaseToMavenCentral

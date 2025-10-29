@@ -41,3 +41,6 @@ captures/
 
 # Logs
 *.log
+
+# Environment variables (publishing credentials)
+.env

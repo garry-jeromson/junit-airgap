@@ -240,6 +240,58 @@ make gpg-export-public
 
 ## Publishing a Release
 
+You can publish either from your local machine or via GitHub Actions.
+
+### Option A: Publish from Local Machine
+
+This is useful for testing the publishing process or for quick releases.
+
+#### 1. Set Up Local Environment
+
+Create a `.env` file in the project root (copy from `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in your credentials:
+
+```bash
+# Maven Central Portal Token (from https://central.sonatype.com/account)
+export ORG_GRADLE_PROJECT_mavenCentralUsername=YourTokenUsername
+export ORG_GRADLE_PROJECT_mavenCentralPassword=YourTokenPassword
+
+# GPG Signing Credentials
+export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey
+export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase
+```
+
+**Get your credentials:**
+- Portal Token: Generate at https://central.sonatype.com/account
+- GPG Key: Run `make gpg-export-private`
+- GPG Passphrase: The passphrase you set when creating your GPG key
+
+**⚠️ Security:** Never commit the `.env` file! It's already in `.gitignore`.
+
+#### 2. Publish
+
+Run the publish-local target:
+
+```bash
+make publish-local
+```
+
+This will:
+- Check that `.env` exists
+- Load your credentials
+- Prompt for confirmation (publishing is irreversible!)
+- Publish both `junit-airgap` and `gradle-plugin` to Maven Central
+- Automatically release after validation
+
+### Option B: Publish via GitHub Actions
+
+This is the recommended approach for production releases.
+
 ### 1. Prepare the Release
 
 1. **Ensure all tests pass:**
