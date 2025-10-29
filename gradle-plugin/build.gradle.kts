@@ -152,8 +152,8 @@ tasks.withType<Jar>().configureEach {
 // Maven Central Publishing Configuration (Central Portal API)
 // Note: Gradle Plugin Portal publishing is handled by the plugin-publish plugin above
 mavenPublishing {
-    // Publish to Central Portal (automatic release after validation)
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+    // Publish to Central Portal with automatic release after validation
+    publishToMavenCentral(automaticRelease = true)
 
     // Sign all publications with GPG
     signAllPublications()

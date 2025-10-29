@@ -412,8 +412,8 @@ tasks.named("clean") {
 // ============================================================================
 
 mavenPublishing {
-    // Publish to Central Portal (automatic release after validation)
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+    // Publish to Central Portal with automatic release after validation
+    publishToMavenCentral(automaticRelease = true)
 
     // Sign all publications with GPG
     signAllPublications()
