@@ -38,7 +38,26 @@ kotlin {
     }
 
     // iOS target (Apple Silicon simulator)
-    iosSimulatorArm64()
+    iosSimulatorArm64 {
+        // Configure cinterop for Objective-C bridge
+        compilations.getByName("main") {
+            cinterops {
+                val airgap by creating {
+                    defFile(project.file("src/nativeInterop/cinterop/airgap.def"))
+                    packageName("airgap")
+
+                    // Add include directory for header files
+                    includeDirs(project.file("src/nativeInterop/cinterop"))
+
+                    // Compile the Objective-C source file along with the cinterop
+                    extraOpts(
+                        "-Xcompile-source",
+                        project.file("src/nativeInterop/cinterop/AirgapURLProtocol.m").absolutePath
+                    )
+                }
+            }
+        }
+    }
 
     sourceSets {
         // Common source sets
