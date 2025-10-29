@@ -8,7 +8,7 @@ plugins {
 junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = true
+    debug = false
     // injectJUnit4Rule is auto-detected (JUnit 4 dependency + no useJUnitPlatform)
 }
 

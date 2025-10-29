@@ -312,8 +312,8 @@ tasks.register<Test>("integrationTest") {
     systemProperty("junit.airgap.debug", debugProperty)
 
     testLogging {
-        events("passed", "skipped", "failed")
-        showStandardStreams = true
+        events("failed")
+        showStandardStreams = false
     }
 }
 

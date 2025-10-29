@@ -8,7 +8,7 @@ plugins {
 junitAirgap {
     enabled = true
     applyToAllTests = false // Test explicit @BlockNetworkRequests annotation
-    debug = true // Enable debug logging to troubleshoot agent loading
+    debug = false // Enable debug logging to troubleshoot agent loading
 }
 
 dependencies {
