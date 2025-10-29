@@ -22,11 +22,11 @@ This document describes how to publish the JUnit Airgap Extension to Maven Centr
 The JUnit Airgap Extension is published to two repositories:
 
 1. **Maven Central** - For the core library artifacts (via Central Portal API)
-   - `io.github.garryjeromson:junit-airgap` (JVM + Android)
-   - `io.github.garryjeromson:junit-airgap-gradle-plugin` (Gradle plugin)
+   - `io.github.garry-jeromson:junit-airgap` (JVM + Android)
+   - `io.github.garry-jeromson:junit-airgap-gradle-plugin` (Gradle plugin)
 
 2. **Gradle Plugin Portal** - For the Gradle plugin
-   - `io.github.garryjeromson.junit-airgap` plugin
+   - `io.github.garry-jeromson.junit-airgap` plugin
 
 The GitHub Actions workflow automates publishing to both repositories simultaneously using the modern Central Portal Publisher API.
 
@@ -59,12 +59,12 @@ Maven Central now uses the **Central Portal** (https://central.sonatype.com) - a
 
 After signing up, you'll automatically receive a verified namespace for your GitHub account:
 
-- **Your namespace**: `io.github.garryjeromson`
+- **Your namespace**: `io.github.garry-jeromson`
 - **Status**: ✅ Automatically verified (no manual verification needed!)
 
 This namespace allows you to publish artifacts with group IDs like:
-- `io.github.garryjeromson:junit-airgap`
-- `io.github.garryjeromson:junit-airgap-gradle-plugin`
+- `io.github.garry-jeromson:junit-airgap`
+- `io.github.garry-jeromson:junit-airgap-gradle-plugin`
 
 **Important Notes:**
 - ⚠️ **Usernames cannot be changed** - your Central Portal username is tied to your GitHub account
@@ -371,17 +371,17 @@ git push origin v1.0.0
 - Status will show: VALIDATED → PUBLISHING → PUBLISHED
 
 **Maven Central - Within 30 minutes:**
-- Maven Central search: https://search.maven.org/search?q=g:io.github.garryjeromson
-- Central Portal page: https://central.sonatype.com/artifact/io.github.garryjeromson/junit-airgap
+- Maven Central search: https://search.maven.org/search?q=g:io.github.garry-jeromson
+- Central Portal page: https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap
 
 **Maven Central - Within 2 hours:**
 - Full Maven Central CDN synchronization
 - Gradle/Maven can reliably download artifacts from all mirrors
 
 **Gradle Plugin Portal - Within 30 minutes:**
-- Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap
+- Plugin Portal: https://plugins.gradle.org/plugin/io.github.garry-jeromson.junit-airgap
 - Plugin should appear in search results
-- Users can apply the plugin with `id("io.github.garryjeromson.junit-airgap")`
+- Users can apply the plugin with `id("io.github.garry-jeromson.junit-airgap")`
 
 **Test Maven Central artifacts:**
 ```gradle
@@ -390,14 +390,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation("io.github.garryjeromson:junit-airgap:1.0.0")
+    testImplementation("io.github.garry-jeromson:junit-airgap:1.0.0")
 }
 ```
 
 **Test Gradle Plugin:**
 ```gradle
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "1.0.0"
+    id("io.github.garry-jeromson.junit-airgap") version "1.0.0"
 }
 ```
 

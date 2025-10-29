@@ -112,7 +112,7 @@ byte-buddy = { module = "net.bytebuddy:byte-buddy", version.ref = "byte-buddy" }
 byte-buddy-agent = { module = "net.bytebuddy:byte-buddy-agent", version.ref = "byte-buddy" }
 
 # JUnit Airgap Library
-junit-airgap = { module = "io.github.garryjeromson:junit-airgap", version.ref = "junit-airgap" }
+junit-airgap = { module = "io.github.garry-jeromson:junit-airgap", version.ref = "junit-airgap" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -122,4 +122,4 @@ android-library = { id = "com.android.library", version.ref = "android-gradle-pl
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-junit-airgap = { id = "io.github.garryjeromson.junit-airgap", version.ref = "junit-airgap" }
+junit-airgap = { id = "io.github.garry-jeromson.junit-airgap", version.ref = "junit-airgap" }

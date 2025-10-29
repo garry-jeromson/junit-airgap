@@ -7,7 +7,7 @@ plugins {
 }
 
 // Project coordinates (group and version)
-group = "io.github.garryjeromson"
+group = "io.github.garry-jeromson"
 version = "0.1.0-beta.1"
 
 // Configure ktlint for consistent code formatting
@@ -447,7 +447,7 @@ mavenPublishing {
     }
 
     // Coordinates (group already set above, artifactId inferred from project name)
-    coordinates("io.github.garryjeromson", "junit-airgap", version.toString())
+    coordinates("io.github.garry-jeromson", "junit-airgap", version.toString())
 }
 
 // ============================================================================

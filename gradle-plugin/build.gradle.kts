@@ -14,7 +14,7 @@ gradlePlugin {
 
     plugins {
         create("junitAirgapPlugin") {
-            id = "io.github.garryjeromson.junit-airgap"
+            id = "io.github.garry-jeromson.junit-airgap"
             implementationClass = "io.github.garryjeromson.junit.airgap.gradle.JunitAirgapPlugin"
             displayName = "JUnit Airgap Plugin"
             description = "Automatically configure JUnit tests to block network requests"
@@ -187,7 +187,7 @@ mavenPublishing {
     }
 
     // Coordinates
-    coordinates("io.github.garryjeromson", "junit-airgap-gradle-plugin", version.toString())
+    coordinates("io.github.garry-jeromson", "junit-airgap-gradle-plugin", version.toString())
 }
 
 // ============================================================================

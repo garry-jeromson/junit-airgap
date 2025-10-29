@@ -259,7 +259,7 @@ publish-local:
 	@echo ""
 	@echo "Verify at:"
 	@echo "  - Maven Central: https://central.sonatype.com/publishing"
-	@echo "  - Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap"
+	@echo "  - Plugin Portal: https://plugins.gradle.org/plugin/io.github.garry-jeromson.junit-airgap"
 
 ## publish: Publish to Maven Central via Central Portal API (CI only)
 publish:
