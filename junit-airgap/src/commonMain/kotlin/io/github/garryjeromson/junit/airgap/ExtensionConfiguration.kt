@@ -25,18 +25,17 @@ internal const val ALLOWED_HOSTS_PROPERTY: String = "junit.airgap.allowedHosts"
 internal const val BLOCKED_HOSTS_PROPERTY: String = "junit.airgap.blockedHosts"
 
 /**
- * Platform-specific system property accessor.
- * On JVM/Android: delegates to System.getProperty()
- * On iOS: returns defaultValue (system properties not available)
+ * System property accessor.
+ * Delegates to System.getProperty() on all platforms (JVM and Android).
  *
  * @param key The property key to read
  * @param defaultValue The default value if property is not set
  * @return The property value or defaultValue
  */
-internal expect fun getSystemProperty(
+internal fun getSystemProperty(
     key: String,
     defaultValue: String = "",
-): String
+): String = System.getProperty(key) ?: defaultValue
 
 /**
  * Configuration helper for the NoNetwork extension.
