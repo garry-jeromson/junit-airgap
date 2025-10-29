@@ -21,14 +21,14 @@ This document describes how to publish the JUnit Airgap Extension to Maven Centr
 
 The JUnit Airgap Extension is published to two repositories:
 
-1. **Maven Central** - For the core library artifacts
-   - `io.github.garryjeromson:junit-airgap` (JVM)
-   - `io.github.garryjeromson:junit-airgap-android` (Android)
+1. **Maven Central** - For the core library artifacts (via Central Portal API)
+   - `io.github.garryjeromson:junit-airgap` (JVM + Android)
+   - `io.github.garryjeromson:junit-airgap-gradle-plugin` (Gradle plugin)
 
 2. **Gradle Plugin Portal** - For the Gradle plugin
    - `io.github.garryjeromson.junit-airgap` plugin
 
-The GitHub Actions workflow automates publishing to both repositories simultaneously.
+The GitHub Actions workflow automates publishing to both repositories simultaneously using the modern Central Portal Publisher API.
 
 ## Prerequisites
 
@@ -43,118 +43,133 @@ Before you can publish, you need:
 
 ## One-Time Setup
 
-### 1. Create Sonatype OSSRH Account
+### 1. Create Maven Central Account via GitHub
 
-1. **Sign up** at [https://issues.sonatype.org](https://issues.sonatype.org)
-   - Create a Jira account if you don't have one
+Maven Central now uses the **Central Portal** (https://central.sonatype.com) - a modern, self-service platform that has replaced the old Jira-based OSSRH system.
 
-2. **Request access** to your Group ID
-   - Create a new issue: [New Project Ticket](https://issues.sonatype.org/secure/CreateIssue.jspa?issuetype=21&pid=10134)
-   - **Project**: Community Support - Open Source Project Repository Hosting (OSSRH)
-   - **Issue Type**: New Project
-   - **Summary**: "Request publishing rights for io.github.garryjeromson"
-   - **Group Id**: `io.github.garryjeromson`
-   - **Project URL**: `https://github.com/garry-jeromson/junit-request-blocker`
-   - **SCM URL**: `https://github.com/garry-jeromson/junit-request-blocker.git`
+#### Sign Up with GitHub (Recommended)
 
-3. **Verify ownership** of the Group ID
-   - Sonatype will ask you to verify ownership of `github.com/garry-jeromson`
-   - Methods to verify:
-     - Add a GitHub repository matching the ticket ID (e.g., `OSSRH-12345`)
-     - Or add a TXT DNS record to your custom domain
+1. **Go to** [https://central.sonatype.com](https://central.sonatype.com)
+2. **Click "Sign Up"**
+3. **Select "Sign up with GitHub"**
+4. **Authorize the application** when prompted by GitHub
+5. **Verify your email address** - check your inbox for the verification link
 
-4. **Wait for approval** (usually 1-2 business days)
-   - You'll receive a comment on the ticket when approved
-   - Save your Sonatype username and password - you'll need these later
+#### Register Your Namespace
+
+After signing up, you'll automatically receive a verified namespace for your GitHub account:
+
+- **Your namespace**: `io.github.garryjeromson`
+- **Status**: ✅ Automatically verified (no manual verification needed!)
+
+This namespace allows you to publish artifacts with group IDs like:
+- `io.github.garryjeromson:junit-airgap`
+- `io.github.garryjeromson:junit-airgap-gradle-plugin`
+
+**Important Notes:**
+- ⚠️ **Usernames cannot be changed** - your Central Portal username is tied to your GitHub account
+- GitHub-based signup provides instant namespace verification
+- No Jira tickets or waiting periods required
 
 ### 2. Generate GPG Keys
 
 GPG (GNU Privacy Guard) is used to sign artifacts to verify their authenticity.
 
-#### Install GPG
-
-**macOS:**
-```bash
-brew install gnupg
-```
-
-**Linux:**
-```bash
-sudo apt-get install gnupg  # Debian/Ubuntu
-sudo yum install gnupg      # RHEL/CentOS
-```
-
-**Windows:**
-Download from [https://gnupg.org/download/](https://gnupg.org/download/)
-
 #### Generate Key Pair
 
+Use the Makefile target to generate a new GPG key:
+
 ```bash
-# Generate a new GPG key pair (interactive)
-gpg --full-generate-key
+make gpg-generate
 ```
 
-**Prompts:**
-- **Kind of key**: RSA and RSA (default)
-- **Key size**: 4096 bits (more secure)
-- **Expiration**: 0 (key does not expire) or set expiration as preferred
+This will:
+- Check if GPG is installed (and prompt to install via Homebrew if not)
+- Guide you through key generation with recommended settings
+- Provide next steps after generation
+
+**Follow the prompts:**
+- **Key type**: RSA and RSA (default)
+- **Key size**: 4096 bits (recommended)
+- **Expiration**: 0 (does not expire) or set as preferred
 - **Real name**: Your name
 - **Email**: Your email (should match Git commits)
-- **Comment**: Optional (e.g., "Maven Central signing key")
 - **Passphrase**: Choose a strong passphrase and **save it securely**
 
 #### Get Key ID
 
+After generating your key, get the key ID for GitHub secrets:
+
 ```bash
-# List secret keys with long format
-gpg --list-secret-keys --keyid-format LONG
+make gpg-key-id
 ```
 
-Output example:
-```
-sec   rsa4096/ABCD1234EFGH5678 2025-01-26 [SC]
-      1234567890ABCDEF1234567890ABCDEF12345678
-uid                 [ultimate] Your Name <your.email@example.com>
-ssb   rsa4096/IJKL9012MNOP3456 2025-01-26 [E]
-```
-
-The key ID is **ABCD1234EFGH5678** (after `rsa4096/`)
-The full fingerprint is the long hex string on the second line.
+This displays your key ID (e.g., `ABCD1234EFGH5678`) which you'll need for the `SIGNING_KEY_ID` secret.
 
 #### Export Private Key
 
-```bash
-# Export the private key (ASCII-armored format)
-gpg --armor --export-secret-keys ABCD1234EFGH5678 > signing-key.asc
+Export your private key in base64 format for GitHub secrets:
 
-# View the exported key (should start with -----BEGIN PGP PRIVATE KEY BLOCK-----)
-cat signing-key.asc
+```bash
+make gpg-export-private
 ```
 
+Enter your key ID when prompted. The output will be base64-encoded and ready to paste into the `SIGNING_KEY` GitHub secret.
+
 **⚠️ Security Warning:**
-- Keep `signing-key.asc` **extremely secure** - it's your private key
+- This displays your PRIVATE key - keep it secure!
 - Never commit it to version control
-- Delete it after configuring GitHub secrets
-- Back it up in a secure location (password manager, encrypted drive)
+- Store it securely (password manager recommended)
+- Clear your terminal history if needed
 
 ### 3. Publish GPG Public Key
 
 Your public key must be published to key servers so Maven Central can verify signatures.
 
+Publish to multiple keyservers using the Makefile target:
+
 ```bash
-# Publish to multiple keyservers for redundancy
-gpg --keyserver keyserver.ubuntu.com --send-keys ABCD1234EFGH5678
-gpg --keyserver keys.openpgp.org --send-keys ABCD1234EFGH5678
-gpg --keyserver pgp.mit.edu --send-keys ABCD1234EFGH5678
+make gpg-publish
 ```
 
+Enter your key ID when prompted. This will publish your public key to:
+- keyserver.ubuntu.com
+- keys.openpgp.org
+- pgp.mit.edu
+
 **Verify publication:**
+
+Wait a few minutes for propagation, then verify:
 ```bash
-# Search for your key (wait a few minutes for propagation)
 gpg --keyserver keyserver.ubuntu.com --search-keys your.email@example.com
 ```
 
-### 4. Create Gradle Plugin Portal Account
+### 4. Generate Maven Central Portal Token
+
+The Central Portal uses **Portal Tokens** for publishing authentication (replacing the old username/password approach).
+
+#### Generate Your Token
+
+1. **Log in** to https://central.sonatype.com (using your GitHub account)
+2. **Navigate to** https://central.sonatype.com/account (or click your profile icon → "Account")
+3. **Click on** "Generate User Token" button
+4. **Enter details:**
+   - **Display Name**: "GitHub Actions Publishing" (or any descriptive name)
+   - **Expiration**: Set an appropriate expiration date (e.g., 1 year)
+5. **Click "Generate"**
+6. **Save the credentials immediately**:
+   - **Username**: (token username, e.g., `AbCdEfGh`)
+   - **Password**: (token password, long random string)
+
+**⚠️ Critical Warning:**
+- Tokens **cannot be retrieved** once the modal closes
+- Save both username and password securely (password manager recommended)
+- If lost, you must generate a new token
+- The token username/password pair is used as publishing credentials
+
+**Note:** While legacy OSSRH username/password still works, Portal Tokens are the recommended modern approach and provide better security through expiration dates and granular control.
+
+### 5. Create Gradle Plugin Portal Account
 
 The Gradle plugin needs to be published to the Gradle Plugin Portal.
 
@@ -176,7 +191,7 @@ The Gradle plugin needs to be published to the Gradle Plugin Portal.
 
 **Note:** These credentials allow publishing plugins under your account. Keep them secure.
 
-### 5. Configure GitHub Secrets
+### 6. Configure GitHub Secrets
 
 GitHub Actions needs access to your credentials to publish artifacts.
 
@@ -194,46 +209,31 @@ Add the following secrets (click "New repository secret" for each):
 
 | Secret Name | Value | How to Get It |
 |------------|-------|---------------|
-| `OSSRH_USERNAME` | Your Sonatype username | From step 1 (Sonatype OSSRH account) |
-| `OSSRH_PASSWORD` | Your Sonatype password | From step 1 (generate a token is recommended) |
+| `MAVEN_CENTRAL_USERNAME` | Your Portal Token username | From step 4 (Central Portal Token username, e.g., `AbCdEfGh`) |
+| `MAVEN_CENTRAL_PASSWORD` | Your Portal Token password | From step 4 (Central Portal Token password - long random string) |
 | `SIGNING_KEY_ID` | Your GPG key ID | Short key ID from step 2 (e.g., `ABCD1234EFGH5678`) |
 | `SIGNING_KEY` | Your GPG private key (base64) | See below |
 | `SIGNING_PASSWORD` | Your GPG passphrase | The passphrase you set when creating the key |
+
+**Important:** These credentials are your **Portal Token** (username and password from the token generation page), NOT your Central Portal login credentials.
 
 **Gradle Plugin Portal Credentials:**
 
 | Secret Name | Value | How to Get It |
 |------------|-------|---------------|
-| `GRADLE_PUBLISH_KEY` | Your Plugin Portal API key | From step 4 (Plugin Portal API Keys) |
-| `GRADLE_PUBLISH_SECRET` | Your Plugin Portal API secret | From step 4 (Plugin Portal API Keys) |
+| `GRADLE_PUBLISH_KEY` | Your Plugin Portal API key | From step 5 (Plugin Portal API Keys) |
+| `GRADLE_PUBLISH_SECRET` | Your Plugin Portal API secret | From step 5 (Plugin Portal API Keys) |
 
-#### Encoding the Private Key
+#### Quick Reference: GPG Commands
 
-The `SIGNING_KEY` must be base64-encoded:
-
+**List your GPG keys:**
 ```bash
-# Encode the private key to base64
-base64 -i signing-key.asc | tr -d '\n' | pbcopy
+make gpg-list
 ```
 
-This copies the encoded key to your clipboard. Paste it as the `SIGNING_KEY` secret value.
-
-**Alternative (Linux):**
+**Export public key (if needed):**
 ```bash
-base64 -w 0 < signing-key.asc | xclip -selection clipboard
-```
-
-**Alternative (manual):**
-```bash
-base64 -i signing-key.asc > signing-key-base64.txt
-# Copy the contents of signing-key-base64.txt to the secret
-```
-
-**⚠️ Cleanup:**
-```bash
-# Delete temporary files containing your private key
-rm signing-key.asc
-rm signing-key-base64.txt  # if created
+make gpg-export-public
 ```
 
 ---
@@ -287,27 +287,30 @@ git push origin v1.0.0
    - ✅ Detect version from git tag
    - ✅ Run all tests (211 integration tests)
    - ✅ Sign all artifacts with your GPG key
-   - ✅ Publish to Maven Central staging repository
-   - ✅ Automatically close and release the staging repository
+   - ✅ Publish to Maven Central via Central Portal API
+   - ✅ Automatically validate and release artifacts
    - ✅ Publish Gradle plugin to Plugin Portal
    - ✅ Create a GitHub release
 
 3. **Typical duration:** 5-10 minutes
 
+**Note:** The new Central Portal API automatically validates and publishes artifacts without manual staging repository management.
+
 ### 5. Verify Publication
 
-**Maven Central - Immediate (Staging):**
-- Check Sonatype Nexus: https://s01.oss.sonatype.org/
-- Log in with your OSSRH credentials
-- Navigate to **Staging Repositories**
-- Your artifacts should be in a "Released" state
+**Central Portal - Immediate:**
+- Check deployment status at https://central.sonatype.com/publishing
+- Log in with your GitHub account
+- Navigate to **Deployments** to see your published artifacts
+- Status will show: VALIDATED → PUBLISHING → PUBLISHED
 
 **Maven Central - Within 30 minutes:**
 - Maven Central search: https://search.maven.org/search?q=g:io.github.garryjeromson
+- Central Portal page: https://central.sonatype.com/artifact/io.github.garryjeromson/junit-airgap
 
 **Maven Central - Within 2 hours:**
-- Full Maven Central availability
-- Gradle/Maven can download artifacts
+- Full Maven Central CDN synchronization
+- Gradle/Maven can reliably download artifacts from all mirrors
 
 **Gradle Plugin Portal - Within 30 minutes:**
 - Plugin Portal: https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap
@@ -336,17 +339,19 @@ plugins {
 
 ## Troubleshooting
 
-### Issue: "Nexus repository manager credentials are not set"
+### Issue: "Authentication failed" or "Invalid credentials"
 
-**Cause:** Missing or incorrect Sonatype credentials
+**Cause:** Missing or incorrect Maven Central Portal Token credentials
 
 **Solution:**
-- Verify GitHub secrets `OSSRH_USERNAME` and `OSSRH_PASSWORD` are set correctly
-- Test credentials by logging into https://s01.oss.sonatype.org/
-- Consider creating a User Token instead of using your password:
-  - Log into Sonatype Nexus
-  - Profile → User Token → Access User Token
-  - Use token username/password as credentials
+- Verify GitHub secrets `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD` are set correctly
+- These should contain your **Portal Token credentials** (from https://central.sonatype.com/account), not your login credentials
+- Test by generating a new Portal Token:
+  1. Log into https://central.sonatype.com
+  2. Navigate to Account → Generate User Token
+  3. Copy both the username and password from the token
+  4. Update GitHub secrets with these values
+- **Note:** Portal Tokens have expiration dates - check if your token has expired and generate a new one if needed
 
 ### Issue: "Could not load PGP key"
 
@@ -354,11 +359,11 @@ plugins {
 
 **Solution:**
 - Verify `SIGNING_KEY` is base64-encoded (should be a very long single line)
-- Re-export and re-encode the key:
+- Re-export the key using the Makefile target:
   ```bash
-  gpg --armor --export-secret-keys YOUR_KEY_ID | base64 -w 0
+  make gpg-export-private
   ```
-- Ensure no line breaks in the secret value
+- Copy the entire output (no line breaks) and update the GitHub secret
 
 ### Issue: "Invalid signature" or "No public key"
 
@@ -369,11 +374,11 @@ plugins {
   ```bash
   gpg --keyserver keyserver.ubuntu.com --search-keys your.email@example.com
   ```
-- If not found, re-publish:
+- If not found, publish it:
   ```bash
-  gpg --keyserver keyserver.ubuntu.com --send-keys YOUR_KEY_ID
+  make gpg-publish
   ```
-- Wait 5-10 minutes for propagation
+- Wait 5-10 minutes for propagation across keyservers
 
 ### Issue: "Version X.Y.Z already exists"
 
@@ -388,16 +393,20 @@ plugins {
   git tag -a vX.Y.Z+1 -m "..."     # Create new tag with incremented version
   ```
 
-### Issue: "Staging repository failed to close"
+### Issue: "Publishing failed" or "Validation errors"
 
-**Cause:** Validation errors (missing signatures, invalid POM, etc.)
+**Cause:** Validation errors (missing signatures, invalid POM, incorrect metadata, etc.)
 
 **Solution:**
-1. Log into https://s01.oss.sonatype.org/
-2. Navigate to **Staging Repositories**
-3. Find your repository (search by name: `iogithubgarryjeromson-XXXX`)
-4. Click **Activity** tab to see detailed error messages
-5. Fix the issues and re-run the workflow
+1. Log into https://central.sonatype.com
+2. Navigate to **Deployments** tab
+3. Find your deployment (sorted by date, most recent first)
+4. Click on the deployment to see validation status and error messages
+5. Common issues:
+   - Missing or invalid GPG signatures
+   - Incomplete POM metadata (missing license, SCM, or developer info)
+   - Invalid artifact coordinates or naming
+6. Fix the issues in your build configuration and re-run the workflow
 
 ### Issue: Tests fail during publish workflow
 
@@ -416,7 +425,9 @@ plugins {
 
 ## Additional Resources
 
-- [Maven Central Publishing Guide](https://central.sonatype.org/publish/publish-guide/)
+- [Central Portal Publishing Guide](https://central.sonatype.org/publish/publish-portal-guide/)
+- [vanniktech Maven Publish Plugin](https://vanniktech.github.io/gradle-maven-publish-plugin/)
+- [Central Portal API Documentation](https://central.sonatype.org/publish/publish-portal-api/)
 - [GPG Tutorial](https://central.sonatype.org/publish/requirements/gpg/)
 - [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [Semantic Versioning](https://semver.org/)
