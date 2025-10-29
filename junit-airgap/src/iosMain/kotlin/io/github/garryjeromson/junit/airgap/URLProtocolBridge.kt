@@ -4,9 +4,7 @@ import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSMutableDictionary
-import platform.Foundation.NSString
-import platform.Foundation.setObject
+import kotlinx.cinterop.staticCFunction
 import airgap.AirgapURLProtocol
 
 /**
@@ -52,49 +50,14 @@ fun unregisterURLProtocol(): Boolean {
 }
 
 /**
- * Set the configuration for the URLProtocol.
- *
- * @param config NetworkConfiguration to apply
- * @return true if configuration was set successfully
+ * Static C function that will be called from Objective-C to check if a host should be blocked.
+ * This is created once and passed to Objective-C as a function pointer.
  */
-@OptIn(ExperimentalForeignApi::class, kotlin.experimental.ExperimentalNativeApi::class)
-fun setURLProtocolConfiguration(config: NetworkConfiguration): Boolean {
-    return try {
-        // Convert Kotlin NetworkConfiguration to NSDictionary
-        val nsConfig = NSMutableDictionary()
-
-        // Determine blockByDefault based on whether allowedHosts is empty
-        // If no allowed hosts specified, block everything by default
-        val blockByDefault = config.allowedHosts.isEmpty()
-        nsConfig.setObject(blockByDefault as Any, forKey = NSString.create(string = "blockByDefault"))
-
-        // Convert Set<String> to NSArray
-        nsConfig.setObject(config.allowedHosts.toList() as Any, forKey = NSString.create(string = "allowedHosts"))
-        nsConfig.setObject(config.blockedHosts.toList() as Any, forKey = NSString.create(string = "blockedHosts"))
-
-        AirgapURLProtocol.setConfiguration(nsConfig as Map<Any?, *>)
-        true
-    } catch (e: Exception) {
-        DebugLogger.log("Failed to set URLProtocol configuration: ${e.message}")
-        false
-    }
-}
-
-/**
- * Exported function called from Objective-C to check if a host should be blocked.
- *
- * This function is called from AirgapURLProtocol.m when a request is intercepted.
- * It reads the current NetworkConfiguration and determines if the host should be blocked.
- *
- * @param hostPtr C string pointer to the hostname
- * @return true if the host should be blocked, false if allowed
- */
-@CName("airgap_should_block_host")
-@OptIn(ExperimentalForeignApi::class, kotlin.experimental.ExperimentalNativeApi::class)
-fun shouldBlockHost(hostPtr: CPointer<ByteVar>?): Boolean {
+@OptIn(ExperimentalForeignApi::class)
+private val hostBlockingCallback = staticCFunction<CPointer<ByteVar>?, Boolean> { hostPtr ->
     if (hostPtr == null) {
-        DebugLogger.log("shouldBlockHost called with null host pointer")
-        return false
+        DebugLogger.log("Callback called with null host pointer")
+        return@staticCFunction false
     }
 
     val host = hostPtr.toKString()
@@ -103,7 +66,7 @@ fun shouldBlockHost(hostPtr: CPointer<ByteVar>?): Boolean {
     val config = NetworkBlocker.getSharedConfiguration()
     if (config == null) {
         DebugLogger.log("No configuration set, allowing request to $host")
-        return false
+        return@staticCFunction false
     }
 
     // isAllowed() returns true if the host is allowed, we need to return true if BLOCKED
@@ -111,5 +74,36 @@ fun shouldBlockHost(hostPtr: CPointer<ByteVar>?): Boolean {
     val shouldBlock = !isAllowed
 
     DebugLogger.log("Host $host: allowed=$isAllowed, shouldBlock=$shouldBlock")
-    return shouldBlock
+    shouldBlock
+}
+
+/**
+ * Set the configuration for the URLProtocol.
+ *
+ * @param config NetworkConfiguration to apply
+ * @return true if configuration was set successfully
+ */
+@OptIn(ExperimentalForeignApi::class)
+fun setURLProtocolConfiguration(config: NetworkConfiguration): Boolean {
+    return try {
+        // Determine blockByDefault based on whether allowedHosts is empty
+        // If no allowed hosts specified, block everything by default
+        val blockByDefault = config.allowedHosts.isEmpty()
+
+        // Convert Kotlin Sets to Objective-C NSArrays
+        val allowedHostsList = config.allowedHosts.toList()
+        val blockedHostsList = config.blockedHosts.toList()
+
+        // Call the Objective-C API with primitive parameters and callback
+        AirgapURLProtocol.setConfigurationWithBlockByDefault(
+            blockByDefault = blockByDefault,
+            allowedHosts = allowedHostsList,
+            blockedHosts = blockedHostsList,
+            callback = hostBlockingCallback
+        )
+        true
+    } catch (e: Exception) {
+        DebugLogger.log("Failed to set URLProtocol configuration: ${e.message}")
+        false
+    }
 }

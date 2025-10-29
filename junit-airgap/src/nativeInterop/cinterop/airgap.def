@@ -3,34 +3,9 @@
 # This file defines how Kotlin/Native should interact with the Objective-C
 # URLProtocol implementation.
 #
-# Note: Include paths are provided via build.gradle.kts includeDirs
+# Callbacks are handled via staticCFunction passed from Kotlin to Objective-C
 
 language = Objective-C
 headers = AirgapURLProtocol.h
 compilerOpts = -framework Foundation
 headerFilter = AirgapURLProtocol.h
-
-# The Objective-C source file will be compiled along with this cinterop
-# and linked into the final binary
----
-
-// Export Kotlin functions to Objective-C
-// These functions will be called from AirgapURLProtocol.m
-
-#import <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * Called from Objective-C to check if a host should be blocked.
- *
- * @param host The hostname to check (UTF-8 C string)
- * @return true if the host should be blocked, false if allowed
- */
-bool airgap_should_block_host(const char* host);
-
-#ifdef __cplusplus
-}
-#endif

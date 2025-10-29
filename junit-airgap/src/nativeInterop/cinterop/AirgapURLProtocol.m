@@ -14,9 +14,10 @@ static NSString * const AirgapURLProtocolHandledKey = @"AirgapURLProtocolHandled
     NSURLConnection *_connection;
 }
 
-// Store configuration in static variable
+// Store configuration and callback in static variables
 static NSDictionary *_configuration = nil;
 static dispatch_queue_t _configQueue = nil;
+static HostBlockingCallback _blockingCallback = NULL;
 
 + (void)initialize {
     if (self == [AirgapURLProtocol class]) {
@@ -34,9 +35,19 @@ static dispatch_queue_t _configQueue = nil;
     [NSURLProtocol unregisterClass:[AirgapURLProtocol class]];
 }
 
-+ (void)setConfiguration:(NSDictionary *)config {
++ (void)setConfigurationWithBlockByDefault:(BOOL)blockByDefault
+                              allowedHosts:(nullable NSArray<NSString *> *)allowedHosts
+                              blockedHosts:(nullable NSArray<NSString *> *)blockedHosts
+                                  callback:(nullable HostBlockingCallback)callback {
+    // Convert primitive parameters to NSDictionary for internal storage
+    NSMutableDictionary *config = [NSMutableDictionary dictionary];
+    config[@"blockByDefault"] = @(blockByDefault);
+    config[@"allowedHosts"] = allowedHosts ?: @[];
+    config[@"blockedHosts"] = blockedHosts ?: @[];
+
     dispatch_barrier_async(_configQueue, ^{
         _configuration = [config copy];
+        _blockingCallback = callback;
     });
 }
 
@@ -116,24 +127,30 @@ static dispatch_queue_t _configQueue = nil;
 
 #pragma mark - Private Helpers
 
-// Forward declaration of Kotlin function exported via cinterop
-// This function is implemented in Kotlin and called from Objective-C
-extern bool airgap_should_block_host(const char* host);
-
 - (BOOL)shouldBlockHost:(NSString *)host withConfiguration:(NSDictionary *)config {
     if (!config) {
         // No configuration - don't block
         return NO;
     }
 
-    // Call into Kotlin to determine if host should be blocked
-    // The Kotlin side has access to NetworkConfiguration and can make the decision
+    // Use the callback if available
+    __block HostBlockingCallback callback = NULL;
+    dispatch_sync(_configQueue, ^{
+        callback = _blockingCallback;
+    });
+
+    if (callback == NULL) {
+        // No callback set - don't block
+        return NO;
+    }
+
+    // Call the Kotlin callback to determine if host should be blocked
     const char *hostCString = [host UTF8String];
     if (hostCString == NULL) {
         return NO;  // Can't check null host
     }
 
-    bool shouldBlock = airgap_should_block_host(hostCString);
+    bool shouldBlock = callback(hostCString);
     return shouldBlock ? YES : NO;
 }
 

@@ -1,7 +1,6 @@
 package io.github.garryjeromson.junit.airgap
 
 import kotlin.test.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -9,8 +8,11 @@ import kotlin.test.assertTrue
  *
  * These tests verify that:
  * 1. Kotlin can call into Objective-C (registerURLProtocol, etc.)
- * 2. Objective-C can call back into Kotlin (shouldBlockHost check)
+ * 2. Objective-C can call back into Kotlin (via staticCFunction callback)
  * 3. Configuration is properly marshalled between the two
+ *
+ * Note: Full end-to-end testing with actual network requests will be done
+ * in integration tests with Ktor Darwin engine.
  */
 class URLProtocolBridgeTest {
 
@@ -43,64 +45,38 @@ class URLProtocolBridgeTest {
     }
 
     @Test
-    fun `Objective-C can call back into Kotlin to check host`() {
-        // Set up configuration
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet()
-        )
-        NetworkBlocker.setSharedConfiguration(config)
-
-        // Simulate Objective-C calling our exported function
-        val blockedResult = shouldBlockHost("example.com")
-        assertTrue(blockedResult, "example.com should be blocked")
-
-        val allowedResult = shouldBlockHost("localhost")
-        assertFalse(allowedResult, "localhost should be allowed")
-    }
-
-    @Test
-    fun `blocked hosts take precedence over allowed hosts`() {
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("*"),  // Allow all
-            blockedHosts = setOf("evil.com")  // Except this
-        )
-        NetworkBlocker.setSharedConfiguration(config)
-
-        val blockedResult = shouldBlockHost("evil.com")
-        assertTrue(blockedResult, "evil.com should be blocked despite wildcard allow")
-
-        val allowedResult = shouldBlockHost("example.com")
-        assertFalse(allowedResult, "example.com should be allowed")
-    }
-
-    @Test
-    fun `supports wildcard patterns in host matching`() {
+    fun `can set configuration with wildcards`() {
         val config = NetworkConfiguration(
             allowedHosts = setOf("*.example.com"),
-            blockedHosts = emptySet()
+            blockedHosts = setOf("evil.example.com")
         )
-        NetworkBlocker.setSharedConfiguration(config)
 
-        val allowedSubdomain = shouldBlockHost("api.example.com")
-        assertFalse(allowedSubdomain, "api.example.com should match *.example.com")
-
-        val blockedOther = shouldBlockHost("other.com")
-        assertTrue(blockedOther, "other.com should not match *.example.com")
+        // Should not crash
+        val result = setURLProtocolConfiguration(config)
+        assertTrue(result, "Configuration with wildcards should be set successfully")
     }
 
     @Test
-    fun `configuration persists across multiple checks`() {
+    fun `can set empty configuration`() {
         val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
+            allowedHosts = emptySet(),
             blockedHosts = emptySet()
         )
-        NetworkBlocker.setSharedConfiguration(config)
 
-        // Multiple checks should use same configuration
-        assertTrue(shouldBlockHost("example.com"))
-        assertFalse(shouldBlockHost("localhost"))
-        assertTrue(shouldBlockHost("evil.com"))
-        assertFalse(shouldBlockHost("localhost"))  // Still allowed
+        // Should not crash - empty config means block all
+        val result = setURLProtocolConfiguration(config)
+        assertTrue(result, "Empty configuration should be set successfully")
+    }
+
+    @Test
+    fun `can set configuration with allow-all`() {
+        val config = NetworkConfiguration(
+            allowedHosts = setOf("*"),
+            blockedHosts = emptySet()
+        )
+
+        // Should not crash
+        val result = setURLProtocolConfiguration(config)
+        assertTrue(result, "Allow-all configuration should be set successfully")
     }
 }

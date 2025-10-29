@@ -32,21 +32,23 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)unregisterAirgapProtocol;
 
 /**
- * Set the configuration for network blocking.
- *
- * @param config Dictionary containing:
- *   - "blockByDefault" (NSNumber/BOOL): Whether to block requests by default
- *   - "allowedHosts" (NSArray<NSString *>): Hosts that are allowed (supports wildcards)
- *   - "blockedHosts" (NSArray<NSString *>): Hosts that are explicitly blocked (takes precedence)
+ * Type definition for the host blocking callback function.
+ * The callback receives a hostname and returns true if it should be blocked.
  */
-+ (void)setConfiguration:(NSDictionary *)config;
+typedef bool (*HostBlockingCallback)(const char* _Nullable host);
 
 /**
- * Get the current configuration.
+ * Set the configuration for network blocking using primitive parameters.
  *
- * @return Dictionary with current configuration, or nil if not set
+ * @param blockByDefault Whether to block requests by default
+ * @param allowedHosts Array of host patterns that are allowed (supports wildcards like *.example.com)
+ * @param blockedHosts Array of host patterns that are explicitly blocked (takes precedence over allowedHosts)
+ * @param callback Function pointer to call for checking if a host should be blocked
  */
-+ (nullable NSDictionary *)getConfiguration;
++ (void)setConfigurationWithBlockByDefault:(BOOL)blockByDefault
+                              allowedHosts:(nullable NSArray<NSString *> *)allowedHosts
+                              blockedHosts:(nullable NSArray<NSString *> *)blockedHosts
+                                  callback:(nullable HostBlockingCallback)callback;
 
 @end
 
