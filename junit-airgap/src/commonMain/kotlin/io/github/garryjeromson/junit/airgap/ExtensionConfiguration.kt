@@ -25,24 +25,9 @@ internal const val ALLOWED_HOSTS_PROPERTY: String = "junit.airgap.allowedHosts"
 internal const val BLOCKED_HOSTS_PROPERTY: String = "junit.airgap.blockedHosts"
 
 /**
- * System property accessor.
- * Delegates to System.getProperty() on all platforms (JVM and Android).
- *
- * @param key The property key to read
- * @param defaultValue The default value if property is not set
- * @return The property value or defaultValue
- */
-internal fun getSystemProperty(
-    key: String,
-    defaultValue: String = "",
-): String = System.getProperty(key) ?: defaultValue
-
-/**
  * Configuration helper for the NoNetwork extension.
  * This object centralizes configuration logic for determining whether network blocking
  * should be applied by default and which hosts should be allowed/blocked.
- *
- * All parsing logic is in commonMain, with only system property reading delegated to platforms.
  */
 internal object ExtensionConfiguration {
     /**
@@ -50,21 +35,21 @@ internal object ExtensionConfiguration {
      *
      * @return true if the system property is set to "true", false otherwise
      */
-    fun isApplyToAllTestsEnabled(): Boolean = getSystemProperty(APPLY_TO_ALL_TESTS_PROPERTY, "false").toBoolean()
+    fun isApplyToAllTestsEnabled(): Boolean = (System.getProperty(APPLY_TO_ALL_TESTS_PROPERTY) ?: "false").toBoolean()
 
     /**
      * Retrieves the list of globally allowed hosts from system property.
      *
      * @return Set of allowed host patterns (e.g., "localhost", "*.local"), empty if not configured
      */
-    fun getAllowedHosts(): Set<String> = parseHostList(getSystemProperty(ALLOWED_HOSTS_PROPERTY))
+    fun getAllowedHosts(): Set<String> = parseHostList(System.getProperty(ALLOWED_HOSTS_PROPERTY) ?: "")
 
     /**
      * Retrieves the list of globally blocked hosts from system property.
      *
      * @return Set of blocked host patterns (e.g., "evil.com", "*.tracking.com"), empty if not configured
      */
-    fun getBlockedHosts(): Set<String> = parseHostList(getSystemProperty(BLOCKED_HOSTS_PROPERTY))
+    fun getBlockedHosts(): Set<String> = parseHostList(System.getProperty(BLOCKED_HOSTS_PROPERTY) ?: "")
 
     /**
      * Parses a comma-separated list of host patterns.
