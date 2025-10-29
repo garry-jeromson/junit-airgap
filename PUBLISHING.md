@@ -261,8 +261,13 @@ Edit `.env` and fill in your credentials:
 export ORG_GRADLE_PROJECT_mavenCentralUsername=YourTokenUsername
 export ORG_GRADLE_PROJECT_mavenCentralPassword=YourTokenPassword
 
-# GPG Signing Credentials
-export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey
+# GPG Signing Credentials (ASCII-armored format)
+# IMPORTANT: The key must be in ASCII-armored format (not base64)
+export ORG_GRADLE_PROJECT_signingInMemoryKeyId=1A94B4FF632CFD7C
+export ORG_GRADLE_PROJECT_signingInMemoryKey='-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+...your private key content...
+-----END PGP PRIVATE KEY BLOCK-----'
 export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase
 
 # Gradle Plugin Portal Credentials
@@ -272,9 +277,12 @@ export GRADLE_PUBLISH_SECRET=YourPluginPortalSecret
 
 **Get your credentials:**
 - **Maven Central Portal Token**: Generate at https://central.sonatype.com/account
-- **GPG Key**: Run `make gpg-export-private`
+- **GPG Key ID**: Run `make gpg-key-id` (e.g., `1A94B4FF632CFD7C`)
+- **GPG Private Key**: Run `make gpg-export-private` and choose option 1 (ASCII-armored)
 - **GPG Passphrase**: The passphrase you set when creating your GPG key
 - **Gradle Plugin Portal**: Login at https://plugins.gradle.org/ → API Keys
+
+**Important:** For local publishing, the GPG key must be in ASCII-armored format (the full key with `-----BEGIN/END PGP PRIVATE KEY BLOCK-----` lines). For GitHub secrets, use option 2 (base64) instead.
 
 **⚠️ Security:** Never commit the `.env` file! It's already in `.gitignore`.
 

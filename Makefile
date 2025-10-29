@@ -66,8 +66,8 @@ help:
 	@echo "GPG Key Management Commands:"
 	@echo "  gpg-generate       Generate a new GPG key pair for signing"
 	@echo "  gpg-list           List all GPG keys"
-	@echo "  gpg-key-id         Show GPG key ID for GitHub secrets"
-	@echo "  gpg-export-private Export private key (base64) for GitHub secrets"
+	@echo "  gpg-key-id         Show GPG key ID for secrets"
+	@echo "  gpg-export-private Export private key (ASCII-armored or base64)"
 	@echo "  gpg-export-public  Export public key for publishing to keyservers"
 	@echo "  gpg-publish        Publish public key to keyservers"
 	@echo ""
@@ -224,8 +224,11 @@ publish-local:
 		echo "  export ORG_GRADLE_PROJECT_mavenCentralUsername=YourTokenUsername"; \
 		echo "  export ORG_GRADLE_PROJECT_mavenCentralPassword=YourTokenPassword"; \
 		echo ""; \
-		echo "  # GPG Signing Credentials"; \
-		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKey=YourBase64EncodedPrivateKey"; \
+		echo "  # GPG Signing Credentials (ASCII-armored format)"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKeyId=YourKeyId"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKey='-----BEGIN PGP PRIVATE KEY BLOCK-----"; \
+		echo "  ..."; \
+		echo "  -----END PGP PRIVATE KEY BLOCK-----'"; \
 		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKeyPassword=YourGPGPassphrase"; \
 		echo ""; \
 		echo "  # Gradle Plugin Portal Credentials"; \
@@ -330,10 +333,10 @@ gpg-key-id:
 	@echo "The key ID is the part after 'rsa4096/' (e.g., ABCD1234EFGH5678)"
 	@echo "Use this value for the SIGNING_KEY_ID GitHub secret"
 
-# gpg-export-private: Export private key (base64) for GitHub secrets
+# gpg-export-private: Export private key for publishing
 gpg-export-private:
 	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "  Export GPG Private Key (for SIGNING_KEY secret)"
+	@echo "  Export GPG Private Key"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
 	@if ! command -v gpg >/dev/null 2>&1; then \
@@ -347,14 +350,39 @@ gpg-export-private:
 		exit 1; \
 	fi; \
 	echo ""; \
-	echo "Exporting private key for key ID: $$KEY_ID"; \
-	echo "⚠️  WARNING: This will display your PRIVATE key. Keep it secure!"; \
+	echo "Choose export format:"; \
+	echo "  1) ASCII-armored (for .env file / local publishing)"; \
+	echo "  2) Base64 (for GitHub secrets)"; \
+	read -p "Choice [1/2]: " CHOICE; \
 	echo ""; \
-	gpg --armor --export-secret-keys $$KEY_ID | base64 | tr -d '\n' && echo ""; \
-	echo ""; \
-	echo "✅ Private key exported (base64 encoded)"; \
-	echo ""; \
-	echo "Copy the output above and use it for the SIGNING_KEY GitHub secret"; \
+	if [ "$$CHOICE" = "1" ]; then \
+		echo "Exporting ASCII-armored private key for key ID: $$KEY_ID"; \
+		echo "⚠️  WARNING: This will display your PRIVATE key. Keep it secure!"; \
+		echo ""; \
+		echo "Copy the entire output below (including BEGIN/END lines) to your .env file:"; \
+		echo ""; \
+		gpg --armor --export-secret-keys $$KEY_ID; \
+		echo ""; \
+		echo "✅ Private key exported (ASCII-armored)"; \
+		echo ""; \
+		echo "Add to .env as:"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKeyId=$$KEY_ID"; \
+		echo "  export ORG_GRADLE_PROJECT_signingInMemoryKey='-----BEGIN PGP..."; \
+		echo "  ..."; \
+		echo "  -----END PGP PRIVATE KEY BLOCK-----'"; \
+	elif [ "$$CHOICE" = "2" ]; then \
+		echo "Exporting base64-encoded private key for key ID: $$KEY_ID"; \
+		echo "⚠️  WARNING: This will display your PRIVATE key. Keep it secure!"; \
+		echo ""; \
+		gpg --armor --export-secret-keys $$KEY_ID | base64 | tr -d '\n' && echo ""; \
+		echo ""; \
+		echo "✅ Private key exported (base64 encoded)"; \
+		echo ""; \
+		echo "Copy the output above and use it for the SIGNING_KEY GitHub secret"; \
+	else \
+		echo "❌ Invalid choice"; \
+		exit 1; \
+	fi; \
 	echo ""; \
 	echo "⚠️  SECURITY REMINDER:"; \
 	echo "  - Never commit this key to version control"; \
