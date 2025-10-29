@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native
+.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish jar sources-jar all verify setup-native build-native test-native clean-native gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
 
 # Default Java version for the project
 JAVA_VERSION ?= 21
@@ -59,8 +59,16 @@ help:
 	@echo ""
 	@echo "Publishing Commands:"
 	@echo "  install            Install to local Maven repository (~/.m2/repository)"
-	@echo "  publish            Publish to Maven Central (requires OSSRH credentials)"
-	@echo "  publish-plugin     Publish Gradle plugin to Plugin Portal (requires credentials)"
+	@echo "  publish            Publish to Maven Central via Central Portal API"
+	@echo "  publish-plugin     Publish Gradle plugin to Plugin Portal"
+	@echo ""
+	@echo "GPG Key Management Commands:"
+	@echo "  gpg-generate       Generate a new GPG key pair for signing"
+	@echo "  gpg-list           List all GPG keys"
+	@echo "  gpg-key-id         Show GPG key ID for GitHub secrets"
+	@echo "  gpg-export-private Export private key (base64) for GitHub secrets"
+	@echo "  gpg-export-public  Export public key for publishing to keyservers"
+	@echo "  gpg-publish        Publish public key to keyservers"
 	@echo ""
 	@echo "Utility Commands:"
 	@echo "  tasks              List all available Gradle tasks"
@@ -200,15 +208,164 @@ install:
 	@echo "Installing to local Maven repository..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publishToMavenLocal
 
-## publish: Publish to Maven Central
+## publish: Publish to Maven Central via Central Portal API
 publish:
-	@echo "Publishing artifacts to Maven Central..."
-	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) publishToSonatype closeAndReleaseSonatypeStagingRepository
+	@echo "Publishing artifacts to Maven Central via Central Portal API..."
+	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :junit-airgap:publishAndReleaseToMavenCentral :gradle-plugin:publishAndReleaseToMavenCentral
 
 ## publish-plugin: Publish Gradle plugin to Plugin Portal
 publish-plugin:
 	@echo "Publishing Gradle plugin to Plugin Portal..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) :gradle-plugin:publishPlugins
+
+## GPG Key Management Targets
+
+# gpg-generate: Generate a new GPG key pair for artifact signing
+gpg-generate:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Generating GPG Key Pair for Maven Central Signing"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found."; \
+		echo ""; \
+		echo "Install GPG:"; \
+		echo "  macOS:   brew install gnupg"; \
+		echo "  Linux:   apt-get install gnupg  (Debian/Ubuntu)"; \
+		echo "           yum install gnupg      (RHEL/CentOS)"; \
+		exit 1; \
+	fi
+	@echo "Follow the prompts to create your GPG key:"
+	@echo "  - Key type: RSA and RSA (default)"
+	@echo "  - Key size: 4096 bits (recommended)"
+	@echo "  - Expiration: 0 (does not expire) or set as preferred"
+	@echo "  - Real name: Your name"
+	@echo "  - Email: Your email (should match Git commits)"
+	@echo "  - Passphrase: Choose a strong passphrase and save it securely"
+	@echo ""
+	@gpg --full-generate-key
+	@echo ""
+	@echo "✅ GPG key generated successfully!"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Get your key ID:         make gpg-key-id"
+	@echo "  2. Export private key:      make gpg-export-private"
+	@echo "  3. Publish public key:      make gpg-publish"
+
+# gpg-list: List all GPG keys
+gpg-list:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  GPG Keys"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found. Install with: brew install gnupg"; \
+		exit 1; \
+	fi
+	@gpg --list-secret-keys --keyid-format LONG
+
+# gpg-key-id: Show GPG key ID for GitHub secrets
+gpg-key-id:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  GPG Key ID (for SIGNING_KEY_ID secret)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found. Install with: brew install gnupg"; \
+		exit 1; \
+	fi
+	@gpg --list-secret-keys --keyid-format LONG | grep -A 1 "^sec" | head -2 || \
+		(echo "❌ No GPG keys found. Generate one with: make gpg-generate" && exit 1)
+	@echo ""
+	@echo "The key ID is the part after 'rsa4096/' (e.g., ABCD1234EFGH5678)"
+	@echo "Use this value for the SIGNING_KEY_ID GitHub secret"
+
+# gpg-export-private: Export private key (base64) for GitHub secrets
+gpg-export-private:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Export GPG Private Key (for SIGNING_KEY secret)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found. Install with: brew install gnupg"; \
+		exit 1; \
+	fi
+	@echo "Enter the key ID (e.g., ABCD1234EFGH5678) from 'make gpg-key-id':"
+	@read -p "Key ID: " KEY_ID; \
+	if [ -z "$$KEY_ID" ]; then \
+		echo "❌ Error: Key ID cannot be empty"; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Exporting private key for key ID: $$KEY_ID"; \
+	echo "⚠️  WARNING: This will display your PRIVATE key. Keep it secure!"; \
+	echo ""; \
+	gpg --armor --export-secret-keys $$KEY_ID | base64 | tr -d '\n' && echo ""; \
+	echo ""; \
+	echo "✅ Private key exported (base64 encoded)"; \
+	echo ""; \
+	echo "Copy the output above and use it for the SIGNING_KEY GitHub secret"; \
+	echo ""; \
+	echo "⚠️  SECURITY REMINDER:"; \
+	echo "  - Never commit this key to version control"; \
+	echo "  - Store it securely (password manager recommended)"; \
+	echo "  - Clear your terminal history if needed"
+
+# gpg-export-public: Export public key
+gpg-export-public:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Export GPG Public Key"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found. Install with: brew install gnupg"; \
+		exit 1; \
+	fi
+	@echo "Enter the key ID (e.g., ABCD1234EFGH5678) from 'make gpg-key-id':"
+	@read -p "Key ID: " KEY_ID; \
+	if [ -z "$$KEY_ID" ]; then \
+		echo "❌ Error: Key ID cannot be empty"; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Exporting public key for key ID: $$KEY_ID"; \
+	echo ""; \
+	gpg --armor --export $$KEY_ID; \
+	echo ""; \
+	echo "✅ Public key exported"
+
+# gpg-publish: Publish public key to keyservers
+gpg-publish:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Publish GPG Public Key to Keyservers"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@if ! command -v gpg >/dev/null 2>&1; then \
+		echo "❌ Error: GPG not found. Install with: brew install gnupg"; \
+		exit 1; \
+	fi
+	@echo "Enter the key ID (e.g., ABCD1234EFGH5678) from 'make gpg-key-id':"
+	@read -p "Key ID: " KEY_ID; \
+	if [ -z "$$KEY_ID" ]; then \
+		echo "❌ Error: Key ID cannot be empty"; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Publishing public key to multiple keyservers..."; \
+	echo ""; \
+	echo "→ keyserver.ubuntu.com"; \
+	gpg --keyserver keyserver.ubuntu.com --send-keys $$KEY_ID || echo "⚠️  Failed to publish to keyserver.ubuntu.com"; \
+	echo ""; \
+	echo "→ keys.openpgp.org"; \
+	gpg --keyserver keys.openpgp.org --send-keys $$KEY_ID || echo "⚠️  Failed to publish to keys.openpgp.org"; \
+	echo ""; \
+	echo "→ pgp.mit.edu"; \
+	gpg --keyserver pgp.mit.edu --send-keys $$KEY_ID || echo "⚠️  Failed to publish to pgp.mit.edu"; \
+	echo ""; \
+	echo "✅ Public key published to keyservers"; \
+	echo ""; \
+	echo "Note: It may take a few minutes for the key to propagate"; \
+	echo "Verify publication with: gpg --keyserver keyserver.ubuntu.com --search-keys <your-email>"
 
 ## tasks: List all available Gradle tasks
 tasks:
