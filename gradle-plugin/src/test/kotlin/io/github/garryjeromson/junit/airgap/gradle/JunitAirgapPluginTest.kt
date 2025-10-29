@@ -39,7 +39,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -66,7 +66,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -109,7 +109,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -169,7 +169,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -204,7 +204,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -256,7 +256,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -294,7 +294,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -330,7 +330,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -374,7 +374,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -418,7 +418,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -462,7 +462,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
@@ -503,7 +503,7 @@ class JunitAirgapPluginTest {
             """
             plugins {
                 kotlin("jvm") version "2.1.0"
-                id("io.github.garryjeromson.junit-airgap")
+                id("io.github.garry-jeromson.junit-airgap")
             }
 
             repositories {
