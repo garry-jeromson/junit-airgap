@@ -1,9 +1,8 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    `maven-publish`
-    // signing  // Temporarily disabled for local development
     id("com.gradle.plugin-publish") version "1.3.0"
+    alias(libs.plugins.maven.publish)
     id("junit-extensions.kotlin-common-convention")
     alias(libs.plugins.kover)
 }
@@ -150,72 +149,46 @@ tasks.withType<Jar>().configureEach {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("pluginMaven") {
-            // groupId and version are inherited from project
-            artifactId = "junit-airgap-gradle-plugin"
+// Maven Central Publishing Configuration (Central Portal API)
+// Note: Gradle Plugin Portal publishing is handled by the plugin-publish plugin above
+mavenPublishing {
+    // Publish to Central Portal (automatic release after validation)
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
 
-            // POM metadata for Maven Central
-            pom {
-                name.set("JUnit Airgap Gradle Plugin")
-                description.set("Gradle plugin for automatically configuring JUnit tests to block network requests")
-                url.set("https://github.com/garry-jeromson/junit-airgap")
+    // Sign all publications with GPG
+    signAllPublications()
 
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
+    // POM metadata for Maven Central
+    pom {
+        name.set("JUnit Airgap Gradle Plugin")
+        description.set("Gradle plugin for automatically configuring JUnit tests to block network requests")
+        url.set("https://github.com/garry-jeromson/junit-airgap")
 
-                developers {
-                    developer {
-                        id.set("garry-jeromson")
-                        name.set("Garry Jeromson")
-                        email.set("garry.jeromson@gmail.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/garry-jeromson/junit-airgap.git")
-                    developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-airgap.git")
-                    url.set("https://github.com/garry-jeromson/junit-airgap")
-                }
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
-    }
-}
 
-// Signing configuration for Maven Central
-// Temporarily disabled for local development
+        developers {
+            developer {
+                id.set("garry-jeromson")
+                name.set("Garry Jeromson")
+                email.set("garry.jeromson@gmail.com")
+            }
+        }
 
-/*
-signing {
-    // Only require signing if publishing to Maven Central (not for Maven Local)
-    // This ensures publishToMavenLocal doesn't require signing credentials
-    setRequired {
-        gradle.taskGraph.allTasks.any { task ->
-            task.name.contains("publish", ignoreCase = true) &&
-                !task.name.contains("ToMavenLocal", ignoreCase = true)
+        scm {
+            connection.set("scm:git:git://github.com/garry-jeromson/junit-airgap.git")
+            developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-airgap.git")
+            url.set("https://github.com/garry-jeromson/junit-airgap")
         }
     }
 
-    // Use in-memory key from environment variables or gradle.properties
-    val signingKeyId: String? = findProperty("signingKeyId") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKeyId")
-    val signingKey: String? = findProperty("signingKey") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKey")
-    val signingPassword: String? = findProperty("signingPassword") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingPassword")
-
-    if (signingKeyId != null && signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-    }
-
-    // Only configure signing tasks if we have credentials
-    if (signingKeyId != null && signingKey != null && signingPassword != null) {
-        sign(publishing.publications)
-    }
+    // Coordinates
+    coordinates("io.github.garryjeromson", "junit-airgap-gradle-plugin", version.toString())
 }
-*/
 
 // ============================================================================
 // Code Coverage Configuration (Kover)

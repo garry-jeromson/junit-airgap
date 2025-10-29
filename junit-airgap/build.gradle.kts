@@ -1,8 +1,7 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
-    `maven-publish`
-    // signing  // Temporarily disabled for local development
+    alias(libs.plugins.maven.publish)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
 }
@@ -409,60 +408,47 @@ tasks.named("clean") {
 }
 
 // ============================================================================
-// Maven Central Publishing Configuration
+// Maven Central Publishing Configuration (Central Portal API)
 // ============================================================================
 
-publishing {
-    publications.withType<MavenPublication> {
-        // POM metadata for Maven Central
-        pom {
-            name.set("JUnit Airgap Extension")
-            description.set("A JUnit extension that automatically fails tests attempting to make outgoing network requests")
-            url.set("https://github.com/garry-jeromson/junit-airgap")
+mavenPublishing {
+    // Publish to Central Portal (automatic release after validation)
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
 
-            licenses {
-                license {
-                    name.set("MIT License")
-                    url.set("https://opensource.org/licenses/MIT")
-                }
-            }
+    // Sign all publications with GPG
+    signAllPublications()
 
-            developers {
-                developer {
-                    id.set("garry-jeromson")
-                    name.set("Garry Jeromson")
-                    email.set("garry.jeromson@gmail.com")
-                }
-            }
+    // POM metadata for Maven Central
+    pom {
+        name.set("JUnit Airgap Extension")
+        description.set("A JUnit extension that automatically fails tests attempting to make outgoing network requests")
+        url.set("https://github.com/garry-jeromson/junit-airgap")
 
-            scm {
-                connection.set("scm:git:git://github.com/garry-jeromson/junit-airgap.git")
-                developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-airgap.git")
-                url.set("https://github.com/garry-jeromson/junit-airgap")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
+
+        developers {
+            developer {
+                id.set("garry-jeromson")
+                name.set("Garry Jeromson")
+                email.set("garry.jeromson@gmail.com")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:git://github.com/garry-jeromson/junit-airgap.git")
+            developerConnection.set("scm:git:ssh://github.com:garry-jeromson/junit-airgap.git")
+            url.set("https://github.com/garry-jeromson/junit-airgap")
+        }
     }
+
+    // Coordinates (group already set above, artifactId inferred from project name)
+    coordinates("io.github.garryjeromson", "junit-airgap", version.toString())
 }
-
-// Signing configuration for Maven Central
-// Temporarily disabled for local development
-
-/*
-signing {
-    // Only require signing if publishing to Maven Central (not for local builds)
-    setRequired { gradle.taskGraph.allTasks.any { it.name.contains("publish") } }
-
-    // Use in-memory key from environment variables or gradle.properties
-    val signingKeyId: String? = findProperty("signingKeyId") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKeyId")
-    val signingKey: String? = findProperty("signingKey") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingKey")
-    val signingPassword: String? = findProperty("signingPassword") as String? ?: System.getenv("ORG_GRADLE_PROJECT_signingPassword")
-
-    if (signingKeyId != null && signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-        sign(publishing.publications)
-    }
-}
-*/
 
 // ============================================================================
 // Code Coverage Configuration (Kover)

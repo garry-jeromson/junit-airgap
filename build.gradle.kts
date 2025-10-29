@@ -2,20 +2,11 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.nexus.publish)
 }
 
-// Configure Nexus publishing for Maven Central
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(findProperty("ossrhUsername") as String? ?: System.getenv("ORG_GRADLE_PROJECT_ossrhUsername"))
-            password.set(findProperty("ossrhPassword") as String? ?: System.getenv("ORG_GRADLE_PROJECT_ossrhPassword"))
-        }
-    }
-}
+// Publishing is now configured per-module using the vanniktech maven-publish plugin
+// See junit-airgap/build.gradle.kts and gradle-plugin/build.gradle.kts
+// This provides direct Central Portal API support via the Publisher API
 
 // Configure root test task to run all tests across the project
 // This ensures that running `./gradlew test` runs comprehensive test coverage:
