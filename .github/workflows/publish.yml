@@ -117,19 +117,19 @@ jobs:
           body: |
             ## JUnit Airgap Extension v${{ steps.version.outputs.version }}
 
-            Published to Maven Central: https://central.sonatype.com/artifact/io.github.garryjeromson/junit-airgap
+            Published to Maven Central: https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap
 
             ### Installation
             ```gradle
             dependencies {
-                testImplementation("io.github.garryjeromson:junit-airgap:${{ steps.version.outputs.version }}")
+                testImplementation("io.github.garry-jeromson:junit-airgap:${{ steps.version.outputs.version }}")
             }
             ```
 
             Or use the Gradle plugin:
             ```gradle
             plugins {
-                id("io.github.garryjeromson.junit-airgap") version "${{ steps.version.outputs.version }}"
+                id("io.github.garry-jeromson.junit-airgap") version "${{ steps.version.outputs.version }}"
             }
             ```
           draft: false
@@ -145,8 +145,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Maven Central" >> $GITHUB_STEP_SUMMARY
           echo "Library artifacts are being synchronized to Maven Central. This may take a few hours." >> $GITHUB_STEP_SUMMARY
-          echo "- **Maven Central:** https://central.sonatype.com/artifact/io.github.garryjeromson/junit-airgap/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Maven Central:** https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Gradle Plugin Portal" >> $GITHUB_STEP_SUMMARY
           echo "Gradle plugin is now available on the Gradle Plugin Portal." >> $GITHUB_STEP_SUMMARY
-          echo "- **Plugin Portal:** https://plugins.gradle.org/plugin/io.github.garryjeromson.junit-airgap" >> $GITHUB_STEP_SUMMARY
+          echo "- **Plugin Portal:** https://plugins.gradle.org/plugin/io.github.garry-jeromson.junit-airgap" >> $GITHUB_STEP_SUMMARY
