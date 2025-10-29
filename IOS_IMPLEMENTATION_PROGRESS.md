@@ -84,6 +84,48 @@
   - 10 NetworkConfiguration tests ✅
   - 6 KtorDarwin integration tests ✅
 
+### 6. Ktor Client Integration (Zero-Configuration API) ✅ COMPLETE
+- **File Created**: `junit-airgap/src/iosMain/kotlin/.../KtorAirgapIntegration.kt`
+- **Two Integration Approaches**:
+
+**Approach 1: Manual Control** (for advanced users):
+```kotlin
+val blocker = NetworkBlocker(config)
+blocker.install()
+try {
+    val client = HttpClient(Darwin) {
+        installAirgap()  // Adds AirgapURLProtocol to protocolClasses
+    }
+    // Use client...
+} finally {
+    blocker.uninstall()
+}
+```
+
+**Approach 2: Convenience Function** (for quick setup):
+```kotlin
+val (client, blocker) = createAirgapHttpClient(config)
+try {
+    val response = client.get("https://api.example.com")
+    // Process response...
+} finally {
+    client.close()
+    blocker.uninstall()
+}
+```
+
+- **Key Features**:
+  - Clean DSL extension: `installAirgap()` automatically configures NSURLSession
+  - Returns both client and blocker for proper lifecycle management
+  - Zero-configuration for Ktor users
+  - Follows Ktor conventions and patterns
+
+- **Design Decisions**:
+  - `installAirgap()` only configures the session (doesn't install blocker)
+  - Users explicitly manage NetworkBlocker lifecycle
+  - `createAirgapHttpClient()` handles installation and returns cleanup handle
+  - Separation of concerns: configuration vs. lifecycle
+
 ---
 
 ## ⏳ Remaining Work (Phase 2-5)
@@ -210,9 +252,10 @@ junit-extensions/airgap/
 │       │   └── AirgapURLProtocol.m      # Copied from native-ios
 │       ├── iosMain/kotlin/
 │       │   └── .../airgap/
-│       │       ├── URLProtocolBridge.kt # Kotlin ↔ Objective-C bridge
-│       │       ├── NetworkBlocker.kt    # iOS implementation (updated)
-│       │       └── DebugLogger.kt       # iOS debug logging
+│       │       ├── URLProtocolBridge.kt    # Kotlin ↔ Objective-C bridge
+│       │       ├── NetworkBlocker.kt       # iOS implementation
+│       │       ├── KtorAirgapIntegration.kt # Ktor client DSL extension
+│       │       └── DebugLogger.kt          # iOS debug logging
 │       └── iosTest/kotlin/
 │           └── .../airgap/
 │               ├── URLProtocolBridgeTest.kt        # Bridge tests (6 tests)
@@ -232,6 +275,7 @@ junit-extensions/airgap/
 - ✅ All 30 tests passing (6 bridge + 8 exception + 10 configuration + 6 integration)
 - ✅ Build system configured with `-Xcompile-source` and Ktor dependencies
 - ✅ End-to-end integration tests with Ktor Darwin engine and local test server
+- ✅ **Zero-configuration Ktor integration** with clean DSL extension
 
 ### Key Learnings
 
@@ -243,10 +287,25 @@ junit-extensions/airgap/
 
 4. **Simplified Protocol Implementation**: Only intercept blocked requests - let the system handle allowed requests normally. This avoids deprecated NSURLConnection forwarding logic and potential crashes.
 
-### Next Steps (Phase 2-5)
-**Phase 2**: KSP processor for code generation (2-3 weeks)
-**Phase 3**: Integrate KSP into Gradle plugin (1 week)
-**Phase 4**: Add iOS to plugin integration tests (1 week)
-**Phase 5**: Update documentation for iOS support (3-4 days)
+5. **Ktor Integration Pattern**: Creating a DSL extension (`installAirgap()`) that configures the Darwin engine is more idiomatic than traditional Ktor plugins. This approach:
+   - Works at engine configuration time (not request/response time)
+   - Follows Ktor conventions for engine-specific configuration
+   - Simpler than KSP code generation
+   - Provides zero-configuration for users
 
-**Estimated Total Time for Phases 2-5**: 5-7 weeks
+### Next Steps (Phase 2-5) - REVISED
+
+**Original Plan**: Full KSP processor for code generation (2-3 weeks)
+**Revised Plan**: Ktor DSL integration (COMPLETED ✅)
+
+With the Ktor integration complete, the remaining work is significantly simplified:
+
+**Phase 2**: ~~KSP processor~~ → **Ktor DSL** ✅ **COMPLETE**
+**Phase 3**: Add iOS support to Gradle plugin (optional - for auto-setup)
+**Phase 4**: Add iOS to plugin integration tests (1 week)
+**Phase 5**: Update documentation for iOS support (2-3 days)
+  - Usage guide with Ktor integration examples
+  - Migration guide from manual setup
+  - Add to README and API docs
+
+**Estimated Total Time for Remaining Phases**: 1-2 weeks (vs. original 5-7 weeks)
