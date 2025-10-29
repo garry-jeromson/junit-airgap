@@ -188,8 +188,8 @@ publishing {
 }
 
 // Signing configuration for Maven Central
-
 // Temporarily disabled for local development
+
 /*
 signing {
     // Only require signing if publishing to Maven Central (not for Maven Local)

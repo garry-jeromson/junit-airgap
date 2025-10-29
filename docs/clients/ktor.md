@@ -9,9 +9,10 @@ Test Ktor HTTP clients with automatic network blocking.
 | CIO | JVM | ✅ Fully Supported | Throws `NetworkRequestAttemptedException` directly |
 | OkHttp | JVM, Android | ✅ Fully Supported | Wraps in `IOException` (check message) |
 | Java | JVM | ✅ Fully Supported | Throws `NetworkRequestAttemptedException` directly |
-| Darwin | iOS | ⚠️ Not Blocked | API structure only |
 
 **Tested Version**: Ktor 2.3.7
+
+**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
 
 ## Basic Usage
 
@@ -289,25 +290,6 @@ try {
 }
 ```
 
-### iOS Tests Failing
-
-**Expected behavior:** Darwin engine (iOS) doesn't block network requests.
-
-**Solution:** Use conditional compilation or skip iOS:
-
-```kotlin
-@Test
-fun testNetworkBlocking() = runTest {
-    if (Platform.isIOS) {
-        return@runTest // Skip for iOS
-    }
-
-    assertFailsWith<NetworkRequestAttemptedException> {
-        client.get("https://example.com")
-    }
-}
-```
-
 ### Coroutines Not Waiting for Exception
 
 **Solution:** Use `runTest` from `kotlinx-coroutines-test`:
@@ -330,7 +312,6 @@ fun test() = runTest { // Use runTest, not runBlocking
 | Android project | OkHttp | Better Android integration |
 | KMP (JVM + Android) | CIO (JVM), OkHttp (Android) | Platform-specific engines |
 | Standard HTTP features | Java | Uses java.net.http.HttpClient |
-| iOS | Darwin | Required for iOS (not blocked) |
 
 ## See Also
 

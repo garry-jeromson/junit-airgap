@@ -15,7 +15,8 @@ Block network requests in Kotlin Multiplatform unit tests using JUnit 5.
 |----------|-----------------|-------|
 | JVM | ✅ Fully Supported | JVMTI agent-based blocking |
 | Android | ✅ Fully Supported | Requires Robolectric for unit tests |
-| iOS | ⚠️ API Only | Provides API structure but doesn't block |
+
+**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
 
 ## Installation
 
@@ -32,7 +33,6 @@ kotlin {
     // Configure targets
     jvm()
     androidTarget() // If targeting Android
-    iosSimulatorArm64() // If targeting iOS
 
     sourceSets {
         val commonTest by getting {
@@ -91,7 +91,7 @@ class ApiClientTest {
         val client = createPlatformHttpClient()
 
         try {
-            // This test runs on JVM and Android (not iOS - API only)
+            // This test runs on JVM and Android
             assertFailsWith<NetworkRequestAttemptedException> {
                 client.get("https://example.com")
             }
@@ -127,13 +127,6 @@ actual object HttpClientFactory {
 }
 ```
 
-**iosMain:**
-```kotlin
-actual object HttpClientFactory {
-    actual fun create() = HttpClient(Darwin) // Darwin engine for iOS
-}
-```
-
 ## Exception Handling by Platform
 
 Different platforms/engines throw different exception types:
@@ -143,7 +136,6 @@ Different platforms/engines throw different exception types:
 | JVM | CIO | Throws `NetworkRequestAttemptedException` directly |
 | JVM | Java | Throws `NetworkRequestAttemptedException` directly |
 | Android | OkHttp | Wraps in `IOException` (check message) |
-| iOS | Darwin | Not blocked |
 
 **Cross-platform exception handling:**
 
@@ -214,25 +206,6 @@ junitAirgap {
 
 ## Troubleshooting
 
-### Tests Fail on iOS
-
-**Expected behavior**: iOS doesn't block network requests (API structure only).
-
-**Solution**: Use conditional compilation or skip network blocking assertions for iOS:
-
-```kotlin
-@Test
-fun testNetworkBlocking() = runTest {
-    if (Platform.isIOS) {
-        return@runTest // Skip for iOS
-    }
-
-    assertFailsWith<NetworkRequestAttemptedException> {
-        client.get("https://example.com")
-    }
-}
-```
-
 ### Android Tests Not Using Robolectric
 
 **Cause**: Missing `@RunWith(RobolectricTestRunner::class)` annotation.
@@ -266,10 +239,8 @@ src/
 │   └── JvmSpecificTest.kt
 ├── androidMain/kotlin/
 │   └── HttpClientFactory.kt (actual - OkHttp engine)
-├── androidUnitTest/kotlin/
-│   └── AndroidSpecificTest.kt (@RunWith(RobolectricTestRunner))
-└── iosMain/kotlin/
-    └── HttpClientFactory.kt (actual - Darwin engine)
+└── androidUnitTest/kotlin/
+    └── AndroidSpecificTest.kt (@RunWith(RobolectricTestRunner))
 ```
 
 ## Example Projects

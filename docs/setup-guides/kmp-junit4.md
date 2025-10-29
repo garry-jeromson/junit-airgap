@@ -15,7 +15,8 @@ This guide shows how to set up the JUnit Airgap Extension for a Kotlin Multiplat
 |----------|-----------------|-------|
 | JVM | ✅ Fully Supported | JVMTI agent-based blocking |
 | Android | ✅ Fully Supported | Requires Robolectric for unit tests |
-| iOS | ⚠️ API Only | Provides API structure but doesn't block |
+
+**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
 
 ## Installation
 
@@ -41,7 +42,6 @@ kotlin {
     // Configure targets
     jvm()
     androidTarget() // If targeting Android
-    iosSimulatorArm64() // If targeting iOS
 
     sourceSets {
         val commonTest by getting {
@@ -227,7 +227,6 @@ class RobolectricKtorTest {
 |----------|--------|-------------------|
 | JVM | CIO | Throws `NetworkRequestAttemptedException` directly |
 | Android | OkHttp | Wraps in `IOException` (check message) |
-| iOS | Darwin | Not blocked (API only) |
 
 **Handle both cases**:
 
