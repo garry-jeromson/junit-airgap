@@ -1,111 +1,78 @@
 # Retrofit Client Guide
 
-Retrofit is a type-safe HTTP client for Android and Java. It uses OkHttp under the hood, so network blocking behavior is identical to OkHttp.
+Test Retrofit clients with automatic network blocking.
 
 ## Compatibility
 
-| Platform | Status | Exception Behavior |
-|----------|--------|-------------------|
-| JVM | ✅ Fully Supported | Wraps `NetworkRequestAttemptedException` in `IOException` |
-| Android | ✅ Fully Supported | Wraps `NetworkRequestAttemptedException` in `IOException` |
-
-**Tested Version**: Retrofit 2.11.0 (with OkHttp 4.12.0)
+- **Retrofit Version**: 2.11.0 (tested)
+- **Platforms**: JVM, Android
+- **Exception Behavior**: Wraps `NetworkRequestAttemptedException` in `IOException` (uses OkHttp)
 
 ## Basic Usage
 
-### Define API Interface
-
-```kotlin
-import retrofit2.Call
-import retrofit2.http.*
-
-interface ApiService {
-    @GET("users/{id}")
-    fun getUser(@Path("id") id: Int): Call<User>
-
-    @GET("users")
-    fun getUsers(): Call<List<User>>
-
-    @POST("users")
-    fun createUser(@Body user: User): Call<User>
-
-    @PUT("users/{id}")
-    fun updateUser(@Path("id") id: Int, @Body user: User): Call<User>
-
-    @DELETE("users/{id}")
-    fun deleteUser(@Path("id") id: Int): Call<Void>
-}
-
-data class User(val id: Int, val name: String, val email: String)
-```
-
-### Test with Network Blocking (JUnit 5)
+### JUnit 5
 
 ```kotlin
 import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapExtension
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.http.GET
 import kotlin.test.assertTrue
 
-@ExtendWith(AirgapExtension::class)
+interface ApiService {
+    @GET("users")
+    fun getUsers(): retrofit2.Call<String>
+}
+
+@Test
+@BlockNetworkRequests
+fun testRetrofitBlocked() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://api.example.com/")
+        .addConverterFactory(ScalarsConverterFactory.create())
+        .build()
+
+    val service = retrofit.create(ApiService::class.java)
+
+    try {
+        service.getUsers().execute()
+        throw AssertionError("Should have thrown exception")
+    } catch (e: Exception) {
+        // Retrofit wraps NetworkRequestAttemptedException
+        assertTrue(e.message?.contains("Network request blocked") == true)
+    }
+}
+```
+
+### JUnit 4
+
+```kotlin
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import org.junit.Test
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.http.GET
+import kotlin.test.assertTrue
+
+interface ApiService {
+    @GET("users")
+    fun getUsers(): retrofit2.Call<String>
+}
+
 class RetrofitTest {
     @Test
     @BlockNetworkRequests
     fun testRetrofitBlocked() {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://api.example.com/")
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
             .build()
 
         val service = retrofit.create(ApiService::class.java)
 
         try {
-            service.getUser(1).execute()
-            throw AssertionError("Should have thrown exception")
-        } catch (e: Exception) {
-            // Retrofit wraps NetworkRequestAttemptedException
-            assertTrue(
-                e.message?.contains("Network request blocked") == true,
-                "Expected network blocking but got: ${e.message}"
-            )
-        }
-    }
-}
-```
-
-### Test with Network Blocking (JUnit 4 + Robolectric)
-
-```kotlin
-import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
-import io.github.garryjeromson.junit.airgap.AirgapRule
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import kotlin.test.assertTrue
-
-@RunWith(RobolectricTestRunner::class)
-class RetrofitAndroidTest {
-    @get:Rule
-    val noNetworkRule = AirgapRule()
-
-    @Test
-    @BlockNetworkRequests
-    fun testRetrofitBlocked() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.example.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(ApiService::class.java)
-
-        try {
-            service.getUser(1).execute()
+            service.getUsers().execute()
             throw AssertionError("Should have thrown exception")
         } catch (e: Exception) {
             assertTrue(e.message?.contains("Network request blocked") == true)
@@ -116,36 +83,56 @@ class RetrofitAndroidTest {
 
 ## Exception Handling
 
-**Important**: Since Retrofit uses OkHttp, it wraps `NetworkRequestAttemptedException` in `IOException`.
-
-### Recommended Pattern
+Retrofit uses OkHttp under the hood, which wraps `NetworkRequestAttemptedException`:
 
 ```kotlin
 try {
-    service.getUser(1).execute()
+    service.getUsers().execute()
 } catch (e: Exception) {
     assertTrue(
         e.message?.contains("Network request blocked") == true,
-        "Expected network blocking but got: ${e.message}"
+        "Expected network blocking but got: $e"
     )
 }
 ```
 
-## Advanced Examples
+## Request Types
+
+### GET Request
+
+```kotlin
+interface ApiService {
+    @GET("users/{id}")
+    fun getUser(@Path("id") id: Int): Call<User>
+}
+
+@Test
+@BlockNetworkRequests
+fun testGetBlocked() {
+    val service = retrofit.create(ApiService::class.java)
+
+    try {
+        service.getUser(1).execute()
+        throw AssertionError("Should have thrown exception")
+    } catch (e: Exception) {
+        assertTrue(e.message?.contains("Network request blocked") == true)
+    }
+}
+```
 
 ### POST Request
 
 ```kotlin
+interface ApiService {
+    @POST("users")
+    fun createUser(@Body user: User): Call<User>
+}
+
 @Test
 @BlockNetworkRequests
 fun testPostBlocked() {
-    val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.example.com/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
     val service = retrofit.create(ApiService::class.java)
-    val newUser = User(id = 0, name = "John", email = "john@example.com")
+    val newUser = User(name = "John", email = "john@example.com")
 
     try {
         service.createUser(newUser).execute()
@@ -153,130 +140,6 @@ fun testPostBlocked() {
     } catch (e: Exception) {
         assertTrue(e.message?.contains("Network request blocked") == true)
     }
-}
-```
-
-### Custom OkHttpClient
-
-```kotlin
-import okhttp3.OkHttpClient
-import java.util.concurrent.TimeUnit
-
-@Test
-@BlockNetworkRequests
-fun testWithCustomClient() {
-    val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
-
-    val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.example.com/")
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val service = retrofit.create(ApiService::class.java)
-
-    try {
-        service.getUser(1).execute()
-    } catch (e: Exception) {
-        assertTrue(e.message?.contains("Network request blocked") == true)
-    }
-}
-```
-
-### Kotlin Coroutines (Suspend Functions)
-
-```kotlin
-interface ApiService {
-    @GET("users/{id}")
-    suspend fun getUser(@Path("id") id: Int): User
-
-    @GET("users")
-    suspend fun getUsers(): List<User>
-}
-
-@Test
-@BlockNetworkRequests
-fun testSuspendFunctionBlocked() = runTest {
-    val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.example.com/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val service = retrofit.create(ApiService::class.java)
-
-    try {
-        service.getUser(1)
-        throw AssertionError("Should have thrown exception")
-    } catch (e: Exception) {
-        assertTrue(e.message?.contains("Network request blocked") == true)
-    }
-}
-```
-
-## Testing Production Code
-
-### Production Repository
-
-```kotlin
-class UserRepository(
-    private val apiService: ApiService
-) {
-    fun getUser(id: Int): User? {
-        return try {
-            apiService.getUser(id).execute().body()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    suspend fun getUserSuspend(id: Int): User {
-        return apiService.getUser(id)
-    }
-}
-```
-
-### Test with Network Blocking
-
-```kotlin
-@Test
-@BlockNetworkRequests
-fun testRepositoryBlocked() {
-    val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.example.com/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val apiService = retrofit.create(ApiService::class.java)
-    val repository = UserRepository(apiService)
-
-    try {
-        repository.getUser(1)
-    } catch (e: Exception) {
-        // Repository should handle exception gracefully
-        assertTrue(e.message?.contains("Network request blocked") == true)
-    }
-}
-```
-
-### Test with Mock
-
-```kotlin
-@Test
-fun testWithMock() {
-    val mockService = mock<ApiService>()
-    val repository = UserRepository(mockService)
-
-    val mockCall = mock<Call<User>>()
-    val mockResponse = Response.success(User(1, "John", "john@example.com"))
-
-    whenever(mockService.getUser(1)).thenReturn(mockCall)
-    whenever(mockCall.execute()).thenReturn(mockResponse)
-
-    val user = repository.getUser(1)
-    assertEquals("John", user?.name)
 }
 ```
 
@@ -293,84 +156,130 @@ import io.github.garryjeromson.junit.airgap.AllowRequestsToHosts
 fun testCanConnectToLocalhost() {
     val retrofit = Retrofit.Builder()
         .baseUrl("http://localhost:8080/")
-        .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     val service = retrofit.create(ApiService::class.java)
 
     try {
-        service.getUser(1).execute()
+        service.getUsers().execute()
     } catch (e: NetworkRequestAttemptedException) {
         throw AssertionError("Localhost should be allowed", e)
     } catch (e: Exception) {
-        // Connection refused is OK (no server running)
+        // Connection refused is OK
     }
 }
 ```
 
-### Integration with MockWebServer
+### Allow Specific Hosts
 
 ```kotlin
-import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.MockResponse
-
-@Test
-@AllowRequestsToHosts(["localhost", "127.0.0.1"])
-fun testWithMockWebServer() {
-    val server = MockWebServer()
-    server.enqueue(MockResponse().setBody("""{"id":1,"name":"John","email":"john@example.com"}"""))
-    server.start()
-
-    val retrofit = Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val service = retrofit.create(ApiService::class.java)
-    val response = service.getUser(1).execute()
-
-    assertEquals(200, response.code())
-    assertEquals("John", response.body()?.name)
-
-    server.shutdown()
-}
-```
-
-## Common Issues
-
-### Issue: Exception message unclear
-
-**Cause**: Retrofit wraps the exception through multiple layers.
-
-**Solution**: Check the message string or root cause:
-
-```kotlin
-catch (e: Exception) {
-    val rootCause = generateSequence(e as Throwable) { it.cause }.last()
-    assertTrue(
-        e.message?.contains("Network request blocked") == true ||
-        rootCause is NetworkRequestAttemptedException
-    )
-}
-```
-
-### Issue: Suspend functions behave differently
-
-**Solution**: Use `runTest` from kotlinx-coroutines-test:
-
-```kotlin
-import kotlinx.coroutines.test.runTest
-
 @Test
 @BlockNetworkRequests
-fun test() = runTest {
-    // Test suspend functions here
+@AllowRequestsToHosts(["*.staging.example.com"])
+fun testStagingApiAllowed() {
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://api.staging.example.com/")
+        .build()
+
+    // ✅ api.staging.example.com - allowed
+    // ❌ api.production.example.com - blocked
+}
+```
+
+## Testing Production Code
+
+### Repository Example
+
+```kotlin
+class UserRepository(private val apiService: ApiService) {
+    fun getUser(id: Int): User {
+        val response = apiService.getUser(id).execute()
+        return response.body() ?: throw IllegalStateException("User not found")
+    }
+}
+```
+
+### Test with Network Blocking
+
+```kotlin
+@Test
+@BlockNetworkRequests
+fun testRepositoryBlocked() {
+    val service = retrofit.create(ApiService::class.java)
+    val repository = UserRepository(service)
+
+    try {
+        repository.getUser(1)
+        throw AssertionError("Should have thrown exception")
+    } catch (e: Exception) {
+        assertTrue(e.message?.contains("Network request blocked") == true)
+    }
+}
+```
+
+### Test with Mocked Service
+
+```kotlin
+@Test
+fun testWithMockedService() {
+    val mockService = mock<ApiService>()
+    val mockCall = mock<Call<User>>()
+    val mockResponse = Response.success(User(id = 1, name = "John"))
+
+    whenever(mockService.getUser(1)).thenReturn(mockCall)
+    whenever(mockCall.execute()).thenReturn(mockResponse)
+
+    val repository = UserRepository(mockService)
+    val user = repository.getUser(1)
+
+    assertEquals(1, user.id)
+}
+```
+
+## Android with Robolectric
+
+```kotlin
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import io.github.garryjeromson.junit.airgap.BlockNetworkRequests
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+@RunWith(RobolectricTestRunner::class)
+class RetrofitAndroidTest {
+    @Test
+    @BlockNetworkRequests
+    fun testRetrofitWithAndroidContext() {
+        // Can use Android framework
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNotNull(context)
+
+        // But network is blocked
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.example.com/")
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(ApiService::class.java)
+
+        try {
+            service.getUsers().execute()
+            throw AssertionError("Should have thrown exception")
+        } catch (e: Exception) {
+            assertTrue(e.message?.contains("Network request blocked") == true)
+        }
+    }
 }
 ```
 
 ## See Also
 
-- [OkHttp Client Guide](okhttp.md) - Retrofit uses OkHttp
-- [Android Setup Guide](../setup-guides/android-junit4.md)
-- [JVM Setup Guide](../setup-guides/jvm-junit5.md)
-- [Compatibility Matrix](../compatibility-matrix.md)
+- [OkHttp Client Guide](okhttp.md) - Retrofit uses OkHttp under the hood
+- [Ktor Client Guide](ktor.md) - Alternative HTTP client
+- [JVM + JUnit 5 Setup](../setup-guides/jvm-junit5.md)
+- [Android Setup](../setup-guides/android-junit4.md)
