@@ -1,5 +1,13 @@
 # Java Version Compatibility
 
+## Executive Summary
+
+- **One binary per platform** works for all Java 21+ versions (no version-specific builds needed)
+- **JVMTI API is stable** since Java 5 - backward compatibility guaranteed
+- **Dynamic linking** resolves JVM libraries at runtime, not compile time
+- **Platform matrix** needs builds for OS + architecture (darwin-aarch64, linux-x86-64, etc.), NOT Java versions
+- **Current minimum**: Java 21 (project requirement), but JVMTI could support older versions
+
 ## Overview
 
 The junit-airgap JVMTI agent is compiled once per platform and works across multiple Java versions due to JVMTI's stable API and backward compatibility guarantees.

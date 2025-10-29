@@ -1,5 +1,13 @@
 # JVMTI Agent Loading & Performance
 
+## TL;DR
+
+- **Agent loads once** at JVM startup (~5-10ms), not per-test
+- **Per-test overhead** is ~500 nanoseconds (ThreadLocal operations only)
+- **Real tests** show <10% overhead; high percentages only appear in nanosecond-scale microbenchmarks
+- **Focus on absolute overhead** (microseconds), not percentages (100-600%)
+- **Current design is optimal** - simplicity and test isolation beat marginal performance gains
+
 ## Overview
 
 The junit-airgap library uses a JVMTI (JVM Tool Interface) native agent for network interception. Understanding the three-stage loading model helps clarify performance characteristics and dispel common misconceptions about overhead.
