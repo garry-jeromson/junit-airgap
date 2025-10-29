@@ -254,7 +254,10 @@ class JunitAirgapPlugin : Plugin<Project> {
 
             // Capture test task name and build directory for logging (configuration cache compatible)
             val testTaskName = name
-            val buildDirectory = project.layout.buildDirectory.get().asFile
+            val buildDirectory =
+                project.layout.buildDirectory
+                    .get()
+                    .asFile
 
             // Extract native agent and set system properties at execution time (doFirst)
             // This ensures everything is resolved when the test JVM starts
@@ -262,7 +265,9 @@ class JunitAirgapPlugin : Plugin<Project> {
             doFirst {
                 // Check if plugin is enabled before configuring agent
                 if (!extension.enabled.get()) {
-                    logger.info("JUnit Airgap plugin is disabled for test task '$testTaskName', skipping agent configuration")
+                    logger.info(
+                        "JUnit Airgap plugin is disabled for test task '$testTaskName', skipping agent configuration",
+                    )
                     // Set system properties to communicate disabled state
                     systemProperty("junit.airgap.enabled", "false")
                     return@doFirst
@@ -284,11 +289,12 @@ class JunitAirgapPlugin : Plugin<Project> {
                     systemProperty("junit.airgap.blockedHosts", blockedHosts)
                 }
 
-                val agentPath = NativeAgentExtractor.getAgentPath(
-                    buildDirectory, // Use captured build directory
-                    logger, // Use task's logger
-                    extension.debug.get()
-                )
+                val agentPath =
+                    NativeAgentExtractor.getAgentPath(
+                        buildDirectory, // Use captured build directory
+                        logger, // Use task's logger
+                        extension.debug.get(),
+                    )
 
                 if (agentPath != null) {
                     // Add debug option if debug mode is enabled
@@ -350,7 +356,9 @@ class JunitAirgapPlugin : Plugin<Project> {
                     "androidUnitTestImplementation",
                     "io.github.garryjeromson:junit-airgap-jvm:$version",
                 )
-                project.logger.info("Added junit-airgap-jvm:$version to androidUnitTestImplementation for Robolectric support")
+                project.logger.info(
+                    "Added junit-airgap-jvm:$version to androidUnitTestImplementation for Robolectric support",
+                )
             } catch (e: Exception) {
                 project.logger.debug("Failed to add JVM dependency to androidUnitTestImplementation: ${e.message}")
             }
@@ -470,10 +478,11 @@ class JunitAirgapPlugin : Plugin<Project> {
         extension: JunitAirgapExtension,
     ) {
         // Register injection task for JVM project
-        val injectionTask = project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
-            testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
-            debug.set(extension.debug)
-        }
+        val injectionTask =
+            project.tasks.register("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/test"))
+                debug.set(extension.debug)
+            }
 
         // Wire test classpath and configure task dependencies in a nested afterEvaluate
         // to ensure all tasks exist before we reference them
@@ -481,8 +490,9 @@ class JunitAirgapPlugin : Plugin<Project> {
             // Wire test classpath using named() directly instead of .configure() to avoid task realization issues
             project.tasks.named("injectJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
                 testClasspath.setFrom(
-                    project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java)
-                        .flatMap { it.classpath.elements }
+                    project.tasks
+                        .named("test", org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements },
                 )
             }
 
@@ -518,18 +528,20 @@ class JunitAirgapPlugin : Plugin<Project> {
         val compilationTaskName = "compile${variant}UnitTestKotlin"
 
         // Register injection task for this variant
-        val injectionTask = project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
-            testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
-            debug.set(extension.debug)
-        }
+        val injectionTask =
+            project.tasks.register(taskName, JUnit4RuleInjectionTask::class.java) {
+                testClassesDir.set(project.layout.buildDirectory.dir("tmp/kotlin-classes/${variantLower}UnitTest"))
+                debug.set(extension.debug)
+            }
 
         // Configure automatic task wiring after project evaluation
         project.afterEvaluate {
             // Wire test classpath using named() directly instead of .configure() to avoid task realization issues
             project.tasks.named(taskName, JUnit4RuleInjectionTask::class.java) {
                 testClasspath.setFrom(
-                    project.tasks.named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
-                        .flatMap { it.classpath.elements }
+                    project.tasks
+                        .named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements },
                 )
             }
 
@@ -548,16 +560,17 @@ class JunitAirgapPlugin : Plugin<Project> {
     ) {
         // For KMP, we need to configure injection for each target platform
         // JVM target
-        val jvmInjectionTask = project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
-            testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
-            debug.set(extension.debug)
+        val jvmInjectionTask =
+            project.tasks.register("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
+                testClassesDir.set(project.layout.buildDirectory.dir("classes/kotlin/jvm/test"))
+                debug.set(extension.debug)
 
-            // Depend on compilation task
-            project.tasks.findByName("compileTestKotlinJvm")?.let { compileTask ->
-                mustRunAfter(compileTask)
-                dependsOn(compileTask)
+                // Depend on compilation task
+                project.tasks.findByName("compileTestKotlinJvm")?.let { compileTask ->
+                    mustRunAfter(compileTask)
+                    dependsOn(compileTask)
+                }
             }
-        }
 
         // Android target - configure both Debug and Release variants
         listOf("Debug", "Release").forEach { variant ->
@@ -569,8 +582,9 @@ class JunitAirgapPlugin : Plugin<Project> {
             // Wire test classpath for JVM target using named() directly instead of .configure()
             project.tasks.named("injectJvmJUnit4NetworkRule", JUnit4RuleInjectionTask::class.java) {
                 testClasspath.setFrom(
-                    project.tasks.named("jvmTest", org.gradle.api.tasks.testing.Test::class.java)
-                        .flatMap { it.classpath.elements }
+                    project.tasks
+                        .named("jvmTest", org.gradle.api.tasks.testing.Test::class.java)
+                        .flatMap { it.classpath.elements },
                 )
             }
 
@@ -587,8 +601,9 @@ class JunitAirgapPlugin : Plugin<Project> {
                 // Wire test classpath for Android variant using named() directly instead of .configure()
                 project.tasks.named(injectionTaskName, JUnit4RuleInjectionTask::class.java) {
                     testClasspath.setFrom(
-                        project.tasks.named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
-                            .flatMap { it.classpath.elements }
+                        project.tasks
+                            .named(testTaskName, org.gradle.api.tasks.testing.Test::class.java)
+                            .flatMap { it.classpath.elements },
                     )
                 }
 
@@ -623,7 +638,9 @@ class JunitAirgapPlugin : Plugin<Project> {
             }
         }
 
-        project.logger.debug("Configured injection task $taskName for KMP Android $variant variant (classpath will be wired in afterEvaluate)")
+        project.logger.debug(
+            "Configured injection task $taskName for KMP Android $variant variant (classpath will be wired in afterEvaluate)",
+        )
     }
 
     private fun configureTaskWiring(

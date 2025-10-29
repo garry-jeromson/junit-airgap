@@ -51,24 +51,21 @@ internal object ExtensionConfiguration {
      *
      * @return true if the system property is set to "true", false otherwise
      */
-    fun isApplyToAllTestsEnabled(): Boolean =
-        getSystemProperty(APPLY_TO_ALL_TESTS_PROPERTY, "false").toBoolean()
+    fun isApplyToAllTestsEnabled(): Boolean = getSystemProperty(APPLY_TO_ALL_TESTS_PROPERTY, "false").toBoolean()
 
     /**
      * Retrieves the list of globally allowed hosts from system property.
      *
      * @return Set of allowed host patterns (e.g., "localhost", "*.local"), empty if not configured
      */
-    fun getAllowedHosts(): Set<String> =
-        parseHostList(getSystemProperty(ALLOWED_HOSTS_PROPERTY))
+    fun getAllowedHosts(): Set<String> = parseHostList(getSystemProperty(ALLOWED_HOSTS_PROPERTY))
 
     /**
      * Retrieves the list of globally blocked hosts from system property.
      *
      * @return Set of blocked host patterns (e.g., "evil.com", "*.tracking.com"), empty if not configured
      */
-    fun getBlockedHosts(): Set<String> =
-        parseHostList(getSystemProperty(BLOCKED_HOSTS_PROPERTY))
+    fun getBlockedHosts(): Set<String> = parseHostList(getSystemProperty(BLOCKED_HOSTS_PROPERTY))
 
     /**
      * Parses a comma-separated list of host patterns.

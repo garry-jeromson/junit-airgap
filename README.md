@@ -125,12 +125,6 @@ Uses a **JVMTI agent** (JVM Tool Interface) to intercept network calls at the na
 - ✅ Includes DNS interception for complete coverage
 - ✅ Zero-configuration with Gradle plugin
 
-### iOS (API Only)
-
-**Status**: Provides API structure but doesn't actively block network requests.
-
-Kotlin/Native (used for iOS) doesn't support JVMTI agents. For iOS testing, use mocking frameworks or custom network interception.
-
 ---
 
 ## Compatibility Overview
@@ -143,7 +137,6 @@ Kotlin/Native (used for iOS) doesn't support JVMTI agents. For iOS testing, use 
 | **JUnit** | 4.13.2 & 5.11.3 | Both frameworks fully supported |
 | **Platform** | JVM (macOS ARM64) | Native agent currently for macOS ARM64 |
 | **Platform** | Android (Robolectric) | Full support via Robolectric unit tests |
-| **Platform** | iOS | API structure only (no active blocking) |
 | **HTTP Clients** | All major clients | OkHttp, Retrofit, Ktor, Apache, Spring, etc. |
 
 ### 🚧 Coming Soon
@@ -151,6 +144,10 @@ Kotlin/Native (used for iOS) doesn't support JVMTI agents. For iOS testing, use 
 - Linux (x86_64, ARM64)
 - Windows (x86_64)
 - macOS Intel (x86_64)
+
+### ❌ Not Supported
+
+- **iOS/Kotlin Native**: Platform limitations prevent comprehensive network interception. See `IOS_SUPPORT_INVESTIGATION.md` for technical details.
 
 ### 📖 Detailed Compatibility
 

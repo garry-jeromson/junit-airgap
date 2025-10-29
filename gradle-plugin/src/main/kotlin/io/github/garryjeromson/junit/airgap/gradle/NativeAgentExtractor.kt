@@ -152,9 +152,7 @@ object NativeAgentExtractor {
         buildDir: File,
         logger: Logger,
         debug: Boolean = false,
-    ): String? {
-        return extractAgent(buildDir, logger, debug)?.absolutePath
-    }
+    ): String? = extractAgent(buildDir, logger, debug)?.absolutePath
 
     /**
      * Get the path to the native agent, extracting it if necessary (Project overload).
@@ -170,7 +168,12 @@ object NativeAgentExtractor {
         project: Project,
         logger: Logger,
         debug: Boolean = false,
-    ): String? {
-        return extractAgent(project.layout.buildDirectory.get().asFile, logger, debug)?.absolutePath
-    }
+    ): String? =
+        extractAgent(
+            project.layout.buildDirectory
+                .get()
+                .asFile,
+            logger,
+            debug,
+        )?.absolutePath
 }

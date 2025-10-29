@@ -58,25 +58,26 @@ abstract class GenerateJunitPlatformPropertiesTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val props = buildString {
-            // Enable JUnit Jupiter extension auto-detection
-            appendLine("junit.jupiter.extensions.autodetection.enabled=true")
+        val props =
+            buildString {
+                // Enable JUnit Jupiter extension auto-detection
+                appendLine("junit.jupiter.extensions.autodetection.enabled=true")
 
-            // Configure junit-airgapextension
-            appendLine("junit.airgap.applyToAllTests=${applyToAllTests.get()}")
+                // Configure junit-airgapextension
+                appendLine("junit.airgap.applyToAllTests=${applyToAllTests.get()}")
 
-            // Add allowed hosts if configured
-            if (allowedHosts.isPresent && allowedHosts.get().isNotEmpty()) {
-                val hosts = allowedHosts.get().joinToString(",")
-                appendLine("junit.airgap.allowedHosts=$hosts")
+                // Add allowed hosts if configured
+                if (allowedHosts.isPresent && allowedHosts.get().isNotEmpty()) {
+                    val hosts = allowedHosts.get().joinToString(",")
+                    appendLine("junit.airgap.allowedHosts=$hosts")
+                }
+
+                // Add blocked hosts if configured
+                if (blockedHosts.isPresent && blockedHosts.get().isNotEmpty()) {
+                    val hosts = blockedHosts.get().joinToString(",")
+                    appendLine("junit.airgap.blockedHosts=$hosts")
+                }
             }
-
-            // Add blocked hosts if configured
-            if (blockedHosts.isPresent && blockedHosts.get().isNotEmpty()) {
-                val hosts = blockedHosts.get().joinToString(",")
-                appendLine("junit.airgap.blockedHosts=$hosts")
-            }
-        }
 
         val file = outputFile.get().asFile
         file.parentFile.mkdirs()

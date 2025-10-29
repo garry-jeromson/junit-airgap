@@ -50,7 +50,9 @@ class JUnitVersionDetector(
 
             // Mixed (JUnit Vintage) - inject for JUnit 4 tests
             usesJUnitPlatform && hasJUnit4 -> {
-                logger.info("Auto-detected mixed JUnit 4 + JUnit 5 project - enabling @Rule injection for JUnit 4 tests")
+                logger.info(
+                    "Auto-detected mixed JUnit 4 + JUnit 5 project - enabling @Rule injection for JUnit 4 tests",
+                )
                 true
             }
 

@@ -37,35 +37,12 @@ kotlin {
         publishLibraryVariants("release", "debug")
     }
 
-    // iOS target (Apple Silicon simulator)
-    iosSimulatorArm64 {
-        // Configure cinterop for Objective-C bridge
-        compilations.getByName("main") {
-            cinterops {
-                val airgap by creating {
-                    defFile(project.file("src/nativeInterop/cinterop/airgap.def"))
-                    packageName("airgap")
-
-                    // Add include directory for header files
-                    includeDirs(project.file("src/nativeInterop/cinterop"))
-
-                    // Compile the Objective-C source file along with the cinterop
-                    extraOpts(
-                        "-Xcompile-source",
-                        project.file("src/nativeInterop/cinterop/AirgapURLProtocol.m").absolutePath
-                    )
-                }
-            }
-        }
-    }
-
     sourceSets {
         // Common source sets
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlin.stdlib)
                 // Note: JUnit dependencies moved to JVM/Android source sets
-                // as they are not compatible with native (iOS) targets
             }
         }
 
@@ -132,32 +109,11 @@ kotlin {
                 implementation(libs.robolectric.shadows.httpclient)
             }
         }
-
-        // iOS source sets
-        val iosSimulatorArm64Main by getting {
-            dependencies {
-                // Ktor client for iOS network blocking integration
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.darwin)
-            }
-        }
-
-        val iosSimulatorArm64Test by getting {
-            dependencies {
-                // Ktor client for integration testing with Darwin engine (URLSession)
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.darwin)
-
-                // Ktor server for local test server (CIO engine supports native/iOS)
-                implementation(libs.ktor.server.core)
-                implementation(libs.ktor.server.cio)
-            }
-        }
     }
 }
 
 // Enable strict compilation - treat all warnings as errors
-// Apply to all Kotlin compilation tasks (JVM, Android, Native)
+// Apply to all Kotlin compilation tasks (JVM, Android)
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
     compilerOptions {
         allWarningsAsErrors.set(true)
