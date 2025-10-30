@@ -108,44 +108,96 @@ jobs:
         run: |
           ./gradlew :gradle-plugin:publishPlugins --no-daemon --stacktrace
 
+      - name: Create git tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+
+          # Check if tag already exists
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+          else
+            echo "Creating tag $TAG"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Release $VERSION"
+            git push origin "$TAG"
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Extract changelog entry for this version if it exists
+          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            # Extract the section for this version
+            NOTES=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+          else
+            NOTES="See [CHANGELOG.md](https://github.com/garry-jeromson/junit-airgap/blob/main/CHANGELOG.md) for details."
+          fi
+
+          # Create full release body
+          cat > release_notes.md <<EOF
+          ## JUnit Airgap Extension v$VERSION
+
+          Published to Maven Central: https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap
+
+          ### Installation
+
+          **Gradle Plugin (Recommended):**
+          \`\`\`kotlin
+          plugins {
+              id("io.github.garry-jeromson.junit-airgap") version "$VERSION"
+          }
+          \`\`\`
+
+          **Manual Dependency:**
+          \`\`\`kotlin
+          dependencies {
+              testImplementation("io.github.garry-jeromson:junit-airgap:$VERSION")
+          }
+          \`\`\`
+
+          ### What's Changed
+
+          $NOTES
+
+          ### Links
+
+          - 📚 [Documentation](https://github.com/garry-jeromson/junit-airgap#readme)
+          - 🔌 [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.github.garry-jeromson.junit-airgap)
+          - 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap/$VERSION)
+          - 📝 [Changelog](https://github.com/garry-jeromson/junit-airgap/blob/main/CHANGELOG.md)
+          EOF
+
+          echo "Release notes generated"
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
-          body: |
-            ## JUnit Airgap Extension v${{ steps.version.outputs.version }}
-
-            Published to Maven Central: https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap
-
-            ### Installation
-            ```gradle
-            dependencies {
-                testImplementation("io.github.garry-jeromson:junit-airgap:${{ steps.version.outputs.version }}")
-            }
-            ```
-
-            Or use the Gradle plugin:
-            ```gradle
-            plugins {
-                id("io.github.garry-jeromson.junit-airgap") version "${{ steps.version.outputs.version }}"
-            }
-            ```
+          body_path: release_notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish summary
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
           echo "## :rocket: Published Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release:** https://github.com/garry-jeromson/junit-airgap/releases/tag/v$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Maven Central" >> $GITHUB_STEP_SUMMARY
           echo "Library artifacts are being synchronized to Maven Central. This may take a few hours." >> $GITHUB_STEP_SUMMARY
-          echo "- **Maven Central:** https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Maven Central:** https://central.sonatype.com/artifact/io.github.garry-jeromson/junit-airgap/$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Gradle Plugin Portal" >> $GITHUB_STEP_SUMMARY
           echo "Gradle plugin is now available on the Gradle Plugin Portal." >> $GITHUB_STEP_SUMMARY
