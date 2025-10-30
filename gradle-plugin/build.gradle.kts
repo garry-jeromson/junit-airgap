@@ -16,9 +16,9 @@ gradlePlugin {
         create("junitAirgapPlugin") {
             id = "io.github.garry-jeromson.junit-airgap"
             implementationClass = "io.github.garryjeromson.junit.airgap.gradle.JunitAirgapPlugin"
-            displayName = "JUnit Airgap Plugin"
-            description = "Automatically configure JUnit tests to block network requests"
-            tags.set(listOf("testing", "junit", "junit5", "junit4", "network", "isolation", "test-isolation"))
+            displayName = "JUnit Airgap Extension"
+            description = "Zero-configuration network blocking for JUnit tests. Automatically prevents unit tests from making real HTTP requests using JVMTI agent-based interception. Supports JUnit 4 and 5 on JVM and Android (Robolectric)."
+            tags.set(listOf("testing", "junit", "junit5", "junit4", "network", "isolation", "test-isolation", "unit-testing", "mocking"))
         }
     }
 }
