@@ -1,6 +1,8 @@
-# JUnit Airgap Extension
-
-**Stop your unit tests from accidentally hitting real APIs.**
+<div align="center">
+  <img src="docs/img/logo.png" alt="JUnit Airgap Logo" width="200"/>
+  <h1>JUnit Airgap Extension</h1>
+  <p><strong>Stop your unit tests from accidentally hitting real APIs.</strong></p>
+</div>
 
 [![Java 21+](https://img.shields.io/badge/Java-21+-blue.svg)](docs/compatibility-matrix.md)
 [![JUnit 4 & 5](https://img.shields.io/badge/JUnit-4%20%26%205-green.svg)](docs/compatibility-matrix.md)
@@ -119,7 +121,8 @@ Uses a **JVMTI agent** (JVM Tool Interface) to intercept network calls at the na
 5. **Works everywhere** - Same implementation for JVM and Android (via Robolectric)
 
 **Key benefits:**
-- ✅ Works on Java 21+ (no deprecated SecurityManager)
+- ✅ Works on any Java version (JVMTI is not version-dependent)
+- ✅ Requires Java 21+ for build (Kotlin Gradle Plugin requirement)
 - ✅ Intercepts ALL HTTP clients (works at socket level)
 - ✅ Catches both hostname and IP address connections
 - ✅ Includes DNS interception for complete coverage

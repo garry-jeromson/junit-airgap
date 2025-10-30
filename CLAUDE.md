@@ -10,7 +10,7 @@
 JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home ./gradlew <task>
 ```
 
-Required because project targets Java 21 for JVMTI agent and KMP support.
+Required because Kotlin Gradle Plugin requires Java 21+ for build. JVMTI agent works on any Java version at runtime.
 
 ### Test-First Development
 
@@ -18,7 +18,7 @@ Required because project targets Java 21 for JVMTI agent and KMP support.
 
 ## Project Structure
 
-This is a Kotlin Multiplatform (KMP) project with three main components:
+This is a Kotlin Multiplatform (KMP) project targeting JVM and Android with three main components:
 
 1. **`junit-airgap/`** - Core library (JVM + Android targets)
 2. **`gradle-plugin/`** - Gradle plugin for zero-configuration setup
@@ -79,13 +79,9 @@ Format before committing: `make format` (or `./gradlew ktlintFormat`). Check: `m
 
 ### JVMTI Agent (JVM and Android)
 
-C++ JVMTI agent intercepts socket/DNS at native level. Works on Java 21+. Agent packaged in JAR, extracted at runtime, loaded via JVM attach API. Throws `NetworkRequestAttemptedException` on unauthorized connections.
+C++ JVMTI agent intercepts socket/DNS at native level. Works on any Java version (JVMTI is version-independent). Agent packaged in JAR, extracted at runtime, loaded via JVM attach API. Throws `NetworkRequestAttemptedException` on unauthorized connections.
 
 **Native code**: `native/src/` - `agent.cpp`, `socket_interceptor.cpp`, `dns_interceptor.cpp`
-
-### iOS
-
-API-only (no blocking). Kotlin/Native doesn't support JVMTI.
 
 ## Debug Logging
 
@@ -102,12 +98,12 @@ Provides `assertRequestBlocked {}` and `assertRequestAllowed {}` helpers used by
 - **KMP task wiring**: Known issue - injection tasks registered but not auto-wired for Android/KMP
 - **Plugin changes not visible**: Publish to Maven Local: `./gradlew :gradle-plugin:publishToMavenLocal`
 - **"Unsupported class file major version"**: Ensure `JAVA_HOME` points to Java 21
-- **JVMTI agent errors**: Verify Java 21+, check temp dir extraction, file permissions, macOS Gatekeeper
+- **JVMTI agent errors**: Check temp dir extraction, file permissions, macOS Gatekeeper
 
 
 ## Key Architecture Decisions
 
-1. **JVMTI for network blocking**: Native agent intercepts socket/DNS at the lowest level, works on Java 21+
+1. **JVMTI for network blocking**: Native agent intercepts socket/DNS at the lowest level, works on any Java version (version-independent)
 2. **ByteBuddy for JUnit 4**: Enables zero-configuration by injecting `@Rule` fields at compile time
 3. **Execution-time classpath resolution**: Injection task resolves Test task classpath when it runs, not during Gradle configuration
 4. **Single implementation for JVM/Android**: JVMTI agent works identically on both platforms

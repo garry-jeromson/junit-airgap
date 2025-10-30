@@ -4,8 +4,9 @@ Block network requests in Kotlin Multiplatform unit tests using JUnit 5.
 
 ## Requirements
 
-- Java 21+ (uses JVMTI agent)
-- Gradle 7.x+ (tested with 8.11.1)
+- Java 21+ for build (Kotlin Gradle Plugin requirement)
+- JVMTI agent works on any Java version at runtime
+- Gradle 8.0 or later (tested with 8.0, 8.11.1, 9.1)
 - Kotlin 1.9+ (tested with 2.1.0)
 - JUnit 5.8+ (tested with 5.11.3)
 
@@ -15,8 +16,6 @@ Block network requests in Kotlin Multiplatform unit tests using JUnit 5.
 |----------|-----------------|-------|
 | JVM | ✅ Fully Supported | JVMTI agent-based blocking |
 | Android | ✅ Fully Supported | Requires Robolectric for unit tests |
-
-**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
 
 ## Installation
 

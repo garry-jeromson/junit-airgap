@@ -4,8 +4,9 @@ This guide shows how to set up the JUnit Airgap Extension for a Kotlin Multiplat
 
 ## Requirements
 
-- Java 21+ (uses JVMTI agent for network blocking)
-- Gradle 7.x or later (tested with 8.11.1)
+- Java 21+ for build (Kotlin Gradle Plugin requirement)
+- JVMTI agent works on any Java version at runtime
+- Gradle 8.0 or later (tested with 8.0, 8.11.1, 9.1)
 - Kotlin 1.9+ (tested with 2.1.0)
 - JUnit 4.12+ (tested with 4.13.2)
 
@@ -15,8 +16,6 @@ This guide shows how to set up the JUnit Airgap Extension for a Kotlin Multiplat
 |----------|-----------------|-------|
 | JVM | ✅ Fully Supported | JVMTI agent-based blocking |
 | Android | ✅ Fully Supported | Requires Robolectric for unit tests |
-
-**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
 
 ## Installation
 

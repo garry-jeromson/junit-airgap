@@ -12,8 +12,6 @@ Test Ktor HTTP clients with automatic network blocking.
 
 **Tested Version**: Ktor 2.3.7
 
-**Note**: iOS is not supported. For iOS projects, use dependency injection and mocking instead.
-
 ## Basic Usage
 
 ### CIO Engine (JVM)

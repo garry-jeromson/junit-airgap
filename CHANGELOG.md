@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `blockedHosts`: Blacklist specific hosts (supports wildcards)
   - `injectJUnit4Rule`: Automatic `@Rule` injection for JUnit 4
   - `debug`: Enable debug logging
-- Kotlin Multiplatform support (JVM, Android, iOS API compatibility)
+- Kotlin Multiplatform support (JVM, Android)
 - Comprehensive HTTP client support:
   - Java standard library (`Socket`, `HttpURLConnection`, `HttpClient`)
   - OkHttp
@@ -36,11 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known Issues
 - KMP projects: Automatic task wiring for JUnit 4 bytecode injection not yet working for Android/KMP configurations
-- iOS: API compatibility only, no active network blocking (Kotlin/Native limitation)
-- macOS only: Native JVMTI agent currently built for macOS only (Linux and Windows support planned)
+- macOS only: Native JVMTI agent currently built for macOS ARM64 only (Linux and Windows support planned)
 
 ### Technical Details
-- Requires Java 21+ for JVMTI agent support
+- Requires Java 21+ for build (Kotlin Gradle Plugin requirement)
+- JVMTI agent works on any Java version at runtime (version-independent)
 - Uses native agent (`.dylib`/`.so`/`.dll`) for low-level socket and DNS interception
 - Test-first development approach with extensive integration test coverage
 - Zero external dependencies for core library (JUnit only)
