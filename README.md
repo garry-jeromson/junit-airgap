@@ -428,6 +428,13 @@ MIT License - See [LICENSE](LICENSE) for details
 
 Built with comprehensive test coverage across all platforms, frameworks, and HTTP clients.
 
+### Inspiration
+
+This project was inspired by similar network blocking tools in other ecosystems:
+
+- **[pytest-socket](https://github.com/miketheman/pytest-socket)** - Socket blocking for Python's pytest framework. The original inspiration for bringing this pattern to JVM/Android.
+- **[Sniffy](https://github.com/sniffy/sniffy)** - SQL and network monitoring for Java applications. Demonstrated that comprehensive network interception is achievable on the JVM.
+
 ---
 
 **Made with ❤️ for better unit tests**
