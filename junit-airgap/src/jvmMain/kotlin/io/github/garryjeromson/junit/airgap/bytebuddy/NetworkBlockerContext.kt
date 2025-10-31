@@ -238,6 +238,7 @@ object NetworkBlockerContext {
         return blocked
     }
 
+
     /**
      * Check if a host matches a wildcard pattern.
      * This mirrors the logic in NetworkConfiguration.matchesPattern().

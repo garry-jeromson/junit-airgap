@@ -72,7 +72,35 @@ static jobjectArray wrapped_lookupAllHostAddr(
 ) {
     DEBUG_LOGF("wrapped_lookupAllHostAddr(%s) called - intercepting DNS resolution", impl_name);
 
-    // Extract hostname string
+    // IMPORTANT: Platform encoding initialization happens AFTER VM_INIT
+    // Even though VM_INIT completes, platform encoding may not be ready yet
+    // NetworkBlockerContext registration happens after platform encoding is ready
+    // So we use NetworkBlockerContext registration as a signal that everything is ready
+
+    // Check 1: VM_INIT must be complete (basic JVM initialization)
+    if (!g_vm_init_complete) {
+        DEBUG_LOG("VM_INIT not complete - allowing DNS without interception");
+        if (original != nullptr) {
+            return original(env, obj, hostname);
+        }
+        return nullptr;
+    }
+
+    // Check 2: NetworkBlockerContext must be registered (platform encoding ready)
+    jclass contextClass = GetNetworkBlockerContextClass();
+    if (contextClass == nullptr) {
+        DEBUG_LOG("NetworkBlockerContext not registered - allowing DNS without interception (platform encoding may not be ready)");
+        if (original != nullptr) {
+            return original(env, obj, hostname);
+        }
+        return nullptr;
+    }
+
+    // Both VM_INIT and NetworkBlockerContext ready - safe to proceed
+    DEBUG_LOG("VM_INIT complete and NetworkBlockerContext registered - proceeding with DNS interception");
+
+    // STEP 1: Extract hostname and check if connection is allowed
+    // This will throw NetworkRequestAttemptedException if blocked
     const char* hostCStr = nullptr;
     if (hostname != nullptr) {
         hostCStr = env->GetStringUTFChars(hostname, nullptr);
@@ -82,12 +110,13 @@ static jobjectArray wrapped_lookupAllHostAddr(
     }
 
     // Check NetworkConfiguration via JNI call to Kotlin
+    // IMPORTANT: checkConnection() returns silently if no config (inter-test period)
+    // It only throws if there IS a config AND connection is blocked
     if (hostname != nullptr && hostCStr != nullptr) {
-        // Get cached class and method references
-        jclass contextClass = GetNetworkBlockerContextClass();
+        // Get checkConnectionMethod (contextClass already verified above)
         jmethodID checkConnectionMethod = GetCheckConnectionMethod();
 
-        if (contextClass != nullptr && checkConnectionMethod != nullptr) {
+        if (checkConnectionMethod != nullptr) {
             DEBUG_LOG("Calling NetworkBlockerContext.checkConnection() for DNS");
 
             // Get cached caller string (initialized during VM_INIT)
@@ -108,7 +137,7 @@ static jobjectArray wrapped_lookupAllHostAddr(
 
             DEBUG_LOGF("DNS resolution allowed for: %s", hostCStr);
         } else {
-            DEBUG_LOG("NetworkBlockerContext not registered - allowing DNS (agent may not be loaded or class not initialized yet)");
+            DEBUG_LOG("checkConnectionMethod not available - allowing DNS");
         }
     }
 
@@ -117,7 +146,11 @@ static jobjectArray wrapped_lookupAllHostAddr(
         env->ReleaseStringUTFChars(hostname, hostCStr);
     }
 
-    // Call original function
+    // STEP 2: Connection is allowed - call original DNS resolution
+    // If checkConnection() didn't throw, the connection is allowed
+    // The VM_INIT and NetworkBlockerContext registration checks above already
+    // prevent calling this function during JVM initialization when platform
+    // encoding might not be ready
     if (original != nullptr) {
         DEBUG_LOGF("Calling original %s.lookupAllHostAddr()", impl_name);
         return original(env, obj, hostname);

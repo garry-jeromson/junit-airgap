@@ -71,6 +71,10 @@ extern jstring g_caller_agent_string;  // "JVMTI-Agent"
 extern jstring g_caller_dns_string;    // "JVMTI-DNS"
 extern std::mutex g_strings_mutex;
 
+// VM initialization state (true after VM_INIT callback completes)
+// Used to guard JNI string operations that require platform encoding to be initialized
+extern bool g_vm_init_complete;
+
 // Get cached context class and method (thread-safe)
 jclass GetNetworkBlockerContextClass();
 jmethodID GetCheckConnectionMethod();

@@ -63,6 +63,9 @@ jstring g_caller_agent_string = nullptr;
 jstring g_caller_dns_string = nullptr;
 std::mutex g_strings_mutex;
 
+// VM initialization state
+bool g_vm_init_complete = false;
+
 /**
  * Store original function pointer for later use.
  *
@@ -230,6 +233,23 @@ void JNICALL VMInitCallback(
     }
 
     DEBUG_LOG("String constants initialized successfully");
+
+    // Eagerly initialize platform encoding for string extraction (GetStringUTFChars)
+    // This ensures platform encoding is fully ready before we allow any interception
+    if (g_caller_agent_string != nullptr) {
+        const char* test_str = jni_env->GetStringUTFChars(g_caller_agent_string, nullptr);
+        if (test_str != nullptr) {
+            DEBUG_LOG("Platform encoding initialized for string extraction");
+            jni_env->ReleaseStringUTFChars(g_caller_agent_string, test_str);
+        } else {
+            fprintf(stderr, "[JVMTI-Agent] WARNING: Failed to initialize platform encoding for extraction\n");
+        }
+    }
+
+    // Mark VM as fully initialized - platform encoding is now ready
+    // After this point, all JNI string operations (GetStringUTFChars, etc.) are safe
+    g_vm_init_complete = true;
+    DEBUG_LOG("VM initialization complete - all JNI operations now safe");
 }
 
 /**
@@ -385,6 +405,17 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
     // Parse options
     if (options != nullptr && strstr(options, "debug") != nullptr) {
         g_debug_mode = true;
+    }
+
+    // Display version banner (only in debug mode)
+    if (g_debug_mode) {
+        fprintf(stderr, "\n");
+        fprintf(stderr, "================================================================================\n");
+        fprintf(stderr, "[JVMTI-Agent] junit-airgap Native Agent\n");
+        fprintf(stderr, "[JVMTI-Agent] Version: 2024-10-31 (platform encoding fix)\n");
+        fprintf(stderr, "[JVMTI-Agent] Build time: %s %s\n", __DATE__, __TIME__);
+        fprintf(stderr, "================================================================================\n");
+        fprintf(stderr, "\n");
     }
 
     DEBUG_LOG("JVMTI Agent loading...");
