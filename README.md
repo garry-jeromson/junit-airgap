@@ -344,6 +344,25 @@ make test-plugin-integration      # Plugin integration tests
 2. ✅ For JUnit 5: Is `@ExtendWith(AirgapExtension::class)` on class?
 3. ✅ Is JVMTI agent loaded? (check with `-Djunit.airgap.debug=true`)
 
+### IntelliJ IDEA Compatibility
+
+**Issue Fixed in v0.1.0-beta.2+**
+
+If you're using an older version and encounter "platform encoding not initialized" errors when running tests via IntelliJ:
+
+**Workaround 1: Configure IntelliJ to use Gradle**
+```
+Preferences → Build, Execution, Deployment → Build Tools → Gradle
+Set "Run tests using" to "Gradle" instead of "IntelliJ IDEA"
+```
+
+**Workaround 2: Run tests via Gradle**
+```bash
+./gradlew test --tests "YourTestClass"
+```
+
+**Solution**: Upgrade to v0.1.0-beta.2 or later for full IDE support.
+
 ### JVMTI Agent Not Found
 
 ```

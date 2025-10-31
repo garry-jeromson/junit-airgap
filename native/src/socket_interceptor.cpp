@@ -120,8 +120,8 @@ jint JNICALL wrapped_Net_connect0(
         jmethodID isExplicitlyBlockedMethod = GetIsExplicitlyBlockedMethod();
 
         if (contextClass != nullptr && checkConnectionMethod != nullptr && isExplicitlyBlockedMethod != nullptr) {
-            // Create caller string
-            jstring callerString = env->NewStringUTF("JVMTI-Agent");
+            // Get cached caller string (initialized during VM_INIT)
+            jstring callerString = GetCallerAgentString();
 
             // First, check if hostname or IP are explicitly blocked
             bool hostnameExplicitlyBlocked = false;

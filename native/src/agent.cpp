@@ -58,6 +58,11 @@ jmethodID g_check_connection_method = nullptr;
 jmethodID g_is_explicitly_blocked_method = nullptr;
 std::mutex g_context_mutex;
 
+// Cached string constants (initialized during VM_INIT)
+jstring g_caller_agent_string = nullptr;
+jstring g_caller_dns_string = nullptr;
+std::mutex g_strings_mutex;
+
 /**
  * Store original function pointer for later use.
  *
@@ -136,6 +141,7 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
     jvmtiEventCallbacks callbacks;
     memset(&callbacks, 0, sizeof(callbacks));
     callbacks.NativeMethodBind = &NativeMethodBindCallback;
+    callbacks.VMInit = &VMInitCallback;
 
     error = jvmti->SetEventCallbacks(&callbacks, sizeof(callbacks));
     if (error != JVMTI_ERROR_NONE) {
@@ -159,7 +165,71 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
 
     DEBUG_LOG("JVMTI native method bind events enabled");
 
+    // Enable VM_INIT event to initialize string constants when JVM is fully initialized
+    error = jvmti->SetEventNotificationMode(
+        JVMTI_ENABLE,
+        JVMTI_EVENT_VM_INIT,
+        nullptr
+    );
+
+    if (error != JVMTI_ERROR_NONE) {
+        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to enable VM_INIT event: %d\n", error);
+        return false;
+    }
+
+    DEBUG_LOG("JVMTI VM_INIT event enabled");
+
     return true;
+}
+
+/**
+ * JVMTI callback for VM initialization.
+ *
+ * This is called when the JVM is fully initialized and ready to run Java code.
+ * We use this to initialize string constants that require platform encoding,
+ * which may not be available during earlier initialization phases.
+ *
+ * This fixes "platform encoding not initialized" errors when running tests
+ * via IntelliJ IDEA, which loads classes earlier than command-line Gradle.
+ *
+ * @param jvmti_env JVMTI environment
+ * @param jni_env JNI environment
+ * @param thread Current thread
+ */
+void JNICALL VMInitCallback(
+    jvmtiEnv *jvmti_env,
+    JNIEnv* jni_env,
+    jthread thread
+) {
+    DEBUG_LOG("VM_INIT callback - initializing cached string constants");
+
+    std::lock_guard<std::mutex> lock(g_strings_mutex);
+
+    // Create "JVMTI-Agent" string constant
+    if (g_caller_agent_string == nullptr) {
+        jstring local_agent = jni_env->NewStringUTF("JVMTI-Agent");
+        if (local_agent != nullptr) {
+            g_caller_agent_string = (jstring)jni_env->NewGlobalRef(local_agent);
+            jni_env->DeleteLocalRef(local_agent);
+            DEBUG_LOG("Cached caller agent string: JVMTI-Agent");
+        } else {
+            fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create caller agent string\n");
+        }
+    }
+
+    // Create "JVMTI-DNS" string constant
+    if (g_caller_dns_string == nullptr) {
+        jstring local_dns = jni_env->NewStringUTF("JVMTI-DNS");
+        if (local_dns != nullptr) {
+            g_caller_dns_string = (jstring)jni_env->NewGlobalRef(local_dns);
+            jni_env->DeleteLocalRef(local_dns);
+            DEBUG_LOG("Cached caller DNS string: JVMTI-DNS");
+        } else {
+            fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create caller DNS string\n");
+        }
+    }
+
+    DEBUG_LOG("String constants initialized successfully");
 }
 
 /**
@@ -389,6 +459,26 @@ jmethodID GetCheckConnectionMethod() {
 jmethodID GetIsExplicitlyBlockedMethod() {
     std::lock_guard<std::mutex> lock(g_context_mutex);
     return g_is_explicitly_blocked_method;
+}
+
+/**
+ * Get cached caller agent string constant.
+ *
+ * @return Cached "JVMTI-Agent" string, or nullptr if not initialized
+ */
+jstring GetCallerAgentString() {
+    std::lock_guard<std::mutex> lock(g_strings_mutex);
+    return g_caller_agent_string;
+}
+
+/**
+ * Get cached caller DNS string constant.
+ *
+ * @return Cached "JVMTI-DNS" string, or nullptr if not initialized
+ */
+jstring GetCallerDnsString() {
+    std::lock_guard<std::mutex> lock(g_strings_mutex);
+    return g_caller_dns_string;
 }
 
 /**

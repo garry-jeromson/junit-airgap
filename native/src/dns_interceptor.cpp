@@ -90,8 +90,8 @@ static jobjectArray wrapped_lookupAllHostAddr(
         if (contextClass != nullptr && checkConnectionMethod != nullptr) {
             DEBUG_LOG("Calling NetworkBlockerContext.checkConnection() for DNS");
 
-            // Create caller string
-            jstring callerString = env->NewStringUTF("JVMTI-DNS");
+            // Get cached caller string (initialized during VM_INIT)
+            jstring callerString = GetCallerDnsString();
 
             // Call checkConnection with port -1 (DNS doesn't have a port)
             // This will throw NetworkRequestAttemptedException if blocked

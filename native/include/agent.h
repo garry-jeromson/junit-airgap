@@ -22,7 +22,13 @@ extern "C" {
 extern jvmtiEnv *g_jvmti;
 extern JavaVM *g_jvm;
 
-// Callback for native method binding
+// Callbacks for JVMTI events
+void JNICALL VMInitCallback(
+    jvmtiEnv *jvmti_env,
+    JNIEnv* jni_env,
+    jthread thread
+);
+
 void JNICALL NativeMethodBindCallback(
     jvmtiEnv *jvmti_env,
     JNIEnv* jni_env,
@@ -59,10 +65,20 @@ extern jmethodID g_check_connection_method;
 extern jmethodID g_is_explicitly_blocked_method;
 extern std::mutex g_context_mutex;
 
+// Cached string constants (initialized during VM_INIT to avoid "platform encoding not initialized" errors)
+// See: https://github.com/garry-jeromson/junit-airgap/issues/XXX
+extern jstring g_caller_agent_string;  // "JVMTI-Agent"
+extern jstring g_caller_dns_string;    // "JVMTI-DNS"
+extern std::mutex g_strings_mutex;
+
 // Get cached context class and method (thread-safe)
 jclass GetNetworkBlockerContextClass();
 jmethodID GetCheckConnectionMethod();
 jmethodID GetIsExplicitlyBlockedMethod();
+
+// Get cached string constants (thread-safe)
+jstring GetCallerAgentString();
+jstring GetCallerDnsString();
 
 // Registration function called from Java to cache class/method references
 extern "C" {

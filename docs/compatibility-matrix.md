@@ -124,7 +124,7 @@ assertTrue(
 
 | IDE | Status | Notes |
 |-----|--------|-------|
-| IntelliJ IDEA | ✅ Works | May need JVM args: `-Djava.security.manager=allow` |
+| IntelliJ IDEA | ✅ Fully Supported | Works with both CLI and IDE test runners (fixed in v0.1.0-beta.2+) |
 | Android Studio | ✅ Works | Use with Robolectric tests |
 | VS Code | ⚠️ Should Work | Not tested |
 
