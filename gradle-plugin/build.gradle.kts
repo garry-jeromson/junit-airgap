@@ -1,3 +1,5 @@
+import org.gradle.plugins.signing.Sign
+
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
@@ -5,6 +7,15 @@ plugins {
     alias(libs.plugins.maven.publish)
     id("junit-extensions.kotlin-common-convention")
     alias(libs.plugins.kover)
+}
+
+// Configure signing to be optional (only required when keys are available)
+// This allows publishToMavenLocal without GPG setup
+tasks.withType<Sign>().configureEach {
+    isRequired = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
+        .orElse(providers.gradleProperty("signingInMemoryKey"))
+        .map { true }
+        .getOrElse(false)
 }
 
 gradlePlugin {
@@ -157,12 +168,7 @@ mavenPublishing {
 
     // Sign all publications with GPG (only when signing credentials are available)
     // Skip signing for publishToMavenLocal to allow tests without GPG setup
-    val hasSigningKey = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
-        .orElse(providers.gradleProperty("signingInMemoryKey"))
-        .isPresent
-    if (hasSigningKey) {
-        signAllPublications()
-    }
+    signAllPublications()
 
     // POM metadata for Maven Central
     pom {
