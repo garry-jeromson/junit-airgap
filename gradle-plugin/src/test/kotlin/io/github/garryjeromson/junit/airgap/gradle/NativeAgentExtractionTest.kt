@@ -80,18 +80,22 @@ class NativeAgentExtractionTest {
         )
 
         // Run test task
-        val result = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test", "--info")
-            .withPluginClasspath()
-            .forwardOutput()
-            .build()
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info")
+                .withPluginClasspath()
+                .forwardOutput()
+                .build()
 
         // Task outcome could be SUCCESS or NO-SOURCE (if no tests discovered)
         // We just care that the agent gets extracted
         val taskOutcome = result.task(":test")?.outcome
         assertTrue(
-            taskOutcome == TaskOutcome.SUCCESS || taskOutcome == TaskOutcome.NO_SOURCE || taskOutcome == TaskOutcome.FAILED,
+            taskOutcome == TaskOutcome.SUCCESS ||
+                taskOutcome == TaskOutcome.NO_SOURCE ||
+                taskOutcome == TaskOutcome.FAILED,
             "Test task should have completed (was $taskOutcome)",
         )
 
@@ -126,11 +130,13 @@ class NativeAgentExtractionTest {
         )
 
         // First run - extract agent
-        val firstResult = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test", "--info", "--rerun-tasks")
-            .withPluginClasspath()
-            .build()
+        val firstResult =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info", "--rerun-tasks")
+                .withPluginClasspath()
+                .build()
 
         // Don't assert task outcome - focus on agent extraction
         val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
@@ -141,17 +147,25 @@ class NativeAgentExtractionTest {
         Thread.sleep(100)
 
         // Second run - should reuse cached agent
-        val secondResult = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test", "--info", "--rerun-tasks")
-            .withPluginClasspath()
-            .build()
+        val secondResult =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info", "--rerun-tasks")
+                .withPluginClasspath()
+                .build()
 
         // Verify agent was NOT re-extracted (timestamp unchanged)
-        assertEquals(firstTimestamp, agentFile.lastModified(),
-            "Agent should be reused from cache (timestamp unchanged)")
-        assertEquals(firstSize, agentFile.length(),
-            "Agent size should remain the same")
+        assertEquals(
+            firstTimestamp,
+            agentFile.lastModified(),
+            "Agent should be reused from cache (timestamp unchanged)",
+        )
+        assertEquals(
+            firstSize,
+            agentFile.length(),
+            "Agent size should remain the same",
+        )
     }
 
     @Test
@@ -179,11 +193,13 @@ class NativeAgentExtractionTest {
         )
 
         // First run - extract agent
-        val firstResult = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test", "--info", "--rerun-tasks")
-            .withPluginClasspath()
-            .build()
+        val firstResult =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info", "--rerun-tasks")
+                .withPluginClasspath()
+                .build()
 
         val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
         val correctSize = agentFile.length()
@@ -194,17 +210,25 @@ class NativeAgentExtractionTest {
         assertTrue(corruptedSize < correctSize, "Corrupted file should be smaller than correct agent")
 
         // Second run - should detect size mismatch and re-extract
-        val secondResult = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test", "--info", "--rerun-tasks")
-            .withPluginClasspath()
-            .build()
+        val secondResult =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info", "--rerun-tasks")
+                .withPluginClasspath()
+                .build()
 
         // Verify agent was re-extracted to correct size
-        assertEquals(correctSize, agentFile.length(),
-            "Agent should be re-extracted to correct size")
-        assertNotEquals(corruptedSize, agentFile.length(),
-            "Agent should not remain corrupted")
+        assertEquals(
+            correctSize,
+            agentFile.length(),
+            "Agent should be re-extracted to correct size",
+        )
+        assertNotEquals(
+            corruptedSize,
+            agentFile.length(),
+            "Agent should not remain corrupted",
+        )
 
         // Note: Debug log messages about "size mismatch" are not visible at --info level
         // The important thing is that the agent was re-extracted to the correct size
@@ -235,11 +259,13 @@ class NativeAgentExtractionTest {
         )
 
         // Run test task
-        val result = GradleRunner.create()
-            .withProjectDir(testProjectDir)
-            .withArguments("test")
-            .withPluginClasspath()
-            .build()
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test")
+                .withPluginClasspath()
+                .build()
 
         assertEquals(TaskOutcome.SUCCESS, result.task(":test")?.outcome)
 
@@ -248,8 +274,10 @@ class NativeAgentExtractionTest {
         val isWindows = System.getProperty("os.name").lowercase().contains("windows")
 
         if (!isWindows) {
-            assertTrue(agentFile.canExecute(),
-                "Agent should be executable on Unix-like systems (macOS, Linux)")
+            assertTrue(
+                agentFile.canExecute(),
+                "Agent should be executable on Unix-like systems (macOS, Linux)",
+            )
         }
     }
 
@@ -293,16 +321,18 @@ class NativeAgentExtractionTest {
         )
 
         // Run both test tasks (may fail due to no tests discovered, but that's OK)
-        val result = try {
-            GradleRunner.create()
-                .withProjectDir(testProjectDir)
-                .withArguments("test", "integrationTest", "--info", "--rerun-tasks")
-                .withPluginClasspath()
-                .build()
-        } catch (e: org.gradle.testkit.runner.UnexpectedBuildFailure) {
-            // Build may fail with "no tests discovered" but agent should still be extracted
-            e.buildResult
-        }
+        val result =
+            try {
+                GradleRunner
+                    .create()
+                    .withProjectDir(testProjectDir)
+                    .withArguments("test", "integrationTest", "--info", "--rerun-tasks")
+                    .withPluginClasspath()
+                    .build()
+            } catch (e: org.gradle.testkit.runner.UnexpectedBuildFailure) {
+                // Build may fail with "no tests discovered" but agent should still be extracted
+                e.buildResult
+            }
 
         // Verify tasks attempted to run (outcome may be FAILED due to no tests)
         assertTrue(result.task(":test") != null, "Test task should run")
