@@ -37,11 +37,15 @@ include(":gradle-plugin")
 // 2. Check if plugin exists in Maven Local before including builds
 // 3. Provide helpful error message when plugin is missing
 
+// Only skip included builds when DIRECTLY publishing (not when test depends on publish)
 val isPublishing = gradle.startParameter.taskNames.any {
-    it.contains("publish") || it.contains("MavenLocal")
+    it == "publishToMavenLocal" ||
+    it == ":gradle-plugin:publishToMavenLocal" ||
+    it == "publish" ||
+    it.startsWith("publish") && !it.contains("test", ignoreCase = true)
 }
 
-val pluginMarkerPath = file("${System.getProperty("user.home")}/.m2/repository/io/github/garryjeromson/junit-airgap-gradle-plugin")
+val pluginMarkerPath = file("${System.getProperty("user.home")}/.m2/repository/io/github/garry-jeromson/junit-airgap-gradle-plugin")
 val pluginExists = pluginMarkerPath.exists()
 
 if (isPublishing) {
