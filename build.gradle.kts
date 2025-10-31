@@ -21,20 +21,28 @@ tasks.register("test") {
     group = "verification"
 
     // Depend on tests from core library and plugin (main workspace)
+    // Order: junit-airgap → gradle-plugin → publishToMavenLocal → plugin-integration-tests
     dependsOn(
         ":junit-airgap:test",
         ":junit-airgap:integrationTest",
         ":gradle-plugin:test",
     )
 
-    // Publish plugin to Maven Local before running integration tests
-    // Integration tests consume the plugin from Maven Local (realistic testing)
-    dependsOn(":gradle-plugin:publishToMavenLocal")
+    // Publish plugin AND library to Maven Local before running integration tests
+    // Integration tests consume both from Maven Local (realistic testing)
+    dependsOn(
+        ":junit-airgap:publishToMavenLocal",
+        ":gradle-plugin:publishToMavenLocal"
+    )
 
-    // Include plugin integration tests from the included build
+    // Include plugin integration tests from the included build (if available)
     // Must run after publishToMavenLocal
-    dependsOn(gradle.includedBuild("plugin-integration-tests").task(":test"))
-    mustRunAfter(":gradle-plugin:publishToMavenLocal")
+    try {
+        dependsOn(gradle.includedBuild("plugin-integration-tests").task(":test"))
+    } catch (e: Exception) {
+        // plugin-integration-tests not included (plugin not in Maven Local yet)
+        logger.info("Skipping plugin-integration-tests (not included in this build)")
+    }
 }
 
 // Task to run plugin integration tests from the included build
