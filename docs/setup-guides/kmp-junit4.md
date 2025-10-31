@@ -25,7 +25,7 @@ Add the plugin to your KMP module's `build.gradle.kts`:
 plugins {
     kotlin("multiplatform")
     id("com.android.library") // If targeting Android
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-SNAPSHOT"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-SNAPSHOT"
 }
 
 // Configure the plugin

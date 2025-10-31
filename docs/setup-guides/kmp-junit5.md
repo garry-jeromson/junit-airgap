@@ -23,7 +23,7 @@ Block network requests in Kotlin Multiplatform unit tests using JUnit 5.
 plugins {
     kotlin("multiplatform")
     id("com.android.library") // If targeting Android
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {

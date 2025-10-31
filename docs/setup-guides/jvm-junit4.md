@@ -19,7 +19,7 @@ With auto-injection, no manual `@Rule` fields needed:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {

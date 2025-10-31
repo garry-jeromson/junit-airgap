@@ -19,7 +19,7 @@ Block network requests in Android unit tests using Robolectric.
 plugins {
     id("com.android.library") // or com.android.application
     kotlin("android")
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 android {

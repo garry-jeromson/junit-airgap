@@ -62,7 +62,7 @@ fun `calculates user stats`() {
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
@@ -279,7 +279,7 @@ Zero configuration - plugin handles everything automatically:
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 

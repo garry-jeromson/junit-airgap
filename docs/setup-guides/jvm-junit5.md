@@ -17,7 +17,7 @@ Block network requests in JVM unit tests using JUnit 5.
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {

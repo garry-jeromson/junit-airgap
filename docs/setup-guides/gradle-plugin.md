@@ -14,7 +14,7 @@ The Gradle plugin simplifies setup by automatically:
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
@@ -159,7 +159,7 @@ junitAirgap {
 ```kotlin
 plugins {
     kotlin("jvm")
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 
@@ -169,7 +169,7 @@ plugins {
 plugins {
     id("com.android.library")
     kotlin("android")
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 android {
@@ -186,7 +186,7 @@ android {
 ```kotlin
 plugins {
     kotlin("multiplatform")
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 
 kotlin {
@@ -220,7 +220,7 @@ junitAirgap {
 
 ```kotlin
 allprojects {
-    pluginManager.withPlugin("io.github.garryjeromson.junit-airgap") {
+    pluginManager.withPlugin("io.github.garry-jeromson.junit-airgap") {
         configure<JunitAirgapExtension> {
             enabled = true
             allowedHosts = listOf("localhost")
@@ -267,7 +267,7 @@ Check plugin block:
 
 ```kotlin
 plugins {
-    id("io.github.garryjeromson.junit-airgap") version "0.1.0-beta.1"
+    id("io.github.garry-jeromson.junit-airgap") version "0.1.0-beta.1"
 }
 ```
 

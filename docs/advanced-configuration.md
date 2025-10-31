@@ -272,7 +272,7 @@ class MyTest {
 ```kotlin
 // Root build.gradle.kts
 allprojects {
-    pluginManager.withPlugin("io.github.garryjeromson.junit-airgap") {
+    pluginManager.withPlugin("io.github.garry-jeromson.junit-airgap") {
         configure<JunitAirgapExtension> {
             enabled = true
             allowedHosts = listOf("localhost")
