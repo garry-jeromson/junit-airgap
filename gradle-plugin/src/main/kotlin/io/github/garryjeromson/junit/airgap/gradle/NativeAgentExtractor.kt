@@ -64,6 +64,60 @@ object NativeAgentExtractor {
     }
 
     /**
+     * Check if the extracted agent is up-to-date by comparing file sizes.
+     *
+     * This prevents stale cached agents from being used after plugin updates.
+     * We compare the size of the extracted file with the resource in the JAR.
+     *
+     * @param extractedAgent The extracted agent file
+     * @param resourceStream Stream to the agent resource in the JAR
+     * @param logger Logger for diagnostic messages
+     * @return true if the agent is up-to-date, false if it needs re-extraction
+     */
+    private fun isAgentUpToDate(
+        extractedAgent: File,
+        resourceStream: java.io.InputStream,
+        logger: Logger,
+    ): Boolean {
+        if (!extractedAgent.exists()) {
+            return false
+        }
+
+        try {
+            // Get size of extracted file
+            val extractedSize = extractedAgent.length()
+
+            // Get size of resource by reading it
+            val resourceSize = resourceStream.available().toLong()
+
+            // If available() returns 0, we need to count bytes manually
+            val actualResourceSize = if (resourceSize == 0L) {
+                var count = 0L
+                val buffer = ByteArray(8192)
+                var bytesRead: Int
+                while (resourceStream.read(buffer).also { bytesRead = it } != -1) {
+                    count += bytesRead
+                }
+                count
+            } else {
+                resourceSize
+            }
+
+            if (extractedSize != actualResourceSize) {
+                logger.debug(
+                    "Native agent size mismatch (extracted=$extractedSize, resource=$actualResourceSize) - will re-extract",
+                )
+                return false
+            }
+
+            return true
+        } catch (e: Exception) {
+            logger.debug("Failed to check agent version: ${e.message} - will re-extract")
+            return false
+        }
+    }
+
+    /**
      * Extract the native agent for the current platform to the build directory.
      *
      * @param buildDir Build directory (for configuration cache compatibility)
@@ -93,15 +147,6 @@ object NativeAgentExtractor {
         val extractDir = File(buildDir, "junit-airgap/native")
         val extractedAgent = File(extractDir, platform.agentFileName)
 
-        // Skip extraction if agent already exists and is up-to-date
-        if (extractedAgent.exists()) {
-            logger.debug("Native agent already extracted: ${extractedAgent.absolutePath}")
-            return extractedAgent
-        }
-
-        // Create extraction directory
-        extractDir.mkdirs()
-
         // Load resource from plugin JAR
         val resourcePath = platform.resourcePath
         val resourceStream = NativeAgentExtractor::class.java.classLoader.getResourceAsStream(resourcePath)
@@ -115,9 +160,32 @@ object NativeAgentExtractor {
             return null
         }
 
+        // Check if we need to re-extract by comparing resource size with extracted file size
+        val needsExtraction = !extractedAgent.exists() || !isAgentUpToDate(extractedAgent, resourceStream, logger)
+
+        // Close the stream and reopen if we don't need to extract
+        // (we needed to open it to check size, but if not extracting we need to close it)
+        if (!needsExtraction) {
+            resourceStream.close()
+            if (debug) {
+                logger.debug("Native agent already up-to-date: ${extractedAgent.absolutePath}")
+            }
+            return extractedAgent
+        }
+
+        // Create extraction directory
+        extractDir.mkdirs()
+
+        // Re-open the resource stream for extraction (we consumed it during size check)
+        val extractionStream = NativeAgentExtractor::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: run {
+                logger.error("Failed to re-open resource stream for extraction")
+                return null
+            }
+
         // Extract agent to build directory
         try {
-            resourceStream.use { input ->
+            extractionStream.use { input ->
                 FileOutputStream(extractedAgent).use { output ->
                     input.copyTo(output)
                 }
