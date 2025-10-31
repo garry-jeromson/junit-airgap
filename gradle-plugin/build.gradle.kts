@@ -12,10 +12,12 @@ plugins {
 // Configure signing to be optional (only required when keys are available)
 // This allows publishToMavenLocal without GPG setup
 tasks.withType<Sign>().configureEach {
-    isRequired = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
-        .orElse(providers.gradleProperty("signingInMemoryKey"))
-        .map { true }
-        .getOrElse(false)
+    isRequired =
+        providers
+            .environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
+            .orElse(providers.gradleProperty("signingInMemoryKey"))
+            .map { true }
+            .getOrElse(false)
 }
 
 gradlePlugin {
@@ -28,7 +30,8 @@ gradlePlugin {
             id = "io.github.garry-jeromson.junit-airgap"
             implementationClass = "io.github.garryjeromson.junit.airgap.gradle.JunitAirgapPlugin"
             displayName = "JUnit Airgap Extension"
-            description = "Zero-configuration network blocking for JUnit tests. Automatically prevents unit tests from making real HTTP requests using JVMTI agent-based interception. Supports JUnit 4 and 5 on JVM and Android (Robolectric)."
+            description =
+                "Zero-configuration network blocking for JUnit tests. Automatically prevents unit tests from making real HTTP requests using JVMTI agent-based interception. Supports JUnit 4 and 5 on JVM and Android (Robolectric)."
             tags.set(listOf("testing", "junit", "junit5", "junit4", "network", "isolation", "test-isolation", "unit-testing", "mocking"))
         }
     }

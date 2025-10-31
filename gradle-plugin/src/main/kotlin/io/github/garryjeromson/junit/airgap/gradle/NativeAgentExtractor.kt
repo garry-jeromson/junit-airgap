@@ -91,17 +91,18 @@ object NativeAgentExtractor {
             val resourceSize = resourceStream.available().toLong()
 
             // If available() returns 0, we need to count bytes manually
-            val actualResourceSize = if (resourceSize == 0L) {
-                var count = 0L
-                val buffer = ByteArray(8192)
-                var bytesRead: Int
-                while (resourceStream.read(buffer).also { bytesRead = it } != -1) {
-                    count += bytesRead
+            val actualResourceSize =
+                if (resourceSize == 0L) {
+                    var count = 0L
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+                    while (resourceStream.read(buffer).also { bytesRead = it } != -1) {
+                        count += bytesRead
+                    }
+                    count
+                } else {
+                    resourceSize
                 }
-                count
-            } else {
-                resourceSize
-            }
 
             if (extractedSize != actualResourceSize) {
                 logger.debug(
@@ -177,11 +178,12 @@ object NativeAgentExtractor {
         extractDir.mkdirs()
 
         // Re-open the resource stream for extraction (we consumed it during size check)
-        val extractionStream = NativeAgentExtractor::class.java.classLoader.getResourceAsStream(resourcePath)
-            ?: run {
-                logger.error("Failed to re-open resource stream for extraction")
-                return null
-            }
+        val extractionStream =
+            NativeAgentExtractor::class.java.classLoader.getResourceAsStream(resourcePath)
+                ?: run {
+                    logger.error("Failed to re-open resource stream for extraction")
+                    return null
+                }
 
         // Extract agent to build directory
         try {

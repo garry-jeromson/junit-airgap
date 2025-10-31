@@ -15,10 +15,12 @@ version = "0.1.0-beta.1"
 // Configure signing to be optional (only required when keys are available)
 // This allows publishToMavenLocal without GPG setup
 tasks.withType<Sign>().configureEach {
-    isRequired = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
-        .orElse(providers.gradleProperty("signingInMemoryKey"))
-        .map { true }
-        .getOrElse(false)
+    isRequired =
+        providers
+            .environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
+            .orElse(providers.gradleProperty("signingInMemoryKey"))
+            .map { true }
+            .getOrElse(false)
 }
 
 // Configure ktlint for consistent code formatting
