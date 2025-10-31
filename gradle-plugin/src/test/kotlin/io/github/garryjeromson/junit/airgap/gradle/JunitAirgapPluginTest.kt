@@ -193,7 +193,7 @@ class JunitAirgapPluginTest {
 
         // Check that the dependency was added
         assertTrue(
-            result.output.contains("io.github.garryjeromson:junit-airgap"),
+            result.output.contains("io.github.garry-jeromson:junit-airgap"),
             "Should add junit-airgap dependency",
         )
     }

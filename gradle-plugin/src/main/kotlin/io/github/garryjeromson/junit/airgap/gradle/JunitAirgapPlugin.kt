@@ -135,7 +135,7 @@ class JunitAirgapPlugin : Plugin<Project> {
             project.configurations.findByName(configName)?.let { _ ->
                 project.dependencies.add(
                     configName,
-                    "io.github.garryjeromson:junit-airgap:$version",
+                    "io.github.garry-jeromson:junit-airgap:$version",
                 )
                 project.logger.info("Added junit-airgap:$version to $configName")
             }
@@ -147,7 +147,7 @@ class JunitAirgapPlugin : Plugin<Project> {
                 try {
                     project.dependencies.add(
                         "testImplementation",
-                        "io.github.garryjeromson:junit-airgap-jvm:$version",
+                        "io.github.garry-jeromson:junit-airgap-jvm:$version",
                     )
                     project.logger.info("Added junit-airgap-jvm:$version to testImplementation for Robolectric support")
                 } catch (e: Exception) {
@@ -339,7 +339,7 @@ class JunitAirgapPlugin : Plugin<Project> {
                 try {
                     project.dependencies.add(
                         configName,
-                        "io.github.garryjeromson:junit-airgap:$version",
+                        "io.github.garry-jeromson:junit-airgap:$version",
                     )
                     project.logger.info("Added junit-airgap:$version to $configName")
                 } catch (e: Exception) {
@@ -354,7 +354,7 @@ class JunitAirgapPlugin : Plugin<Project> {
             try {
                 project.dependencies.add(
                     "androidUnitTestImplementation",
-                    "io.github.garryjeromson:junit-airgap-jvm:$version",
+                    "io.github.garry-jeromson:junit-airgap-jvm:$version",
                 )
                 project.logger.info(
                     "Added junit-airgap-jvm:$version to androidUnitTestImplementation for Robolectric support",
