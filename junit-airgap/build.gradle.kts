@@ -1,3 +1,5 @@
+import org.gradle.plugins.signing.Sign
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -9,6 +11,15 @@ plugins {
 // Project coordinates (group and version)
 group = "io.github.garry-jeromson"
 version = "0.1.0-beta.1"
+
+// Configure signing to be optional (only required when keys are available)
+// This allows publishToMavenLocal without GPG setup
+tasks.withType<Sign>().configureEach {
+    isRequired = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
+        .orElse(providers.gradleProperty("signingInMemoryKey"))
+        .map { true }
+        .getOrElse(false)
+}
 
 // Configure ktlint for consistent code formatting
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
@@ -415,14 +426,8 @@ mavenPublishing {
     // Publish to Central Portal with automatic release after validation
     publishToMavenCentral(automaticRelease = true)
 
-    // Sign all publications with GPG (only when signing credentials are available)
-    // Skip signing for publishToMavenLocal to allow tests without GPG setup
-    val hasSigningKey = providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey")
-        .orElse(providers.gradleProperty("signingInMemoryKey"))
-        .isPresent
-    if (hasSigningKey) {
-        signAllPublications()
-    }
+    // Sign all publications with GPG (signing is optional via task configuration above)
+    signAllPublications()
 
     // POM metadata for Maven Central
     pom {
