@@ -105,7 +105,7 @@ bootstrap:
 ## test: Run all tests (Core library + Gradle plugin + Integration tests + Plugin integration tests)
 test:
 	@# Check if plugin exists in Maven Local (only check gradle-plugin marker)
-	@if [ ! -d "$$HOME/.m2/repository/io/github/garryjeromson/junit-airgap-gradle-plugin" ]; then \
+	@if [ ! -d "$$HOME/.m2/repository/io/github/garry-jeromson/junit-airgap-gradle-plugin" ]; then \
 		echo "═══════════════════════════════════════════════════════════════"; \
 		echo "  First-time setup: Publishing plugin to Maven Local..."; \
 		echo "═══════════════════════════════════════════════════════════════"; \
