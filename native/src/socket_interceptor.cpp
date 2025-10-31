@@ -55,6 +55,33 @@ jint JNICALL wrapped_Net_connect0(
 ) {
     DEBUG_LOG("wrapped_Net_connect0() called - intercepting connection attempt");
 
+    // IMPORTANT: Platform encoding initialization happens AFTER VM_INIT
+    // Even though VM_INIT completes, platform encoding may not be ready yet
+    // NetworkBlockerContext registration happens after platform encoding is ready
+    // So we use NetworkBlockerContext registration as a signal that everything is ready
+
+    // Check 1: VM_INIT must be complete (basic JVM initialization)
+    if (!g_vm_init_complete) {
+        DEBUG_LOG("VM_INIT not complete - allowing socket connection without interception");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
+        }
+        return -2; // Error if original function not available
+    }
+
+    // Check 2: NetworkBlockerContext must be registered (platform encoding ready)
+    jclass contextClass = GetNetworkBlockerContextClass();
+    if (contextClass == nullptr) {
+        DEBUG_LOG("NetworkBlockerContext not registered - allowing socket connection without interception (platform encoding may not be ready)");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
+        }
+        return -2; // Error if original function not available
+    }
+
+    // Both VM_INIT and NetworkBlockerContext ready - safe to proceed
+    DEBUG_LOG("VM_INIT complete and NetworkBlockerContext registered - proceeding with socket interception");
+
     // Extract both hostname and IP address from InetAddress
     // We need to check BOTH because:
     // 1. User might allowlist "example.com" (hostname)
@@ -78,24 +105,45 @@ jint JNICALL wrapped_Net_connect0(
             if (getHostAddressMethod != nullptr) {
                 hostAddressString = (jstring)env->CallObjectMethod(remote, getHostAddressMethod);
                 if (hostAddressString != nullptr) {
-                    hostAddressCStr = env->GetStringUTFChars(hostAddressString, nullptr);
+                    // Test platform encoding before extracting
+                    const char* testStr = env->GetStringUTFChars(hostAddressString, nullptr);
+                    if (testStr != nullptr) {
+                        hostAddressCStr = testStr;  // Keep the string
+                    } else {
+                        DEBUG_LOG("Platform encoding not ready - skipping IP address extraction");
+                        if (env->ExceptionCheck()) {
+                            env->ExceptionClear();
+                        }
+                    }
                 }
             }
 
             // Get hostname (may return cached hostname or do reverse DNS)
-            // Note: This might trigger reverse DNS lookup (e.g., "127.0.0.1" -> "localhost")
-            // but that's okay because we're already past DNS resolution at this point
-            jmethodID getHostNameMethod = env->GetMethodID(
-                inetAddressClass,
-                "getHostName",
-                "()Ljava/lang/String;"
-            );
+            // IMPORTANT: Only do this if platform encoding is ready (tested above)
+            // getHostName() can trigger reverse DNS which requires platform encoding
+            if (hostAddressCStr != nullptr) {
+                jmethodID getHostNameMethod = env->GetMethodID(
+                    inetAddressClass,
+                    "getHostName",
+                    "()Ljava/lang/String;"
+                );
 
-            if (getHostNameMethod != nullptr) {
-                hostNameString = (jstring)env->CallObjectMethod(remote, getHostNameMethod);
-                if (hostNameString != nullptr) {
-                    hostNameCStr = env->GetStringUTFChars(hostNameString, nullptr);
+                if (getHostNameMethod != nullptr) {
+                    hostNameString = (jstring)env->CallObjectMethod(remote, getHostNameMethod);
+                    if (hostNameString != nullptr) {
+                        const char* testStr = env->GetStringUTFChars(hostNameString, nullptr);
+                        if (testStr != nullptr) {
+                            hostNameCStr = testStr;  // Keep the string
+                        } else {
+                            DEBUG_LOG("Platform encoding not ready - skipping hostname extraction");
+                            if (env->ExceptionCheck()) {
+                                env->ExceptionClear();
+                            }
+                        }
+                    }
                 }
+            } else {
+                DEBUG_LOG("Skipping hostname extraction - platform encoding not ready");
             }
 
             DEBUG_LOGF("Connection attempt - hostname: %s, IP: %s, port: %d",
