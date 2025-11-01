@@ -250,7 +250,9 @@ void JNICALL VMInitCallback(
         if (g_caller_agent_string != nullptr) {
             const char* test_str = jni_env->GetStringUTFChars(g_caller_agent_string, nullptr);
             if (test_str != nullptr) {
-                DEBUG_LOGF("Platform encoding ready after %d attempts", attempt + 1);
+                if (attempt > 0) {
+                    DEBUG_LOGF("Platform encoding ready after %d attempts", attempt + 1);
+                }
                 jni_env->ReleaseStringUTFChars(g_caller_agent_string, test_str);
                 encoding_ready = true;
             } else {
@@ -260,7 +262,6 @@ void JNICALL VMInitCallback(
                 }
 
                 if (attempt < max_attempts - 1) {
-                    DEBUG_LOGF("Platform encoding not ready (attempt %d/%d), sleeping 10ms...", attempt + 1, max_attempts);
                     // Sleep for 10ms before retrying (usleep takes microseconds)
                     usleep(10000);
                 } else {
@@ -590,7 +591,6 @@ bool EnsurePlatformEncodingReady(JNIEnv* env) {
     // Try to use a cached string to trigger platform encoding initialization
     jstring test_string = GetCallerAgentString();
     if (test_string == nullptr) {
-        DEBUG_LOG("EnsurePlatformEncodingReady: No cached string available");
         return false;
     }
 
@@ -600,7 +600,9 @@ bool EnsurePlatformEncodingReady(JNIEnv* env) {
 
         if (test_chars != nullptr) {
             // Success! Platform encoding is ready
-            DEBUG_LOGF("EnsurePlatformEncodingReady: Platform encoding ready after %d attempt(s)", attempt + 1);
+            if (attempt > 0) {
+                DEBUG_LOGF("Platform encoding ready after %d attempt(s)", attempt + 1);
+            }
             env->ReleaseStringUTFChars(test_string, test_chars);
             return true;
         }
@@ -614,23 +616,20 @@ bool EnsurePlatformEncodingReady(JNIEnv* env) {
             jclass errorClass = env->FindClass("java/lang/InternalError");
             if (errorClass != nullptr && env->IsInstanceOf(exception, errorClass)) {
                 if (attempt < max_attempts - 1) {
-                    DEBUG_LOGF("EnsurePlatformEncodingReady: Platform encoding not ready (attempt %d/%d), retrying in 50ms...", attempt + 1, max_attempts);
                     usleep(50000);  // Sleep 50ms
                     continue;
                 } else {
-                    DEBUG_LOG("EnsurePlatformEncodingReady: Platform encoding still not ready after retries");
+                    DEBUG_LOG("Platform encoding still not ready after retries");
                     return false;
                 }
             } else {
                 // Different error - not a platform encoding issue
-                DEBUG_LOG("EnsurePlatformEncodingReady: Unexpected error (not InternalError)");
                 env->Throw(exception);  // Re-throw
                 return false;
             }
         }
     }
 
-    DEBUG_LOG("EnsurePlatformEncodingReady: Failed after all retries");
     return false;
 }
 
@@ -709,6 +708,5 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
         return;
     }
 
-    DEBUG_LOG("NetworkBlockerContext registered successfully");
     DEBUG_LOG("NetworkBlockerContext registered - network blocking enabled");
 }

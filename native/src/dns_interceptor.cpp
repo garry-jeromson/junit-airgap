@@ -71,9 +71,7 @@ static jobjectArray wrapped_lookupAllHostAddr(
     LookupAllHostAddrFunc original,
     const char* impl_name
 ) {
-    // Log entry WITHOUT doing any string operations (which require platform encoding)
-    DEBUG_LOGF("[WRAPPER-ENTRY] wrapped_lookupAllHostAddr(%s) called - obj=%p, hostname=%p, original=%p",
-               impl_name, obj, hostname, original);
+    DEBUG_LOGF("wrapped_lookupAllHostAddr(%s) called", impl_name);
 
     // IMPORTANT: Platform encoding initialization happens AFTER VM_INIT
     // Even though VM_INIT completes, platform encoding may not be ready yet
@@ -81,7 +79,6 @@ static jobjectArray wrapped_lookupAllHostAddr(
     // So we use NetworkBlockerContext registration as a signal that everything is ready
 
     // Check 1: VM_INIT must be complete (basic JVM initialization)
-    DEBUG_LOGF("[WRAPPER-CHECK1] g_vm_init_complete=%d", g_vm_init_complete);
     if (!g_vm_init_complete) {
         DEBUG_LOG("VM_INIT not complete - allowing DNS without interception");
         if (original != nullptr) {
@@ -92,7 +89,6 @@ static jobjectArray wrapped_lookupAllHostAddr(
 
     // Check 2: NetworkBlockerContext must be registered (platform encoding ready)
     jclass contextClass = GetNetworkBlockerContextClass();
-    DEBUG_LOGF("[WRAPPER-CHECK2] contextClass=%p", contextClass);
     if (contextClass == nullptr) {
         DEBUG_LOG("NetworkBlockerContext not registered - allowing DNS without interception (platform encoding may not be ready)");
         if (original != nullptr) {
@@ -102,7 +98,7 @@ static jobjectArray wrapped_lookupAllHostAddr(
     }
 
     // Both VM_INIT and NetworkBlockerContext ready - safe to proceed
-    DEBUG_LOG("[WRAPPER-CHECK2-OK] VM_INIT complete and NetworkBlockerContext registered - proceeding with DNS interception");
+    DEBUG_LOG("VM_INIT complete and NetworkBlockerContext registered - proceeding with DNS interception");
 
     // Check 3: Is there an active configuration? (optimization to skip string extraction)
     // If no configuration is set (e.g., @AllowNetworkRequests tests), we can skip all
@@ -110,7 +106,6 @@ static jobjectArray wrapped_lookupAllHostAddr(
     // encoding issues in edge cases where VM_INIT is complete but platform encoding
     // might not be fully ready for all string operations.
     jmethodID hasActiveConfigMethod = GetHasActiveConfigurationMethod();
-    DEBUG_LOGF("[WRAPPER-CHECK3] hasActiveConfigMethod=%p", hasActiveConfigMethod);
     if (hasActiveConfigMethod == nullptr) {
         // Method not registered yet - assume no configuration and allow
         DEBUG_LOG("hasActiveConfiguration method not registered - allowing DNS without interception");
@@ -121,9 +116,8 @@ static jobjectArray wrapped_lookupAllHostAddr(
     }
 
     jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
-    DEBUG_LOGF("[WRAPPER-CHECK3-RESULT] hasConfig=%d", hasConfig);
     if (!hasConfig) {
-        DEBUG_LOG("[WRAPPER-NOCONFIG] No active configuration - allowing DNS without interception");
+        DEBUG_LOG("No active configuration - allowing DNS without interception");
 
         // IMPORTANT: Ensure platform encoding is ready for the current thread before calling original function.
         // The original Java DNS function requires platform encoding, which is initialized per-thread.
