@@ -151,15 +151,61 @@ tasks.register<Copy>("packageNativeAgent") {
     }
 }
 
-// Make processResources depend on packaging the native agent
-tasks.named("processResources") {
-    dependsOn("packageNativeAgent")
+// ============================================================================
+// ByteBuddy Agent Packaging
+// ============================================================================
+
+// Task to copy the ByteBuddy agent JAR from junit-airgap build to plugin resources
+tasks.register<Copy>("packageBytebuddyAgent") {
+    description = "Copy ByteBuddy agent JAR into plugin resources for packaging"
+    group = "build"
+
+    // Source: built ByteBuddy agent JAR from junit-airgap module
+    // gradle-plugin is a sibling of junit-airgap, so navigate up to parent, then into junit-airgap/build
+    from(layout.projectDirectory.dir("../junit-airgap/build/libs")) {
+        include("junit-airgap-bytebuddy-agent-*-agent.jar")
+        rename { "junit-airgap-bytebuddy-agent.jar" }
+    }
+
+    // Destination: plugin resources in bytebuddy-agent directory
+    into("src/main/resources/bytebuddy-agent")
+
+    // Depend on the ByteBuddy JAR build task from junit-airgap
+    dependsOn(":junit-airgap:createBytebuddyAgentJar")
+
+    // Capture agent JAR directory at configuration time for configuration cache
+    val agentJarDir = layout.projectDirectory.dir("../junit-airgap/build/libs").asFile
+
+    doFirst {
+        logger.lifecycle("Packaging ByteBuddy agent JAR into plugin resources")
+
+        // Verify the agent JAR exists (using captured directory path)
+        val agentJarFile = agentJarDir
+            .listFiles { file -> file.name.matches(Regex("junit-airgap-bytebuddy-agent-.*-agent\\.jar")) }
+            ?.firstOrNull()
+
+        if (agentJarFile == null || !agentJarFile.exists()) {
+            throw GradleException(
+                "ByteBuddy agent JAR not found in ${agentJarDir.absolutePath}. " +
+                    "Run ':junit-airgap:createBytebuddyAgentJar' first.",
+            )
+        }
+    }
+
+    doLast {
+        logger.lifecycle("Packaged ByteBuddy agent JAR into plugin resources")
+    }
 }
 
-// Make all source JAR tasks depend on packageNativeAgent to avoid task ordering issues
+// Make processResources depend on packaging both agents
+tasks.named("processResources") {
+    dependsOn("packageNativeAgent", "packageBytebuddyAgent")
+}
+
+// Make all source JAR tasks depend on packaging tasks to avoid task ordering issues
 tasks.withType<Jar>().configureEach {
     if (name.contains("sources", ignoreCase = true)) {
-        dependsOn("packageNativeAgent")
+        dependsOn("packageNativeAgent", "packageBytebuddyAgent")
     }
 }
 

@@ -289,29 +289,50 @@ class JunitAirgapPlugin : Plugin<Project> {
                     systemProperty("junit.airgap.blockedHosts", blockedHosts)
                 }
 
-                val agentPath =
+                // Extract ByteBuddy agent (Layer 1 - Java API interception)
+                val bytebuddyAgentPath =
+                    BytebuddyAgentExtractor.getAgentPath(
+                        buildDirectory,
+                        logger,
+                        extension.debug.get(),
+                    )
+
+                if (bytebuddyAgentPath != null) {
+                    jvmArgs("-javaagent:$bytebuddyAgentPath")
+                    if (extension.debug.get()) {
+                        logger.debug("Loading ByteBuddy DNS agent from: $bytebuddyAgentPath")
+                    }
+                } else {
+                    logger.warn(
+                        "ByteBuddy agent not available for test task '$testTaskName'. " +
+                            "DNS interception will rely solely on JVMTI native agent.",
+                    )
+                }
+
+                // Extract JVMTI native agent (Layer 2 - Native method interception)
+                val nativeAgentPath =
                     NativeAgentExtractor.getAgentPath(
                         buildDirectory, // Use captured build directory
                         logger, // Use task's logger
                         extension.debug.get(),
                     )
 
-                if (agentPath != null) {
+                if (nativeAgentPath != null) {
                     // Add debug option if debug mode is enabled
                     val agentArg =
                         if (extension.debug.get()) {
-                            "-agentpath:$agentPath=debug"
+                            "-agentpath:$nativeAgentPath=debug"
                         } else {
-                            "-agentpath:$agentPath"
+                            "-agentpath:$nativeAgentPath"
                         }
                     jvmArgs(agentArg)
                     if (extension.debug.get()) {
-                        logger.debug("Loading JVMTI agent from: $agentPath")
+                        logger.debug("Loading JVMTI native agent from: $nativeAgentPath")
                     }
                 } else {
                     logger.warn(
-                        "JVMTI agent not available for test task '$testTaskName'. " +
-                            "Network blocking may not work on this platform.",
+                        "JVMTI native agent not available for test task '$testTaskName'. " +
+                            "Network blocking will rely on ByteBuddy agent only.",
                     )
                 }
             }
