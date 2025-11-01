@@ -43,6 +43,18 @@ This document provides a comprehensive overview of which Java versions, JUnit ve
 - **Network Blocking**: Fully functional via JVMTI agent
 - **All HTTP Clients**: Supported
 
+#### Platform Architecture Support
+
+| OS | Architecture | Status | Notes |
+|----|--------------|--------|-------|
+| **macOS** | ARM64 (Apple Silicon) | ✅ Fully Supported | Tested on macOS 14+ |
+| **Linux** | x86-64 (amd64) | ✅ Fully Supported | Tested on Ubuntu 22.04+ |
+| Linux | ARM64 (aarch64) | 🚧 Coming Soon | CMake builds supported, untested |
+| **Windows** | x86-64 | 🚧 Coming Soon | CMake builds supported, untested |
+| macOS | Intel (x86-64) | 🚧 Coming Soon | CMake builds supported, untested |
+
+**Note**: The JVMTI native agent requires a platform-specific build. The Gradle build automatically detects your platform and uses the appropriate library (.dylib for macOS, .so for Linux, .dll for Windows).
+
 #### Android
 - **Minimum SDK**: API 26 (Android 8.0)
 - **Compile SDK**: API 35

@@ -40,7 +40,7 @@ help:
 	@echo ""
 	@echo "Native Agent Commands (JVMTI Implementation):"
 	@echo "  setup-native            Install native build dependencies (CMake)"
-	@echo "  build-native            Build JVMTI native agent (.dylib/.so/.dll)"
+	@echo "  build-native            Build JVMTI native agent (macOS: .dylib, Linux: .so, Windows: .dll)"
 	@echo "  test-native             Run native agent tests (AgentLoadTest, SocketInterceptTest)"
 	@echo "  clean-native            Clean native build artifacts"
 	@echo ""
@@ -499,25 +499,40 @@ setup-native:
 build-native: setup-native
 	@echo "Building JVMTI native agent..."
 	@cd native && mkdir -p build && cd build && cmake .. && $(MAKE)
-	@echo "✅ Native agent built: native/build/libjunit-airgap-agent.dylib"
+	@# Detect platform for library extension
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		echo "✅ Native agent built: native/build/libjunit-airgap-agent.dylib"; \
+	elif [ "$(shell uname)" = "Linux" ]; then \
+		echo "✅ Native agent built: native/build/libjunit-airgap-agent.so"; \
+	else \
+		echo "✅ Native agent built: native/build/junit-airgap-agent.dll"; \
+	fi
 
 ## test-native: Run native agent tests
 test-native: build-native
 	@echo "Running native agent tests..."
 	@echo ""
-	@echo "Test 1: AgentLoadTest (verify agent loads)"
-	@echo "─────────────────────────────────────────────"
-	@cd native/test && \
+	@# Detect platform for library path
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		AGENT_LIB="../build/libjunit-airgap-agent.dylib"; \
+	elif [ "$(shell uname)" = "Linux" ]; then \
+		AGENT_LIB="../build/libjunit-airgap-agent.so"; \
+	else \
+		AGENT_LIB="../build/junit-airgap-agent.dll"; \
+	fi; \
+	echo "Test 1: AgentLoadTest (verify agent loads)"; \
+	echo "─────────────────────────────────────────────"; \
+	cd native/test && \
 		$(JAVA_HOME)/bin/javac AgentLoadTest.java && \
-		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-airgap-agent.dylib AgentLoadTest
-	@echo ""
-	@echo "Test 2: SocketInterceptTest (verify Socket interception)"
-	@echo "─────────────────────────────────────────────────────────────"
-	@cd native/test && \
+		$(JAVA_HOME)/bin/java -agentpath:$$AGENT_LIB AgentLoadTest; \
+	echo ""; \
+	echo "Test 2: SocketInterceptTest (verify Socket interception)"; \
+	echo "─────────────────────────────────────────────────────────────"; \
+	cd native/test && \
 		$(JAVA_HOME)/bin/javac SocketInterceptTest.java && \
-		$(JAVA_HOME)/bin/java -agentpath:../build/libjunit-airgap-agent.dylib SocketInterceptTest
-	@echo ""
-	@echo "✅ All native tests passed!"
+		$(JAVA_HOME)/bin/java -agentpath:$$AGENT_LIB SocketInterceptTest; \
+	echo ""; \
+	echo "✅ All native tests passed!"
 
 
 ## clean-native: Clean native build artifacts

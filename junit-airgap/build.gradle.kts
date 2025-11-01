@@ -8,6 +8,18 @@ plugins {
     alias(libs.plugins.kover)
 }
 
+/**
+ * Get the platform-specific native agent library name.
+ */
+fun getNativeAgentLibraryName(): String {
+    return when {
+        org.gradle.internal.os.OperatingSystem.current().isMacOsX -> "libjunit-airgap-agent.dylib"
+        org.gradle.internal.os.OperatingSystem.current().isLinux -> "libjunit-airgap-agent.so"
+        org.gradle.internal.os.OperatingSystem.current().isWindows -> "junit-airgap-agent.dll"
+        else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
+    }
+}
+
 // Project coordinates (group and version)
 group = "io.github.garry-jeromson"
 version = "0.1.0-beta.1"
@@ -219,7 +231,7 @@ tasks.named<Test>("jvmTest") {
 
     // Load JVMTI agent for network blocking
     // Capture file references at configuration time for configuration cache compatibility
-    val agentFile = project.file("../native/build/libjunit-airgap-agent.dylib")
+    val agentFile = project.file("../native/build/${getNativeAgentLibraryName()}")
     val agentPath = agentFile.absolutePath
 
     doFirst {
@@ -270,7 +282,7 @@ tasks.withType<Test>().configureEach {
         jvmArgs("-javaagent:$bytebuddyAgentPath")
 
         // Load JVMTI native agent for network blocking (Layer 2 - Native level)
-        val nativeAgentFile = project.file("../native/build/libjunit-airgap-agent.dylib")
+        val nativeAgentFile = project.file("../native/build/${getNativeAgentLibraryName()}")
         val nativeAgentPath = nativeAgentFile.absolutePath
 
         doFirst {
@@ -322,7 +334,7 @@ tasks.register<Test>("integrationTest") {
 
     // Load JVMTI agent for network blocking
     // Capture file references at configuration time for configuration cache compatibility
-    val agentFile = project.file("../native/build/libjunit-airgap-agent.dylib")
+    val agentFile = project.file("../native/build/${getNativeAgentLibraryName()}")
     val agentPath = agentFile.absolutePath
 
     doFirst {
@@ -408,20 +420,7 @@ tasks.register<Exec>("buildNativeAgent") {
     )
 
     // Output: the built native library (platform-specific)
-    val libraryName =
-        when {
-            org.gradle.internal.os.OperatingSystem
-                .current()
-                .isMacOsX -> "libjunit-airgap-agent.dylib"
-            org.gradle.internal.os.OperatingSystem
-                .current()
-                .isLinux -> "libjunit-airgap-agent.so"
-            org.gradle.internal.os.OperatingSystem
-                .current()
-                .isWindows -> "junit-airgap-agent.dll"
-            else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
-        }
-    outputs.file("../native/build/$libraryName")
+    outputs.file("../native/build/${getNativeAgentLibraryName()}")
 }
 
 // Task to clean native build artifacts

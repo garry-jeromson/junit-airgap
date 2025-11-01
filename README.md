@@ -138,15 +138,16 @@ Uses a **JVMTI agent** (JVM Tool Interface) to intercept network calls at the na
 |----------|--------|---------|
 | **Java** | Java 21+ | Single JVMTI agent works across all 21+ versions |
 | **JUnit** | 4.13.2 & 5.11.3 | Both frameworks fully supported |
-| **Platform** | JVM (macOS ARM64) | Native agent currently for macOS ARM64 |
+| **Platform** | JVM (macOS ARM64) | Native agent for macOS ARM64 |
+| **Platform** | JVM (Linux x86-64) | Native agent for Linux x86-64 |
 | **Platform** | Android (Robolectric) | Full support via Robolectric unit tests |
 | **HTTP Clients** | All major clients | OkHttp, Retrofit, Ktor, Apache, Spring, etc. |
 
 ### 🚧 Coming Soon
 
-- Linux (x86_64, ARM64)
-- Windows (x86_64)
-- macOS Intel (x86_64)
+- Linux ARM64
+- Windows x86-64
+- macOS Intel (x86-64)
 
 ### ❌ Not Supported
 
@@ -387,9 +388,9 @@ junitAirgap {
 java.lang.UnsatisfiedLinkError: no junit-airgap-agent in java.library.path
 ```
 
-**Current support**: macOS ARM64 only
+**Current support**: macOS ARM64, Linux x86-64
 
-**Coming soon**: Linux, Windows, macOS Intel
+**Coming soon**: Linux ARM64, Windows x86-64, macOS Intel (x86-64)
 
 See [Platform Compatibility](docs/compatibility-matrix.md) for details.
 
