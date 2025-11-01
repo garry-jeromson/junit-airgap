@@ -2,7 +2,7 @@ package io.github.garryjeromson.junit.airgap
 
 import java.net.HttpURLConnection
 import java.net.Socket
-import java.net.URL
+import java.net.URI
 import kotlin.test.*
 
 class NetworkBlockerTest {
@@ -29,7 +29,7 @@ class NetworkBlockerTest {
         blocker.install()
         try {
             assertFailsWith<NetworkRequestAttemptedException> {
-                val url = URL("http://example.com")
+                val url = URI("http://example.com").toURL()
                 url.openConnection().connect()
             }
         } finally {
@@ -45,7 +45,7 @@ class NetworkBlockerTest {
         blocker.install()
         try {
             // This should not throw because httpbin.org and all hosts are allowed
-            val url = URL("http://httpbin.org/get")
+            val url = URI("http://httpbin.org/get").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
@@ -101,7 +101,7 @@ class NetworkBlockerTest {
         // After uninstall, network should work (though this test might fail if no internet)
         // We're just checking it doesn't throw NetworkRequestAttemptedException
         try {
-            val url = URL("http://httpbin.org/get")
+            val url = URI("http://httpbin.org/get").toURL()
             url.openConnection()
             // If we get here without NetworkRequestAttemptedException, test passes
             assertTrue(true)
@@ -122,7 +122,7 @@ class NetworkBlockerTest {
         try {
             val exception =
                 assertFailsWith<NetworkRequestAttemptedException> {
-                    val url = URL("http://github.com:443/path")
+                    val url = URI("http://github.com:443/path").toURL()
                     url.openConnection().connect()
                 }
 
@@ -147,7 +147,7 @@ class NetworkBlockerTest {
         blocker.install()
         try {
             // Should allow subdomains of httpbin.org
-            val url = URL("http://eu.httpbin.org/get")
+            val url = URI("http://eu.httpbin.org/get").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000

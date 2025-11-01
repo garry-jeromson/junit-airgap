@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.net.Socket
-import java.net.URL
+import java.net.URI
 
 /**
  * Integration tests simulating real-world testing scenarios.
@@ -25,7 +25,7 @@ class RealWorldScenariosTest {
     fun `blocks API calls in unit tests`() {
         // Simulate a test that accidentally calls a real API
         assertNetworkBlocked("Real API calls should be blocked in unit tests") {
-            val url = URL("https://api.github.com/users/test")
+            val url = URI("https://api.github.com/users/test").toURL()
             url.openConnection().connect()
         }
     }
@@ -68,7 +68,7 @@ class RealWorldScenariosTest {
     @BlockNetworkRequests
     fun `blocks HTTP requests to CDNs`() {
         assertNetworkBlocked("CDN requests should be blocked") {
-            URL("https://cdn.jsdelivr.net/npm/package@1.0.0/file.js").openConnection().connect()
+            URI("https://cdn.jsdelivr.net/npm/package@1.0.0/file.js").toURL().openConnection().connect()
         }
     }
 
@@ -103,7 +103,7 @@ class RealWorldScenariosTest {
     fun `provides clear error messages for blocked requests`() {
         try {
             // Use URL.openConnection() which calls connect with actual port
-            val url = URL("http://api.example.com:8080/test")
+            val url = URI("http://api.example.com:8080/test").toURL()
             url.openConnection().connect()
             throw AssertionError("Should have thrown NetworkRequestAttemptedException")
         } catch (e: io.github.garryjeromson.junit.airgap.NetworkRequestAttemptedException) {

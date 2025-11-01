@@ -151,7 +151,9 @@ class JunitAirgapPlugin : Plugin<Project> {
                     )
                     project.logger.info("Added junit-airgap-jvm:$version to testImplementation for Robolectric support")
                 } catch (e: Exception) {
-                    project.logger.debug("[junit-airgap:plugin] Failed to add JVM dependency to testImplementation: ${e.message}")
+                    project.logger.debug(
+                        "[junit-airgap:plugin] Failed to add JVM dependency to testImplementation: ${e.message}",
+                    )
                 }
             }
         }
@@ -203,7 +205,9 @@ class JunitAirgapPlugin : Plugin<Project> {
         // Write properties file
         propsFile.writeText(properties)
         if (extension.debug.get()) {
-            project.logger.debug("[junit-airgap:plugin] Generated junit-platform.properties at: ${propsFile.absolutePath}")
+            project.logger.debug(
+                "[junit-airgap:plugin] Generated junit-platform.properties at: ${propsFile.absolutePath}",
+            )
         }
 
         // Add generated resources to test source set
@@ -381,7 +385,9 @@ class JunitAirgapPlugin : Plugin<Project> {
                     "Added junit-airgap-jvm:$version to androidUnitTestImplementation for Robolectric support",
                 )
             } catch (e: Exception) {
-                project.logger.debug("[junit-airgap:plugin] Failed to add JVM dependency to androidUnitTestImplementation: ${e.message}")
+                project.logger.debug(
+                    "[junit-airgap:plugin] Failed to add JVM dependency to androidUnitTestImplementation: ${e.message}",
+                )
             }
         }
 
@@ -428,7 +434,10 @@ class JunitAirgapPlugin : Plugin<Project> {
 
         propsFile.writeText(properties)
         // Note: extension is not available in this method, so we skip debug logging here
-        project.logger.debug("[junit-airgap:plugin] Generated junit-platform.properties for $sourceSetName at: ${propsFile.absolutePath}")
+        project.logger.debug(
+            "[junit-airgap:plugin] Generated junit-platform.properties for $sourceSetName at: " +
+                propsFile.absolutePath,
+        )
 
         // Add generated resources to the KMP source set
         addGeneratedResourcesToKmpSourceSet(project, generatedResourcesDir, sourceSetName)
@@ -449,7 +458,10 @@ class JunitAirgapPlugin : Plugin<Project> {
             srcDir.invoke(resources, resourcesDir)
             project.logger.info("Added generated resources to $sourceSetName KMP source set")
         } catch (e: Exception) {
-            project.logger.debug("[junit-airgap:plugin] Could not add generated resources to KMP source set $sourceSetName: ${e.message}")
+            project.logger.debug(
+                "[junit-airgap:plugin] Could not add generated resources to KMP source set " +
+                    "$sourceSetName: ${e.message}",
+            )
         }
     }
 
@@ -475,13 +487,17 @@ class JunitAirgapPlugin : Plugin<Project> {
         when {
             hasKmpPlugin -> {
                 if (extension.debug.get()) {
-                    project.logger.debug("[junit-airgap:plugin] Detected KMP project - configuring KMP injection")
+                    project.logger.debug(
+                        "[junit-airgap:plugin] Detected KMP project - configuring KMP injection",
+                    )
                 }
                 configureKmpJUnit4Injection(project, extension)
             }
             hasAndroidLibrary || hasAndroidApp -> {
                 if (extension.debug.get()) {
-                    project.logger.debug("[junit-airgap:plugin] Detected Android project - configuring Android injection")
+                    project.logger.debug(
+                        "[junit-airgap:plugin] Detected Android project - configuring Android injection",
+                    )
                 }
                 configureAndroidJUnit4Injection(project, extension)
             }

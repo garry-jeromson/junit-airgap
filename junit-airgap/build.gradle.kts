@@ -11,14 +11,19 @@ plugins {
 /**
  * Get the platform-specific native agent library name.
  */
-fun getNativeAgentLibraryName(): String {
-    return when {
-        org.gradle.internal.os.OperatingSystem.current().isMacOsX -> "libjunit-airgap-agent.dylib"
-        org.gradle.internal.os.OperatingSystem.current().isLinux -> "libjunit-airgap-agent.so"
-        org.gradle.internal.os.OperatingSystem.current().isWindows -> "junit-airgap-agent.dll"
+fun getNativeAgentLibraryName(): String =
+    when {
+        org.gradle.internal.os.OperatingSystem
+            .current()
+            .isMacOsX -> "libjunit-airgap-agent.dylib"
+        org.gradle.internal.os.OperatingSystem
+            .current()
+            .isLinux -> "libjunit-airgap-agent.so"
+        org.gradle.internal.os.OperatingSystem
+            .current()
+            .isWindows -> "junit-airgap-agent.dll"
         else -> throw GradleException("Unsupported platform: ${System.getProperty("os.name")}")
     }
-}
 
 // Project coordinates (group and version)
 group = "io.github.garry-jeromson"
@@ -50,8 +55,8 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
 }
 
 kotlin {
-    // Use Java 17 for broader compatibility (other projects use 21)
-    jvmToolchain(17)
+    // Use Java 21 consistently across all projects
+    jvmToolchain(21)
 
     // JVM target
     jvm()
@@ -164,8 +169,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     testOptions {
@@ -269,7 +274,11 @@ tasks.withType<Test>().configureEach {
 
         // Load ByteBuddy Java agent for DNS interception (Layer 1 - Java API level)
         // Capture file references at configuration time for configuration cache compatibility
-        val bytebuddyAgentJar = layout.buildDirectory.file("libs/junit-airgap-bytebuddy-agent-${version}-agent.jar").get().asFile
+        val bytebuddyAgentJar =
+            layout.buildDirectory
+                .file("libs/junit-airgap-bytebuddy-agent-$version-agent.jar")
+                .get()
+                .asFile
         val bytebuddyAgentPath = bytebuddyAgentJar.absolutePath
 
         doFirst {
@@ -540,9 +549,11 @@ val createBytebuddyAgentJar by tasks.registering(Jar::class) {
     from(layout.buildDirectory.dir("classes/kotlin/jvm/main"))
 
     // Include ByteBuddy and dependencies
-    from(configurations.named("jvmRuntimeClasspath").get().map {
-        if (it.isDirectory) it else zipTree(it)
-    })
+    from(
+        configurations.named("jvmRuntimeClasspath").get().map {
+            if (it.isDirectory) it else zipTree(it)
+        },
+    )
 
     // Set manifest for Java agent
     manifest {

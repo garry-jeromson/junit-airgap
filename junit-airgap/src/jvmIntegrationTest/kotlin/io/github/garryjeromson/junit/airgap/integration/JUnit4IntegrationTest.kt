@@ -9,7 +9,7 @@ import io.github.garryjeromson.junit.airgap.integration.fixtures.assertNetworkBl
 import io.github.garryjeromson.junit.airgap.integration.fixtures.assertNetworkNotBlocked
 import org.junit.*
 import java.net.Socket
-import java.net.URL
+import java.net.URI
 
 /**
  * Integration tests for JUnit 4 Rule support.
@@ -68,7 +68,7 @@ class JUnit4IntegrationTest {
         // Without @BlockNetworkRequests, network should not be blocked
         assertNetworkNotBlocked("JUnit 4 should not block without annotation") {
             try {
-                URL("http://example.com").openConnection()
+                URI("http://example.com").toURL().openConnection()
             } catch (e: Exception) {
                 // Other exceptions are fine
             }

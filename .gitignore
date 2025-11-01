@@ -39,6 +39,9 @@ captures/
 *.so
 *.dll
 
+# ByteBuddy agent JAR (generated during build)
+gradle-plugin/src/main/resources/bytebuddy-agent/junit-airgap-bytebuddy-agent.jar
+
 # Logs
 *.log
 

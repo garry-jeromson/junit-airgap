@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 /**
@@ -46,7 +46,7 @@ class HttpClientIntegrationTest {
     @BlockNetworkRequests
     fun `blocks HttpURLConnection to external host`() {
         assertNetworkBlocked("HttpURLConnection should be blocked") {
-            val url = URL("http://example.com/api")
+            val url = URI("http://example.com/api").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()
@@ -58,7 +58,7 @@ class HttpClientIntegrationTest {
     @AllowRequestsToHosts(hosts = ["localhost", "127.0.0.1"])
     fun `allows HttpURLConnection to localhost`() {
         assertNetworkNotBlocked("HttpURLConnection to localhost should work") {
-            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
+            val url = URI("http://localhost:${mockServer.listeningPort}/api/test").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()
@@ -140,7 +140,7 @@ class HttpClientIntegrationTest {
     @BlockNetworkRequests
     fun `blocks HTTPS connections`() {
         assertNetworkBlocked("HTTPS should be blocked") {
-            val url = URL("https://www.google.com")
+            val url = URI("https://www.google.com").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()
@@ -153,7 +153,7 @@ class HttpClientIntegrationTest {
     fun `allows all HTTP clients when wildcard is configured`() {
         assertNetworkNotBlocked("All clients should work with wildcard") {
             // Test with localhost since we have wildcard
-            val url = URL("http://localhost:${mockServer.listeningPort}/api/test")
+            val url = URI("http://localhost:${mockServer.listeningPort}/api/test").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
             connection.connect()

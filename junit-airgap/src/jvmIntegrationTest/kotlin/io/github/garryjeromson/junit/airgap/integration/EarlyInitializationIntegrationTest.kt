@@ -67,7 +67,11 @@ class EarlyInitializationIntegrationTest {
         // 2. Verify VM_INIT callback fired
         assertTrue(
             actual = result.stderr.contains("VM_INIT callback"),
-            message = "VM_INIT callback should fire.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}\nexit code: ${result.exitCode}",
+            message =
+                "VM_INIT callback should fire.\n" +
+                    "stdout:\n${result.stdout}\n" +
+                    "stderr:\n${result.stderr}\n" +
+                    "exit code: ${result.exitCode}",
         )
 
         // 3. Verify wrappers were installed (either deferred during VM_INIT or immediately after)

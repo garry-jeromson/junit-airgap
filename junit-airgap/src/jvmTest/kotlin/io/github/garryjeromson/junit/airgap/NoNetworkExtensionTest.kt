@@ -2,7 +2,7 @@ package io.github.garryjeromson.junit.airgap
 
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.Socket
-import java.net.URL
+import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -24,7 +24,7 @@ class AirgapExtensionTest {
         // This should work because * allows all
         // We just verify it doesn't throw NetworkRequestAttemptedException
         try {
-            val url = URL("http://httpbin.org/get")
+            val url = URI("http://httpbin.org/get").toURL()
             val connection = url.openConnection()
             connection.connectTimeout = 5000
             connection.connect()
@@ -64,7 +64,7 @@ class AirgapExtensionTest {
         // Without @BlockNetworkRequests, this should attempt the connection
         // (it may fail with network error, but should NOT throw NetworkRequestAttemptedException)
         try {
-            val url = URL("http://httpbin.org/get")
+            val url = URI("http://httpbin.org/get").toURL()
             val connection = url.openConnection()
             connection.connectTimeout = 5000
             connection.connect()
