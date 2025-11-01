@@ -672,6 +672,11 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
 
     if (g_check_connection_method == nullptr) {
         fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find checkConnection method\n");
+        if (env->ExceptionCheck()) {
+            fprintf(stderr, "[junit-airgap:native] JNI Exception occurred:\n");
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         return;
@@ -686,6 +691,11 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
 
     if (g_is_explicitly_blocked_method == nullptr) {
         fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find isExplicitlyBlocked method\n");
+        if (env->ExceptionCheck()) {
+            fprintf(stderr, "[junit-airgap:native] JNI Exception occurred:\n");
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         g_check_connection_method = nullptr;
@@ -701,6 +711,12 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
 
     if (g_has_active_configuration_method == nullptr) {
         fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find hasActiveConfiguration method\n");
+        // Check if there's a pending JNI exception that explains the failure
+        if (env->ExceptionCheck()) {
+            fprintf(stderr, "[junit-airgap:native] JNI Exception occurred:\n");
+            env->ExceptionDescribe();  // Prints the exception to stderr
+            env->ExceptionClear();     // Clear the exception
+        }
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         g_check_connection_method = nullptr;
