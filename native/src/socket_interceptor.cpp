@@ -82,6 +82,31 @@ jint JNICALL wrapped_Net_connect0(
     // Both VM_INIT and NetworkBlockerContext ready - safe to proceed
     DEBUG_LOG("VM_INIT complete and NetworkBlockerContext registered - proceeding with socket interception");
 
+    // Check 3: Is there an active configuration? (optimization to skip string extraction)
+    // If no configuration is set (e.g., @AllowNetworkRequests tests), we can skip all
+    // JNI string operations and immediately allow the connection. This avoids platform
+    // encoding issues in edge cases where VM_INIT is complete but platform encoding
+    // might not be fully ready for all string operations.
+    jmethodID hasActiveConfigMethod = GetHasActiveConfigurationMethod();
+    if (hasActiveConfigMethod == nullptr) {
+        // Method not registered yet - assume no configuration and allow
+        DEBUG_LOG("hasActiveConfiguration method not registered - allowing socket connection without interception");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
+        }
+        return -2; // Error if original function not available
+    }
+
+    jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
+    if (!hasConfig) {
+        DEBUG_LOG("No active configuration - allowing socket connection without interception");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
+        }
+        return -2; // Error if original function not available
+    }
+    DEBUG_LOG("Active configuration detected - proceeding with interception");
+
     // Extract both hostname and IP address from InetAddress
     // We need to check BOTH because:
     // 1. User might allowlist "example.com" (hostname)

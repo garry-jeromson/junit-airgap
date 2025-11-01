@@ -63,6 +63,7 @@ void* InstallInet4LookupWrapper(void* original_address);
 extern jclass g_network_blocker_context_class;
 extern jmethodID g_check_connection_method;
 extern jmethodID g_is_explicitly_blocked_method;
+extern jmethodID g_has_active_configuration_method;
 extern std::mutex g_context_mutex;
 
 // Cached string constants (initialized during VM_INIT to avoid "platform encoding not initialized" errors)
@@ -79,10 +80,15 @@ extern bool g_vm_init_complete;
 jclass GetNetworkBlockerContextClass();
 jmethodID GetCheckConnectionMethod();
 jmethodID GetIsExplicitlyBlockedMethod();
+jmethodID GetHasActiveConfigurationMethod();
 
 // Get cached string constants (thread-safe)
 jstring GetCallerAgentString();
 jstring GetCallerDnsString();
+
+// Ensure platform encoding is ready for the current thread
+// Returns true if ready, false if failed after retries
+bool EnsurePlatformEncodingReady(JNIEnv* env);
 
 // Registration function called from Java to cache class/method references
 extern "C" {

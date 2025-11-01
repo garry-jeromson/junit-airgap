@@ -42,6 +42,7 @@
 #include "agent.h"
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>  // for usleep()
 
 // Global state
 jvmtiEnv *g_jvmti = nullptr;
@@ -56,6 +57,7 @@ std::mutex g_functions_mutex;
 jclass g_network_blocker_context_class = nullptr;
 jmethodID g_check_connection_method = nullptr;
 jmethodID g_is_explicitly_blocked_method = nullptr;
+jmethodID g_has_active_configuration_method = nullptr;
 std::mutex g_context_mutex;
 
 // Cached string constants (initialized during VM_INIT)
@@ -236,20 +238,84 @@ void JNICALL VMInitCallback(
 
     // Eagerly initialize platform encoding for string extraction (GetStringUTFChars)
     // This ensures platform encoding is fully ready before we allow any interception
-    if (g_caller_agent_string != nullptr) {
-        const char* test_str = jni_env->GetStringUTFChars(g_caller_agent_string, nullptr);
-        if (test_str != nullptr) {
-            DEBUG_LOG("Platform encoding initialized for string extraction");
-            jni_env->ReleaseStringUTFChars(g_caller_agent_string, test_str);
-        } else {
-            fprintf(stderr, "[JVMTI-Agent] WARNING: Failed to initialize platform encoding for extraction\n");
+    //
+    // IMPORTANT: In Android Studio's test runner, platform encoding may not be fully
+    // ready immediately after VM_INIT. We need to poll/retry until it's actually working.
+    // Without this, tests with @AllowNetworkRequests fail with "platform encoding not initialized"
+    // because even the JVM's own DNS code can't run yet.
+    bool encoding_ready = false;
+    int max_attempts = 50;  // Try for ~500ms (50 attempts * 10ms sleep)
+
+    for (int attempt = 0; attempt < max_attempts && !encoding_ready; attempt++) {
+        if (g_caller_agent_string != nullptr) {
+            const char* test_str = jni_env->GetStringUTFChars(g_caller_agent_string, nullptr);
+            if (test_str != nullptr) {
+                DEBUG_LOGF("Platform encoding ready after %d attempts", attempt + 1);
+                jni_env->ReleaseStringUTFChars(g_caller_agent_string, test_str);
+                encoding_ready = true;
+            } else {
+                // Clear any exception from the failed GetStringUTFChars
+                if (jni_env->ExceptionCheck()) {
+                    jni_env->ExceptionClear();
+                }
+
+                if (attempt < max_attempts - 1) {
+                    DEBUG_LOGF("Platform encoding not ready (attempt %d/%d), sleeping 10ms...", attempt + 1, max_attempts);
+                    // Sleep for 10ms before retrying (usleep takes microseconds)
+                    usleep(10000);
+                } else {
+                    fprintf(stderr, "[JVMTI-Agent] WARNING: Platform encoding still not ready after %d attempts\n", max_attempts);
+                }
+            }
         }
     }
 
-    // Mark VM as fully initialized - platform encoding is now ready
-    // After this point, all JNI string operations (GetStringUTFChars, etc.) are safe
+    if (!encoding_ready) {
+        fprintf(stderr, "[JVMTI-Agent] WARNING: Proceeding without confirmed platform encoding readiness\n");
+        fprintf(stderr, "[JVMTI-Agent] WARNING: String operations may fail with 'platform encoding not initialized' errors\n");
+    }
+
+    // Mark VM as fully initialized - platform encoding is now ready (or we've waited long enough)
+    // After this point, all JNI string operations (GetStringUTFChars, etc.) should be safe
     g_vm_init_complete = true;
     DEBUG_LOG("VM initialization complete - all JNI operations now safe");
+
+    // CRITICAL FIX: Check if DNS native methods were bound before agent initialization
+    // If they were, we have a fundamental limitation: JVMTI can't rebind native methods
+    // after they're already bound. The only solution is to use ByteBuddy at the Java layer.
+    DEBUG_LOG("Checking DNS native method interception status...");
+
+    // Check if we successfully intercepted DNS methods during Agent_OnLoad
+    bool hasInet6Wrapper = (GetOriginalFunction("java.net.Inet6AddressImpl.lookupAllHostAddr") != nullptr);
+    bool hasInet4Wrapper = (GetOriginalFunction("java.net.Inet4AddressImpl.lookupAllHostAddr") != nullptr);
+
+    if (hasInet6Wrapper) {
+        DEBUG_LOG("Inet6AddressImpl.lookupAllHostAddr() successfully intercepted");
+    } else {
+        DEBUG_LOG("WARNING: Inet6AddressImpl.lookupAllHostAddr() was NOT intercepted");
+        DEBUG_LOG("WARNING: DNS methods may have been bound before agent initialization");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "================================================================================\n");
+        fprintf(stderr, "[JVMTI-Agent] ERROR: DNS Interception Failed\n");
+        fprintf(stderr, "================================================================================\n");
+        fprintf(stderr, "[JVMTI-Agent] Inet6AddressImpl.lookupAllHostAddr() was not intercepted.\n");
+        fprintf(stderr, "[JVMTI-Agent] \n");
+        fprintf(stderr, "[JVMTI-Agent] This means the native method was bound BEFORE the JVMTI agent\n");
+        fprintf(stderr, "[JVMTI-Agent] finished loading. This is a known limitation when:\n");
+        fprintf(stderr, "[JVMTI-Agent]   1. The JVM loads DNS classes during early initialization\n");
+        fprintf(stderr, "[JVMTI-Agent]   2. Multiple JVM instances are spawned (e.g., in IDE test runners)\n");
+        fprintf(stderr, "[JVMTI-Agent] \n");
+        fprintf(stderr, "[JVMTI-Agent] WORKAROUND: Use ByteBuddy to intercept at the Java layer instead\n");
+        fprintf(stderr, "[JVMTI-Agent]             of relying solely on JVMTI native interception.\n");
+        fprintf(stderr, "================================================================================\n");
+        fprintf(stderr, "\n");
+    }
+
+    if (hasInet4Wrapper) {
+        DEBUG_LOG("Inet4AddressImpl.lookupAllHostAddr() successfully intercepted");
+    }
+
+    DEBUG_LOG("DNS native method interception check complete");
 }
 
 /**
@@ -493,6 +559,16 @@ jmethodID GetIsExplicitlyBlockedMethod() {
 }
 
 /**
+ * Get cached hasActiveConfiguration method.
+ *
+ * @return Cached method ID, or nullptr if not registered
+ */
+jmethodID GetHasActiveConfigurationMethod() {
+    std::lock_guard<std::mutex> lock(g_context_mutex);
+    return g_has_active_configuration_method;
+}
+
+/**
  * Get cached caller agent string constant.
  *
  * @return Cached "JVMTI-Agent" string, or nullptr if not initialized
@@ -510,6 +586,67 @@ jstring GetCallerAgentString() {
 jstring GetCallerDnsString() {
     std::lock_guard<std::mutex> lock(g_strings_mutex);
     return g_caller_dns_string;
+}
+
+/**
+ * Ensure platform encoding is ready for the current thread.
+ *
+ * Platform encoding initialization is per-thread in the JVM. When a new thread
+ * (like Android Studio's "Test worker") is created, platform encoding may not be
+ * ready immediately, even if VM_INIT has completed and NetworkBlockerContext is registered.
+ *
+ * This function triggers platform encoding initialization by attempting a simple
+ * string operation (GetStringUTFChars) and retrying if it fails.
+ *
+ * @param env JNI environment for current thread
+ * @return true if platform encoding is ready, false if failed after retries
+ */
+bool EnsurePlatformEncodingReady(JNIEnv* env) {
+    // Try to use a cached string to trigger platform encoding initialization
+    jstring test_string = GetCallerAgentString();
+    if (test_string == nullptr) {
+        DEBUG_LOG("EnsurePlatformEncodingReady: No cached string available");
+        return false;
+    }
+
+    int max_attempts = 100;  // Up to 5 seconds (100 attempts * 50ms)
+    for (int attempt = 0; attempt < max_attempts; attempt++) {
+        const char* test_chars = env->GetStringUTFChars(test_string, nullptr);
+
+        if (test_chars != nullptr) {
+            // Success! Platform encoding is ready
+            DEBUG_LOGF("EnsurePlatformEncodingReady: Platform encoding ready after %d attempt(s)", attempt + 1);
+            env->ReleaseStringUTFChars(test_string, test_chars);
+            return true;
+        }
+
+        // Failed - check if it's a platform encoding error
+        if (env->ExceptionCheck()) {
+            jthrowable exception = env->ExceptionOccurred();
+            env->ExceptionClear();
+
+            // Check if it's InternalError (platform encoding error)
+            jclass errorClass = env->FindClass("java/lang/InternalError");
+            if (errorClass != nullptr && env->IsInstanceOf(exception, errorClass)) {
+                if (attempt < max_attempts - 1) {
+                    DEBUG_LOGF("EnsurePlatformEncodingReady: Platform encoding not ready (attempt %d/%d), retrying in 50ms...", attempt + 1, max_attempts);
+                    usleep(50000);  // Sleep 50ms
+                    continue;
+                } else {
+                    DEBUG_LOG("EnsurePlatformEncodingReady: Platform encoding still not ready after retries");
+                    return false;
+                }
+            } else {
+                // Different error - not a platform encoding issue
+                DEBUG_LOG("EnsurePlatformEncodingReady: Unexpected error (not InternalError)");
+                env->Throw(exception);  // Re-throw
+                return false;
+            }
+        }
+    }
+
+    DEBUG_LOG("EnsurePlatformEncodingReady: Failed after all retries");
+    return false;
 }
 
 /**
@@ -568,6 +705,22 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         g_check_connection_method = nullptr;
+        return;
+    }
+
+    // Get hasActiveConfiguration method
+    g_has_active_configuration_method = env->GetStaticMethodID(
+        g_network_blocker_context_class,
+        "hasActiveConfiguration",
+        "()Z"
+    );
+
+    if (g_has_active_configuration_method == nullptr) {
+        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find hasActiveConfiguration method\n");
+        env->DeleteGlobalRef(g_network_blocker_context_class);
+        g_network_blocker_context_class = nullptr;
+        g_check_connection_method = nullptr;
+        g_is_explicitly_blocked_method = nullptr;
         return;
     }
 
