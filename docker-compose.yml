@@ -11,6 +11,8 @@ services:
       # Mount entire source tree (read-write for simplicity)
       # Changes made in container will be visible on host
       - ./:/workspace
+      # Mount CMake build directory to avoid conflicts with host platform
+      - cmake-build-linux-x86:/workspace/native/build
       # Mount Gradle cache for faster builds (persistent across container runs)
       - gradle-cache-linux-x86:/root/.gradle
       # Mount Maven Local for integration tests (persistent across container runs)
@@ -22,6 +24,8 @@ services:
     command: bash -c "chmod +x ./gradlew && ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon"
 
 volumes:
+  # CMake build directory for Linux x86-64 (isolates Linux build from host platform)
+  cmake-build-linux-x86:
   # Gradle cache for Linux x86-64 (separate from host to avoid conflicts)
   gradle-cache-linux-x86:
   # Maven Local for Linux x86-64 (separate from host to avoid native lib conflicts)
