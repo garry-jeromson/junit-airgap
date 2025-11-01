@@ -21,7 +21,12 @@ services:
       - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
       - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
     working_dir: /workspace
-    command: bash -c "chmod +x ./gradlew && ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon"
+    command: bash -c "
+      chmod +x ./gradlew &&
+      ./gradlew :gradle-plugin:publishToMavenLocal --no-daemon &&
+      ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon &&
+      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon
+      "
 
 volumes:
   # CMake build directory for Linux x86-64 (isolates Linux build from host platform)
