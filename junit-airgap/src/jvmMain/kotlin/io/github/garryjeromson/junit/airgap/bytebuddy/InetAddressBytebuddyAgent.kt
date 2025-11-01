@@ -110,13 +110,13 @@ object InetAddressBytebuddyAgent {
             // Intercept getAllByName(String) - primary DNS lookup method
             .visit(
                 Advice
-                    .to(InetAddressGetAllByNameAdvice.Companion::class.java)
+                    .to(InetAddressGetAllByNameAdvice::class.java)
                     .on(getAllByNameMatcher),
             )
             // Intercept getByName(String) - convenience method
             .visit(
                 Advice
-                    .to(InetAddressGetByNameAdvice.Companion::class.java)
+                    .to(InetAddressGetByNameAdvice::class.java)
                     .on(getByNameMatcher),
             )
     }
