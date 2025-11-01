@@ -495,10 +495,13 @@ kover {
                 onCheck = true
             }
 
-            // Exclude integration tests from coverage
+            // Exclude integration tests and untestable infrastructure from coverage
             filters {
                 excludes {
                     packages("io.github.garryjeromson.junit.airgap.integration")
+                    // Exclude ByteBuddy agent infrastructure (only runs as Java agent, tested via integration)
+                    classes("io.github.garryjeromson.junit.airgap.bytebuddy.InetAddressBytebuddyAgent")
+                    classes("io.github.garryjeromson.junit.airgap.bytebuddy.InetAddressBytebuddyAgent\$*")
                 }
             }
 
