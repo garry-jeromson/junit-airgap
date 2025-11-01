@@ -68,8 +68,7 @@ object InetAddressBytebuddyAgent {
                 .type(ElementMatchers.named("java.net.InetAddress")) // Target InetAddress
                 .transform { builder, typeDescription, classLoader, module, _ ->
                     transformInetAddress(builder, typeDescription, classLoader, module)
-                }
-                .installOn(instrumentation)
+                }.installOn(instrumentation)
 
             if (debugMode) {
                 System.err.println("[junit-airgap:bytebuddy] ByteBuddy DNS agent installed successfully")
@@ -100,10 +99,12 @@ object InetAddressBytebuddyAgent {
         }
 
         val getAllByNameMatcher =
-            ElementMatchers.named<net.bytebuddy.description.method.MethodDescription>("getAllByName")
+            ElementMatchers
+                .named<net.bytebuddy.description.method.MethodDescription>("getAllByName")
                 .and(ElementMatchers.takesArguments(1))
         val getByNameMatcher =
-            ElementMatchers.named<net.bytebuddy.description.method.MethodDescription>("getByName")
+            ElementMatchers
+                .named<net.bytebuddy.description.method.MethodDescription>("getByName")
                 .and(ElementMatchers.takesArguments(1))
 
         return builder
@@ -124,8 +125,8 @@ object InetAddressBytebuddyAgent {
     /**
      * Create listener for logging transformation events (debug mode only).
      */
-    private fun createListener(debugMode: Boolean): AgentBuilder.Listener {
-        return if (debugMode) {
+    private fun createListener(debugMode: Boolean): AgentBuilder.Listener =
+        if (debugMode) {
             object : AgentBuilder.Listener {
                 override fun onDiscovery(
                     typeName: String,
@@ -183,5 +184,4 @@ object InetAddressBytebuddyAgent {
         } else {
             AgentBuilder.Listener.NoOp.INSTANCE
         }
-    }
 }

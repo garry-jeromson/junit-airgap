@@ -1,0 +1,76 @@
+# Build outputs (will be built in container)
+build/
+.gradle/
+.kotlin/
+**/build/
+out/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*.swn
+
+# Git
+.git/
+.github/
+
+# Documentation (except README for context)
+docs/
+*.md
+!README.md
+
+# Test results (will be generated in container)
+**/test-results/
+**/reports/
+
+# Native build artifacts (will be built in container)
+native/build/
+*.dylib
+*.so
+*.dll
+*.o
+
+# Maven Local (will be populated in container)
+.m2/
+~/.m2/
+
+# Temporary files
+tmp/
+.tmp/
+*.log
+*.pid
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment files
+.env
+.env.*
+*.local
+
+# Docker files themselves
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Coverage reports
+.kover/
+**/kover/
+
+# Package files
+*.jar
+*.war
+*.aar
+*.zip
+*.tar
+*.tar.gz
+
+# Backup files
+*~
+*.bak
+*.backup

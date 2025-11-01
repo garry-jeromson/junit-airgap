@@ -62,7 +62,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         val debugMode = debug.get()
 
         if (debugMode) {
-            logger.debug("[junit-airgap:plugin] JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}")
+            logger.debug(
+                "[junit-airgap:plugin] JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}",
+            )
         }
 
         if (!classesDir.exists()) {
@@ -131,7 +133,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                     }
                     if (hasAirgapRule(clazz)) {
                         if (debugMode) {
-                            logger.debug("[junit-airgap:plugin]   Skipping $className - already has noNetworkRule field")
+                            logger.debug(
+                                "[junit-airgap:plugin]   Skipping $className - already has noNetworkRule field",
+                            )
                         }
                         skippedCount++
                     } else {
@@ -152,7 +156,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                 }
             } catch (e: NoClassDefFoundError) {
                 if (debugMode) {
-                    logger.debug("[junit-airgap:plugin] Could not load class $className (missing dependency): ${e.message}")
+                    logger.debug(
+                        "[junit-airgap:plugin] Could not load class $className (missing dependency): ${e.message}",
+                    )
                 }
             } catch (e: Exception) {
                 logger.warn("Error processing class $className: ${e.message}")
@@ -163,7 +169,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         }
 
         if (debugMode && (enhancedCount > 0 || skippedCount > 0)) {
-            logger.debug("[junit-airgap:plugin] JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes")
+            logger.debug(
+                "[junit-airgap:plugin] JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes",
+            )
         }
     }
 
@@ -195,7 +203,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         val hasJUnit4Test =
             clazz.declaredMethods.any { method ->
                 if (debugMode) {
-                    logger.debug("[junit-airgap:plugin]     Method: ${method.name}, annotations: ${method.annotations.size}")
+                    logger.debug(
+                        "[junit-airgap:plugin]     Method: ${method.name}, annotations: ${method.annotations.size}",
+                    )
                 }
                 val hasTest =
                     method.annotations.any { annotation ->
@@ -224,7 +234,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
 
         val isJUnit4 = hasJUnit4Test || hasRunWith
         if (debugMode) {
-            logger.debug("[junit-airgap:plugin]     Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4")
+            logger.debug(
+                "[junit-airgap:plugin]     Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4",
+            )
         }
 
         return isJUnit4

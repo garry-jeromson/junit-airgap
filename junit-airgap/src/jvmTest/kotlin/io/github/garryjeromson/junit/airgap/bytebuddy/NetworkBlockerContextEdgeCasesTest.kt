@@ -90,17 +90,19 @@ class NetworkBlockerContextEdgeCasesTest {
     @Test
     fun `configuration set in main thread is visible to child threads via global fallback`() {
         // Given: Configuration is set in main thread
-        val mainConfig = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val mainConfig =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(mainConfig)
 
         // When: Checking configuration in a different thread
         var childThreadConfig: NetworkConfiguration? = null
-        val thread = Thread {
-            childThreadConfig = NetworkBlockerContext.getConfiguration()
-        }
+        val thread =
+            Thread {
+                childThreadConfig = NetworkBlockerContext.getConfiguration()
+            }
         thread.start()
         thread.join()
 
@@ -112,10 +114,11 @@ class NetworkBlockerContextEdgeCasesTest {
     @Test
     fun `clearConfiguration increments generation counter`() {
         // Given: Configuration is set
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Configuration is cleared

@@ -332,7 +332,13 @@ make test-jvm                     # JVM only
 make test-android                 # Android only
 make test-integration             # Integration tests
 make test-plugin-integration      # Plugin integration tests
+
+# Test on Linux locally (requires Docker)
+make docker-build-linux           # Build Linux Docker image (one-time)
+make docker-test-linux            # Run tests in Linux container
 ```
+
+**Docker Multi-Platform Testing**: Test Linux builds locally before pushing to CI for faster feedback loops. See **[Docker Local Testing Guide →](docs/docker-local-testing.md)**
 
 ---
 

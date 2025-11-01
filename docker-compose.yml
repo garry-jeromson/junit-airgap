@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # Linux x86-64 build and test environment
+  linux-x86-64:
+    build:
+      context: .
+      dockerfile: docker/linux-x86-64/Dockerfile
+    platform: linux/amd64
+    volumes:
+      # Mount entire source tree (read-write for simplicity)
+      # Changes made in container will be visible on host
+      - ./:/workspace
+      # Mount Gradle cache for faster builds (persistent across container runs)
+      - gradle-cache-linux-x86:/root/.gradle
+      # Mount Maven Local for integration tests (persistent across container runs)
+      - maven-local-linux-x86:/root/.m2
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
+    working_dir: /workspace
+    command: bash -c "chmod +x ./gradlew && ./gradlew clean :junit-airgap:jvmTest :gradle-plugin:test --no-daemon -Pkotlin.options.allWarningsAsErrors=false -x koverHtmlReport -x koverXmlReport"
+
+volumes:
+  # Gradle cache for Linux x86-64 (separate from host to avoid conflicts)
+  gradle-cache-linux-x86:
+  # Maven Local for Linux x86-64 (separate from host to avoid native lib conflicts)
+  maven-local-linux-x86:

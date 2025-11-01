@@ -26,10 +26,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getAllByName advice blocks unauthorized DNS lookup`() {
         // Given: Configuration blocks example.com
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = setOf("example.com"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = setOf("example.com"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getAllByName("example.com")
@@ -42,10 +43,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getAllByName advice allows authorized DNS lookup`() {
         // Given: Configuration allows localhost
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getAllByName("localhost")
@@ -58,10 +60,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getAllByName advice allows localhost when host is null`() {
         // Given: Configuration blocks all hosts
-        val config = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = setOf("*"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = setOf("*"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getAllByName(null) - represents localhost
@@ -86,10 +89,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getByName advice blocks unauthorized DNS lookup`() {
         // Given: Configuration blocks example.com
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = setOf("example.com"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = setOf("example.com"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getByName("example.com")
@@ -102,10 +106,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getByName advice allows authorized DNS lookup`() {
         // Given: Configuration allows localhost
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("localhost"),
-            blockedHosts = emptySet(),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("localhost"),
+                blockedHosts = emptySet(),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getByName("localhost")
@@ -118,10 +123,11 @@ class InetAddressAdviceTest {
     @Test
     fun `getByName advice allows localhost when host is null`() {
         // Given: Configuration blocks all hosts
-        val config = NetworkConfiguration(
-            allowedHosts = emptySet(),
-            blockedHosts = setOf("*"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = emptySet(),
+                blockedHosts = setOf("*"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice intercepts getByName(null) - represents localhost
@@ -149,10 +155,11 @@ class InetAddressAdviceTest {
         // to find and invoke NetworkBlockerContext.checkConnection()
 
         // Given: Configuration is set
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("allowed.com"),
-            blockedHosts = setOf("blocked.com"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("allowed.com"),
+                blockedHosts = setOf("blocked.com"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When: Advice uses reflection to check both allowed and blocked hosts
@@ -170,10 +177,11 @@ class InetAddressAdviceTest {
     @Test
     fun `advice works with wildcard patterns in configuration`() {
         // Given: Configuration with wildcard patterns
-        val config = NetworkConfiguration(
-            allowedHosts = setOf("*.example.com"),
-            blockedHosts = setOf("bad.*"),
-        )
+        val config =
+            NetworkConfiguration(
+                allowedHosts = setOf("*.example.com"),
+                blockedHosts = setOf("bad.*"),
+            )
         NetworkBlockerContext.setConfiguration(config)
 
         // When/Then: Wildcard matching should work through reflection

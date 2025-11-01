@@ -43,6 +43,18 @@ make lint                      # Lint code
 make coverage                  # Generate coverage reports
 ```
 
+### Docker Multi-Platform Testing
+
+Test Linux builds locally before pushing to CI (requires Docker):
+
+```bash
+make docker-build-linux        # Build Linux x86-64 Docker image (one-time)
+make docker-test-linux         # Run tests in Linux container
+make docker-shell-linux        # Open shell for debugging
+```
+
+See [Docker Local Testing Guide](docs/docker-local-testing.md) for complete documentation.
+
 ### Direct Gradle Commands
 
 Always prefix with `JAVA_HOME=/Users/garry.jeromson/Library/Java/JavaVirtualMachines/temurin-21.0.4/Contents/Home`:

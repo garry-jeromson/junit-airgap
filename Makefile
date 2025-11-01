@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish publish-local jar sources-jar all verify setup-native build-native test-native clean-native gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
+.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish publish-local jar sources-jar all verify setup-native build-native test-native clean-native docker-build-linux docker-build-all docker-test-linux docker-test-all docker-shell-linux docker-clean docker-clean-all gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
 
 # Default Java version for the project
 JAVA_VERSION ?= 21
@@ -43,6 +43,15 @@ help:
 	@echo "  build-native            Build JVMTI native agent (macOS: .dylib, Linux: .so, Windows: .dll)"
 	@echo "  test-native             Run native agent tests (AgentLoadTest, SocketInterceptTest)"
 	@echo "  clean-native            Clean native build artifacts"
+	@echo ""
+	@echo "Docker Multi-Platform Commands:"
+	@echo "  docker-build-linux      Build Linux x86-64 Docker image"
+	@echo "  docker-build-all        Build all Docker images"
+	@echo "  docker-test-linux       Run tests on Linux x86-64 in Docker"
+	@echo "  docker-test-all         Run tests on all platforms in Docker"
+	@echo "  docker-shell-linux      Open interactive shell in Linux container"
+	@echo "  docker-clean            Remove Docker containers and volumes"
+	@echo "  docker-clean-all        Remove all Docker artifacts (containers, volumes, images)"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark      Run all performance benchmarks"
@@ -541,3 +550,64 @@ clean-native:
 	@rm -rf native/build
 	@rm -f native/test/*.class
 	@echo "✅ Native build cleaned"
+
+#═══════════════════════════════════════════════════════════════
+# Docker Multi-Platform Build & Test Commands
+#═══════════════════════════════════════════════════════════════
+
+## docker-build-linux: Build Linux x86-64 Docker image
+docker-build-linux:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Building Linux x86-64 Docker image..."
+	@echo "════════════════════════════════════════════════════════════════"
+	docker compose build linux-x86-64
+	@echo ""
+	@echo "✅ Linux x86-64 Docker image built successfully"
+
+## docker-build-all: Build all Docker images
+docker-build-all:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Building all Docker images..."
+	@echo "════════════════════════════════════════════════════════════════"
+	docker compose build
+	@echo ""
+	@echo "✅ All Docker images built successfully"
+
+## docker-test-linux: Run tests on Linux x86-64 in Docker
+docker-test-linux:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on Linux x86-64 in Docker"
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	docker compose run --rm linux-x86-64
+	@echo ""
+	@echo "✅ Linux x86-64 tests completed"
+
+## docker-test-all: Run tests on all platforms in Docker
+docker-test-all:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on ALL platforms in Docker"
+	@echo "════════════════════════════════════════════════════════════════"
+	@$(MAKE) docker-test-linux
+	@echo ""
+	@echo "✅ All platform tests completed!"
+
+## docker-shell-linux: Open interactive shell in Linux x86-64 container
+docker-shell-linux:
+	@echo "Opening shell in Linux x86-64 container..."
+	@echo "Use 'exit' to leave the container"
+	@echo ""
+	docker compose run --rm linux-x86-64 bash
+
+## docker-clean: Remove Docker containers and volumes
+docker-clean:
+	@echo "Cleaning Docker containers and volumes..."
+	docker compose down -v
+	@echo "✅ Docker containers and volumes removed"
+
+## docker-clean-all: Remove Docker containers, volumes, and images
+docker-clean-all:
+	@echo "Cleaning all Docker artifacts (containers, volumes, images)..."
+	docker compose down -v --rmi all
+	docker system prune -f
+	@echo "✅ All Docker artifacts removed"

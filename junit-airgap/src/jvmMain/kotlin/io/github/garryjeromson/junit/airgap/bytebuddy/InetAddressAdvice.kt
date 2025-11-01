@@ -32,12 +32,13 @@ object InetAddressGetAllByNameAdvice {
             try {
                 // Use reflection - only JDK classes, safe to inline into bootstrap class
                 val contextClass = Class.forName("io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext")
-                val checkConnectionMethod = contextClass.getDeclaredMethod(
-                    "checkConnection",
-                    String::class.java,
-                    Integer.TYPE,
-                    String::class.java,
-                )
+                val checkConnectionMethod =
+                    contextClass.getDeclaredMethod(
+                        "checkConnection",
+                        String::class.java,
+                        Integer.TYPE,
+                        String::class.java,
+                    )
                 checkConnectionMethod.invoke(null, host, Integer.valueOf(-1), "ByteBuddy-DNS")
             } catch (e: ClassNotFoundException) {
                 // NetworkBlockerContext not available - allow request
@@ -85,12 +86,13 @@ object InetAddressGetByNameAdvice {
             try {
                 // Use reflection - only JDK classes, safe to inline into bootstrap class
                 val contextClass = Class.forName("io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext")
-                val checkConnectionMethod = contextClass.getDeclaredMethod(
-                    "checkConnection",
-                    String::class.java,
-                    Integer.TYPE,
-                    String::class.java,
-                )
+                val checkConnectionMethod =
+                    contextClass.getDeclaredMethod(
+                        "checkConnection",
+                        String::class.java,
+                        Integer.TYPE,
+                        String::class.java,
+                    )
                 checkConnectionMethod.invoke(null, host, Integer.valueOf(-1), "ByteBuddy-DNS")
             } catch (e: ClassNotFoundException) {
                 // NetworkBlockerContext not available - allow request

@@ -269,9 +269,10 @@ class BytebuddyAgentExtractionTest {
         assertTrue(agentFile.exists(), "ByteBuddy agent should be extracted")
 
         // Read MANIFEST.MF from JAR
-        val process = ProcessBuilder("unzip", "-p", agentFile.absolutePath, "META-INF/MANIFEST.MF")
-            .redirectErrorStream(true)
-            .start()
+        val process =
+            ProcessBuilder("unzip", "-p", agentFile.absolutePath, "META-INF/MANIFEST.MF")
+                .redirectErrorStream(true)
+                .start()
 
         val manifest = process.inputStream.bufferedReader().use { it.readText() }
         process.waitFor()

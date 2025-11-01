@@ -74,7 +74,9 @@ object BytebuddyAgentExtractor {
 
             return true
         } catch (e: Exception) {
-            logger.debug("[junit-airgap:plugin] Failed to check ByteBuddy agent version: ${e.message} - will re-extract")
+            logger.debug(
+                "[junit-airgap:plugin] Failed to check ByteBuddy agent version: ${e.message} - will re-extract",
+            )
             return false
         }
     }

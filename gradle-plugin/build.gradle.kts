@@ -180,9 +180,10 @@ tasks.register<Copy>("packageBytebuddyAgent") {
         logger.lifecycle("Packaging ByteBuddy agent JAR into plugin resources")
 
         // Verify the agent JAR exists (using captured directory path)
-        val agentJarFile = agentJarDir
-            .listFiles { file -> file.name.matches(Regex("junit-airgap-bytebuddy-agent-.*-agent\\.jar")) }
-            ?.firstOrNull()
+        val agentJarFile =
+            agentJarDir
+                .listFiles { file -> file.name.matches(Regex("junit-airgap-bytebuddy-agent-.*-agent\\.jar")) }
+                ?.firstOrNull()
 
         if (agentJarFile == null || !agentJarFile.exists()) {
             throw GradleException(

@@ -160,7 +160,9 @@ object NetworkBlockerContext {
     fun hasActiveConfiguration(): Boolean {
         val config = getConfiguration()
         val hasConfig = config != null
-        logger.debug { "NetworkBlockerContext.hasActiveConfiguration() = $hasConfig (thread=${Thread.currentThread().name})" }
+        logger.debug {
+            "NetworkBlockerContext.hasActiveConfiguration() = $hasConfig (thread=${Thread.currentThread().name})"
+        }
         return hasConfig
     }
 
@@ -255,7 +257,6 @@ object NetworkBlockerContext {
 
         return blocked
     }
-
 
     /**
      * Check if a host matches a wildcard pattern.
