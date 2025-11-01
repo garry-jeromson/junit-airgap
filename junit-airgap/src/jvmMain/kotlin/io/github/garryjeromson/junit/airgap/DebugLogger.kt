@@ -84,7 +84,7 @@ private class SystemPropertyDebugLogger : DebugLogger {
 
     override fun debug(message: () -> String) {
         if (debugEnabled) {
-            println("[junit-airgap] ${message()}")
+            System.err.println("[junit-airgap] ${message()}")
         }
     }
 }

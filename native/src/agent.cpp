@@ -136,7 +136,7 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
 
     jvmtiError error = jvmti->AddCapabilities(&capabilities);
     if (error != JVMTI_ERROR_NONE) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to add capabilities: %d\n", error);
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to add capabilities: %d\n", error);
         return false;
     }
 
@@ -150,7 +150,7 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
 
     error = jvmti->SetEventCallbacks(&callbacks, sizeof(callbacks));
     if (error != JVMTI_ERROR_NONE) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to set event callbacks: %d\n", error);
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to set event callbacks: %d\n", error);
         return false;
     }
 
@@ -164,7 +164,7 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
     );
 
     if (error != JVMTI_ERROR_NONE) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to enable native method bind events: %d\n", error);
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to enable native method bind events: %d\n", error);
         return false;
     }
 
@@ -178,7 +178,7 @@ bool InitializeJVMTI(jvmtiEnv *jvmti) {
     );
 
     if (error != JVMTI_ERROR_NONE) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to enable VM_INIT event: %d\n", error);
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to enable VM_INIT event: %d\n", error);
         return false;
     }
 
@@ -210,27 +210,27 @@ void JNICALL VMInitCallback(
 
     std::lock_guard<std::mutex> lock(g_strings_mutex);
 
-    // Create "JVMTI-Agent" string constant
+    // Create "Native-Agent" string constant (caller identifier for NetworkBlockerContext)
     if (g_caller_agent_string == nullptr) {
-        jstring local_agent = jni_env->NewStringUTF("JVMTI-Agent");
+        jstring local_agent = jni_env->NewStringUTF("Native-Agent");
         if (local_agent != nullptr) {
             g_caller_agent_string = (jstring)jni_env->NewGlobalRef(local_agent);
             jni_env->DeleteLocalRef(local_agent);
-            DEBUG_LOG("Cached caller agent string: JVMTI-Agent");
+            DEBUG_LOG("Cached caller agent string: Native-Agent");
         } else {
-            fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create caller agent string\n");
+            fprintf(stderr, "[junit-airgap:native] ERROR: Failed to create caller agent string\n");
         }
     }
 
-    // Create "JVMTI-DNS" string constant
+    // Create "Native-DNS" string constant
     if (g_caller_dns_string == nullptr) {
-        jstring local_dns = jni_env->NewStringUTF("JVMTI-DNS");
+        jstring local_dns = jni_env->NewStringUTF("Native-DNS");
         if (local_dns != nullptr) {
             g_caller_dns_string = (jstring)jni_env->NewGlobalRef(local_dns);
             jni_env->DeleteLocalRef(local_dns);
-            DEBUG_LOG("Cached caller DNS string: JVMTI-DNS");
+            DEBUG_LOG("Cached caller DNS string: Native-DNS");
         } else {
-            fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create caller DNS string\n");
+            fprintf(stderr, "[junit-airgap:native] ERROR: Failed to create caller DNS string\n");
         }
     }
 
@@ -264,15 +264,15 @@ void JNICALL VMInitCallback(
                     // Sleep for 10ms before retrying (usleep takes microseconds)
                     usleep(10000);
                 } else {
-                    fprintf(stderr, "[JVMTI-Agent] WARNING: Platform encoding still not ready after %d attempts\n", max_attempts);
+                    fprintf(stderr, "[junit-airgap:native] WARNING: Platform encoding still not ready after %d attempts\n", max_attempts);
                 }
             }
         }
     }
 
     if (!encoding_ready) {
-        fprintf(stderr, "[JVMTI-Agent] WARNING: Proceeding without confirmed platform encoding readiness\n");
-        fprintf(stderr, "[JVMTI-Agent] WARNING: String operations may fail with 'platform encoding not initialized' errors\n");
+        fprintf(stderr, "[junit-airgap:native] WARNING: Proceeding without confirmed platform encoding readiness\n");
+        fprintf(stderr, "[junit-airgap:native] WARNING: String operations may fail with 'platform encoding not initialized' errors\n");
     }
 
     // Mark VM as fully initialized - platform encoding is now ready (or we've waited long enough)
@@ -292,23 +292,8 @@ void JNICALL VMInitCallback(
     if (hasInet6Wrapper) {
         DEBUG_LOG("Inet6AddressImpl.lookupAllHostAddr() successfully intercepted");
     } else {
-        DEBUG_LOG("WARNING: Inet6AddressImpl.lookupAllHostAddr() was NOT intercepted");
-        DEBUG_LOG("WARNING: DNS methods may have been bound before agent initialization");
-        fprintf(stderr, "\n");
-        fprintf(stderr, "================================================================================\n");
-        fprintf(stderr, "[JVMTI-Agent] ERROR: DNS Interception Failed\n");
-        fprintf(stderr, "================================================================================\n");
-        fprintf(stderr, "[JVMTI-Agent] Inet6AddressImpl.lookupAllHostAddr() was not intercepted.\n");
-        fprintf(stderr, "[JVMTI-Agent] \n");
-        fprintf(stderr, "[JVMTI-Agent] This means the native method was bound BEFORE the JVMTI agent\n");
-        fprintf(stderr, "[JVMTI-Agent] finished loading. This is a known limitation when:\n");
-        fprintf(stderr, "[JVMTI-Agent]   1. The JVM loads DNS classes during early initialization\n");
-        fprintf(stderr, "[JVMTI-Agent]   2. Multiple JVM instances are spawned (e.g., in IDE test runners)\n");
-        fprintf(stderr, "[JVMTI-Agent] \n");
-        fprintf(stderr, "[JVMTI-Agent] WORKAROUND: Use ByteBuddy to intercept at the Java layer instead\n");
-        fprintf(stderr, "[JVMTI-Agent]             of relying solely on JVMTI native interception.\n");
-        fprintf(stderr, "================================================================================\n");
-        fprintf(stderr, "\n");
+        DEBUG_LOG("Inet6AddressImpl.lookupAllHostAddr() was not intercepted (DNS methods bound before agent initialization)");
+        DEBUG_LOG("ByteBuddy agent will handle DNS interception as fallback");
     }
 
     if (hasInet4Wrapper) {
@@ -477,9 +462,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
     if (g_debug_mode) {
         fprintf(stderr, "\n");
         fprintf(stderr, "================================================================================\n");
-        fprintf(stderr, "[JVMTI-Agent] junit-airgap Native Agent\n");
-        fprintf(stderr, "[JVMTI-Agent] Version: 2024-10-31 (platform encoding fix)\n");
-        fprintf(stderr, "[JVMTI-Agent] Build time: %s %s\n", __DATE__, __TIME__);
+        fprintf(stderr, "[junit-airgap:native] junit-airgap Native Agent\n");
+        fprintf(stderr, "[junit-airgap:native] Version: 2024-10-31 (platform encoding fix)\n");
+        fprintf(stderr, "[junit-airgap:native] Build time: %s %s\n", __DATE__, __TIME__);
         fprintf(stderr, "================================================================================\n");
         fprintf(stderr, "\n");
     }
@@ -489,7 +474,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
     // Get JVMTI environment
     jint result = vm->GetEnv((void**)&g_jvmti, JVMTI_VERSION_1_0);
     if (result != JNI_OK || g_jvmti == nullptr) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to get JVMTI environment\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to get JVMTI environment\n");
         return JNI_ERR;
     }
 
@@ -497,7 +482,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
 
     // Initialize JVMTI
     if (!InitializeJVMTI(g_jvmti)) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to initialize JVMTI\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to initialize JVMTI\n");
         return JNI_ERR;
     }
 
@@ -571,7 +556,7 @@ jmethodID GetHasActiveConfigurationMethod() {
 /**
  * Get cached caller agent string constant.
  *
- * @return Cached "JVMTI-Agent" string, or nullptr if not initialized
+ * @return Cached "Native-Agent" string, or nullptr if not initialized
  */
 jstring GetCallerAgentString() {
     std::lock_guard<std::mutex> lock(g_strings_mutex);
@@ -581,7 +566,7 @@ jstring GetCallerAgentString() {
 /**
  * Get cached caller DNS string constant.
  *
- * @return Cached "JVMTI-DNS" string, or nullptr if not initialized
+ * @return Cached "Native-DNS" string, or nullptr if not initialized
  */
 jstring GetCallerDnsString() {
     std::lock_guard<std::mutex> lock(g_strings_mutex);
@@ -675,7 +660,7 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     g_network_blocker_context_class = (jclass)env->NewGlobalRef(clazz);
 
     if (g_network_blocker_context_class == nullptr) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to create global reference to NetworkBlockerContext\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to create global reference to NetworkBlockerContext\n");
         return;
     }
 
@@ -687,7 +672,7 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     );
 
     if (g_check_connection_method == nullptr) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find checkConnection method\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find checkConnection method\n");
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         return;
@@ -701,7 +686,7 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     );
 
     if (g_is_explicitly_blocked_method == nullptr) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find isExplicitlyBlocked method\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find isExplicitlyBlocked method\n");
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         g_check_connection_method = nullptr;
@@ -716,7 +701,7 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     );
 
     if (g_has_active_configuration_method == nullptr) {
-        fprintf(stderr, "[JVMTI-Agent] ERROR: Failed to find hasActiveConfiguration method\n");
+        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find hasActiveConfiguration method\n");
         env->DeleteGlobalRef(g_network_blocker_context_class);
         g_network_blocker_context_class = nullptr;
         g_check_connection_method = nullptr;

@@ -53,7 +53,7 @@ object InetAddressBytebuddyAgent {
         val debugMode = System.getProperty("junit.airgap.debug") == "true"
 
         if (debugMode) {
-            System.err.println("[junit-airgap-bytebuddy] ByteBuddy DNS agent starting...")
+            System.err.println("[junit-airgap:bytebuddy] ByteBuddy DNS agent starting...")
         }
 
         try {
@@ -72,11 +72,11 @@ object InetAddressBytebuddyAgent {
                 .installOn(instrumentation)
 
             if (debugMode) {
-                System.err.println("[junit-airgap-bytebuddy] ByteBuddy DNS agent installed successfully")
+                System.err.println("[junit-airgap:bytebuddy] ByteBuddy DNS agent installed successfully")
             }
         } catch (e: Exception) {
-            System.err.println("[junit-airgap-bytebuddy] ERROR: Failed to install ByteBuddy DNS agent")
-            System.err.println("[junit-airgap-bytebuddy] ${e.javaClass.name}: ${e.message}")
+            System.err.println("[junit-airgap:bytebuddy] ERROR: Failed to install ByteBuddy DNS agent")
+            System.err.println("[junit-airgap:bytebuddy] ${e.javaClass.name}: ${e.message}")
             e.printStackTrace(System.err)
         }
     }
@@ -96,7 +96,7 @@ object InetAddressBytebuddyAgent {
         val debugMode = System.getProperty("junit.airgap.debug") == "true"
 
         if (debugMode) {
-            System.err.println("[junit-airgap-bytebuddy] Transforming java.net.InetAddress")
+            System.err.println("[junit-airgap:bytebuddy] Transforming java.net.InetAddress")
         }
 
         val getAllByNameMatcher =
@@ -134,7 +134,7 @@ object InetAddressBytebuddyAgent {
                     loaded: Boolean,
                 ) {
                     if (typeName == "java.net.InetAddress") {
-                        System.err.println("[junit-airgap-bytebuddy] Discovered InetAddress class (loaded=$loaded)")
+                        System.err.println("[junit-airgap:bytebuddy] Discovered InetAddress class (loaded=$loaded)")
                     }
                 }
 
@@ -145,7 +145,7 @@ object InetAddressBytebuddyAgent {
                     loaded: Boolean,
                     dynamicType: DynamicType,
                 ) {
-                    System.err.println("[junit-airgap-bytebuddy] Transformed ${typeDescription.name}")
+                    System.err.println("[junit-airgap:bytebuddy] Transformed ${typeDescription.name}")
                 }
 
                 override fun onIgnored(
@@ -164,8 +164,8 @@ object InetAddressBytebuddyAgent {
                     loaded: Boolean,
                     throwable: Throwable,
                 ) {
-                    System.err.println("[junit-airgap-bytebuddy] ERROR transforming $typeName:")
-                    System.err.println("[junit-airgap-bytebuddy] ${throwable.javaClass.name}: ${throwable.message}")
+                    System.err.println("[junit-airgap:bytebuddy] ERROR transforming $typeName:")
+                    System.err.println("[junit-airgap:bytebuddy] ${throwable.javaClass.name}: ${throwable.message}")
                     throwable.printStackTrace(System.err)
                 }
 
@@ -176,7 +176,7 @@ object InetAddressBytebuddyAgent {
                     loaded: Boolean,
                 ) {
                     if (typeName == "java.net.InetAddress") {
-                        System.err.println("[junit-airgap-bytebuddy] Transformation complete for InetAddress")
+                        System.err.println("[junit-airgap:bytebuddy] Transformation complete for InetAddress")
                     }
                 }
             }

@@ -9,8 +9,8 @@
 
 // Debug logging
 extern bool g_debug_mode;
-#define DEBUG_LOG(msg) if (g_debug_mode) fprintf(stderr, "[JVMTI-Agent] %s\n", msg)
-#define DEBUG_LOGF(fmt, ...) if (g_debug_mode) fprintf(stderr, "[JVMTI-Agent] " fmt "\n", __VA_ARGS__)
+#define DEBUG_LOG(msg) if (g_debug_mode) fprintf(stderr, "[junit-airgap:native] %s\n", msg)
+#define DEBUG_LOGF(fmt, ...) if (g_debug_mode) fprintf(stderr, "[junit-airgap:native] " fmt "\n", __VA_ARGS__)
 
 // Agent entry point
 extern "C" {
@@ -68,8 +68,8 @@ extern std::mutex g_context_mutex;
 
 // Cached string constants (initialized during VM_INIT to avoid "platform encoding not initialized" errors)
 // See: https://github.com/garry-jeromson/junit-airgap/issues/XXX
-extern jstring g_caller_agent_string;  // "JVMTI-Agent"
-extern jstring g_caller_dns_string;    // "JVMTI-DNS"
+extern jstring g_caller_agent_string;  // "Native-Agent"
+extern jstring g_caller_dns_string;    // "Native-DNS"
 extern std::mutex g_strings_mutex;
 
 // VM initialization state (true after VM_INIT callback completes)

@@ -113,7 +113,7 @@ object NativeAgentExtractor {
 
             return true
         } catch (e: Exception) {
-            logger.debug("Failed to check agent version: ${e.message} - will re-extract")
+            logger.debug("[junit-airgap:plugin] Failed to check agent version: ${e.message} - will re-extract")
             return false
         }
     }
@@ -141,7 +141,7 @@ object NativeAgentExtractor {
         }
 
         if (debug) {
-            logger.debug("Detected platform: ${platform.os}-${platform.arch}")
+            logger.debug("[junit-airgap:plugin] Detected platform: ${platform.os}-${platform.arch}")
         }
 
         // Extract to build/junit-airgap/native/
@@ -169,7 +169,7 @@ object NativeAgentExtractor {
         if (!needsExtraction) {
             resourceStream.close()
             if (debug) {
-                logger.debug("Native agent already up-to-date: ${extractedAgent.absolutePath}")
+                logger.debug("[junit-airgap:plugin] Native agent already up-to-date: ${extractedAgent.absolutePath}")
             }
             return extractedAgent
         }
@@ -199,7 +199,7 @@ object NativeAgentExtractor {
             }
 
             if (debug) {
-                logger.debug("Extracted JVMTI agent to: ${extractedAgent.absolutePath}")
+                logger.debug("[junit-airgap:plugin] Extracted JVMTI agent to: ${extractedAgent.absolutePath}")
             }
             return extractedAgent
         } catch (e: Exception) {

@@ -74,7 +74,7 @@ object BytebuddyAgentExtractor {
 
             return true
         } catch (e: Exception) {
-            logger.debug("Failed to check ByteBuddy agent version: ${e.message} - will re-extract")
+            logger.debug("[junit-airgap:plugin] Failed to check ByteBuddy agent version: ${e.message} - will re-extract")
             return false
         }
     }
@@ -116,7 +116,7 @@ object BytebuddyAgentExtractor {
         if (!needsExtraction) {
             resourceStream.close()
             if (debug) {
-                logger.debug("ByteBuddy agent already up-to-date: ${extractedAgent.absolutePath}")
+                logger.debug("[junit-airgap:plugin] ByteBuddy agent already up-to-date: ${extractedAgent.absolutePath}")
             }
             return extractedAgent
         }
@@ -141,7 +141,7 @@ object BytebuddyAgentExtractor {
             }
 
             if (debug) {
-                logger.debug("Extracted ByteBuddy agent to: ${extractedAgent.absolutePath}")
+                logger.debug("[junit-airgap:plugin] Extracted ByteBuddy agent to: ${extractedAgent.absolutePath}")
             }
             return extractedAgent
         } catch (e: Exception) {

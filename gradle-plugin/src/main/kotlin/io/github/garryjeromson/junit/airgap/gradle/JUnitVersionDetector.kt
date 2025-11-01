@@ -37,7 +37,7 @@ class JUnitVersionDetector(
             // Pure JUnit 5 (with JUnit Platform) - no injection needed
             usesJUnitPlatform && hasJUnit5 && !hasJUnit4 -> {
                 if (debugEnabled) {
-                    logger.debug("Auto-detected pure JUnit 5 project - skipping @Rule injection")
+                    logger.debug("[junit-airgap:plugin] Auto-detected pure JUnit 5 project - skipping @Rule injection")
                 }
                 false
             }

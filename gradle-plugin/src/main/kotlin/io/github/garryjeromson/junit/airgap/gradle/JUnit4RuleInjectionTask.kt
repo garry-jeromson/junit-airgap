@@ -62,7 +62,7 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         val debugMode = debug.get()
 
         if (debugMode) {
-            logger.debug("JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}")
+            logger.debug("[junit-airgap:plugin] JUnit 4 Rule Injection Task - checking directory: ${classesDir.absolutePath}")
         }
 
         if (!classesDir.exists()) {
@@ -75,8 +75,8 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         }
 
         if (debugMode) {
-            logger.debug("Scanning for JUnit 4 test classes in: ${classesDir.absolutePath}")
-            logger.debug("Debug mode enabled")
+            logger.debug("[junit-airgap:plugin] Scanning for JUnit 4 test classes in: ${classesDir.absolutePath}")
+            logger.debug("[junit-airgap:plugin] Debug mode enabled")
         }
 
         // Find all .class files
@@ -88,7 +88,7 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
                 .toList()
 
         if (debugMode) {
-            logger.debug("Found ${classFiles.size} class files to analyze")
+            logger.debug("[junit-airgap:plugin] Found ${classFiles.size} class files to analyze")
         }
 
         var enhancedCount = 0
@@ -104,9 +104,9 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         }
 
         if (debugMode) {
-            logger.debug("Using test classes directory for injection: ${classesDir.absolutePath}")
-            logger.debug("Test classpath entries: ${testClasspath.files.size}")
-            logger.debug("Total classpath URLs: ${urls.size}")
+            logger.debug("[junit-airgap:plugin] Using test classes directory for injection: ${classesDir.absolutePath}")
+            logger.debug("[junit-airgap:plugin] Test classpath entries: ${testClasspath.files.size}")
+            logger.debug("[junit-airgap:plugin] Total classpath URLs: ${urls.size}")
         }
 
         // Use plugin's classloader as parent (includes JUnit for annotation detection)
@@ -117,42 +117,42 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
 
             try {
                 if (debugMode) {
-                    logger.debug("Loading class: $className")
+                    logger.debug("[junit-airgap:plugin] Loading class: $className")
                 }
                 val clazz = classLoader.loadClass(className)
 
                 if (debugMode) {
-                    logger.debug("Checking if $className is JUnit 4 test class...")
+                    logger.debug("[junit-airgap:plugin] Checking if $className is JUnit 4 test class...")
                 }
 
                 if (isJUnit4TestClass(clazz)) {
                     if (debugMode) {
-                        logger.debug("  ✓ $className IS a JUnit 4 test class")
+                        logger.debug("[junit-airgap:plugin]   ✓ $className IS a JUnit 4 test class")
                     }
                     if (hasAirgapRule(clazz)) {
                         if (debugMode) {
-                            logger.debug("  Skipping $className - already has noNetworkRule field")
+                            logger.debug("[junit-airgap:plugin]   Skipping $className - already has noNetworkRule field")
                         }
                         skippedCount++
                     } else {
                         injectRule(clazz, classFile, classLoader)
                         enhancedCount++
                         if (debugMode) {
-                            logger.debug("  Enhanced: $className")
+                            logger.debug("[junit-airgap:plugin]   Enhanced: $className")
                         }
                     }
                 } else {
                     if (debugMode) {
-                        logger.debug("  ✗ $className is NOT a JUnit 4 test class")
+                        logger.debug("[junit-airgap:plugin]   ✗ $className is NOT a JUnit 4 test class")
                     }
                 }
             } catch (e: ClassNotFoundException) {
                 if (debugMode) {
-                    logger.debug("Could not load class $className: ${e.message}")
+                    logger.debug("[junit-airgap:plugin] Could not load class $className: ${e.message}")
                 }
             } catch (e: NoClassDefFoundError) {
                 if (debugMode) {
-                    logger.debug("Could not load class $className (missing dependency): ${e.message}")
+                    logger.debug("[junit-airgap:plugin] Could not load class $className (missing dependency): ${e.message}")
                 }
             } catch (e: Exception) {
                 logger.warn("Error processing class $className: ${e.message}")
@@ -163,7 +163,7 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         }
 
         if (debugMode && (enhancedCount > 0 || skippedCount > 0)) {
-            logger.debug("JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes")
+            logger.debug("[junit-airgap:plugin] JUnit 4 Rule Injection: enhanced $enhancedCount classes, skipped $skippedCount classes")
         }
     }
 
@@ -187,27 +187,27 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
         val debugMode = debug.get()
 
         if (debugMode) {
-            logger.debug("  Checking if ${clazz.name} is a JUnit 4 test class")
-            logger.debug("    Found ${clazz.declaredMethods.size} methods")
+            logger.debug("[junit-airgap:plugin]   Checking if ${clazz.name} is a JUnit 4 test class")
+            logger.debug("[junit-airgap:plugin]     Found ${clazz.declaredMethods.size} methods")
         }
 
         // Check for @Test annotation from org.junit (JUnit 4)
         val hasJUnit4Test =
             clazz.declaredMethods.any { method ->
                 if (debugMode) {
-                    logger.debug("    Method: ${method.name}, annotations: ${method.annotations.size}")
+                    logger.debug("[junit-airgap:plugin]     Method: ${method.name}, annotations: ${method.annotations.size}")
                 }
                 val hasTest =
                     method.annotations.any { annotation ->
                         // Use Kotlin reflection to get the annotation type
                         val annotationTypeName = annotation.annotationClass.java.name
                         if (debugMode) {
-                            logger.debug("      Annotation: $annotationTypeName")
+                            logger.debug("[junit-airgap:plugin]       Annotation: $annotationTypeName")
                         }
                         annotationTypeName == "org.junit.Test"
                     }
                 if (debugMode && hasTest) {
-                    logger.debug("      ✓ Method ${method.name} has @Test annotation")
+                    logger.debug("[junit-airgap:plugin]       ✓ Method ${method.name} has @Test annotation")
                 }
                 hasTest
             }
@@ -217,14 +217,14 @@ abstract class JUnit4RuleInjectionTask : DefaultTask() {
             clazz.annotations.any { annotation ->
                 val annotationTypeName = annotation.annotationClass.java.name
                 if (debugMode) {
-                    logger.debug("    Class annotation: $annotationTypeName")
+                    logger.debug("[junit-airgap:plugin]     Class annotation: $annotationTypeName")
                 }
                 annotationTypeName == "org.junit.runner.RunWith"
             }
 
         val isJUnit4 = hasJUnit4Test || hasRunWith
         if (debugMode) {
-            logger.debug("    Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4")
+            logger.debug("[junit-airgap:plugin]     Result: isJUnit4Test=$hasJUnit4Test, hasRunWith=$hasRunWith, final=$isJUnit4")
         }
 
         return isJUnit4
