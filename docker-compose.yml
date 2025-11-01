@@ -19,7 +19,7 @@ services:
       - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
       - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
     working_dir: /workspace
-    command: bash -c "chmod +x ./gradlew && ./gradlew clean :junit-airgap:jvmTest :gradle-plugin:test --no-daemon -Pkotlin.options.allWarningsAsErrors=false -x koverHtmlReport -x koverXmlReport"
+    command: bash -c "chmod +x ./gradlew && ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon"
 
 volumes:
   # Gradle cache for Linux x86-64 (separate from host to avoid conflicts)

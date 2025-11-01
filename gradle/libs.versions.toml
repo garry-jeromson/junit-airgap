@@ -4,7 +4,7 @@ kotlin = "2.1.0"
 android-gradle-plugin = "8.7.2"
 ktlint-gradle = "12.1.1"
 maven-publish = "0.34.0"
-kover = "0.8.3"
+kover = "0.9.3"
 
 # JUnit Airgap Plugin
 junit-airgap = "0.1.0-beta.1"
