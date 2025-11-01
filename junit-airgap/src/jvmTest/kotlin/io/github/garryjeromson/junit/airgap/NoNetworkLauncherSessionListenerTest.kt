@@ -9,10 +9,19 @@ import org.junit.platform.launcher.LauncherSession
  * Unit tests for AirgapLauncherSessionListener debug logging.
  */
 class AirgapLauncherSessionListenerTest {
+    private val mockSession =
+        object : LauncherSession {
+            override fun getLauncher() = throw UnsupportedOperationException()
+
+            override fun close() {}
+        }
+
     @AfterEach
     fun cleanup() {
         // Restore default logger after each test
         DebugLogger.setTestInstance(null)
+        // Restore enabled property
+        System.clearProperty(ENABLED_PROPERTY)
     }
 
     @Test
@@ -21,14 +30,7 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
-
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Should log at least the opening message
         assertTrue(testLogger.messages.isNotEmpty())
@@ -41,14 +43,7 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
-
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Should log initialization success or failure
         assertTrue(testLogger.messages.size >= 2)
@@ -64,14 +59,7 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
-
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Verify we got at least the opening message
         assertTrue(testLogger.messages.isNotEmpty())
@@ -91,15 +79,9 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
 
         // This should not throw even if initialization fails
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Should have at least one log message
         assertTrue(testLogger.messages.isNotEmpty())
@@ -111,14 +93,7 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
-
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Verify we have at least 2 messages
         assertTrue(testLogger.messages.size >= 2) {
@@ -146,15 +121,9 @@ class AirgapLauncherSessionListenerTest {
         DebugLogger.setTestInstance(testLogger)
 
         val listener = AirgapLauncherSessionListener()
-        val session =
-            object : LauncherSession {
-                override fun getLauncher() = throw UnsupportedOperationException()
-
-                override fun close() {}
-            }
 
         val initialMessageCount = testLogger.messages.size
-        listener.launcherSessionOpened(session)
+        listener.launcherSessionOpened(mockSession)
 
         // Verify new messages were added
         assertTrue(testLogger.messages.size > initialMessageCount) {
@@ -164,6 +133,55 @@ class AirgapLauncherSessionListenerTest {
         // All messages should be captured in the same logger
         assertTrue(testLogger.messages.size >= 2) {
             "Expected at least 2 messages total"
+        }
+    }
+
+    @Test
+    fun `launcherSessionOpened skips initialization when disabled via system property`() {
+        // Given: Plugin is disabled via system property
+        System.setProperty(ENABLED_PROPERTY, "false")
+        val testLogger = TestDebugLogger()
+        DebugLogger.setTestInstance(testLogger)
+
+        // When: Opening launcher session
+        val listener = AirgapLauncherSessionListener()
+        listener.launcherSessionOpened(mockSession)
+
+        // Then: Should log opening message and disabled message, but NOT initialization messages
+        assertTrue(testLogger.messages.size >= 2) {
+            "Expected at least 2 log messages (opening + disabled), but got ${testLogger.messages.size}"
+        }
+        assertTrue(testLogger.messages[0].contains("launcherSessionOpened() called")) {
+            "First message should be opening message"
+        }
+        assertTrue(testLogger.messages[1].contains("JUnit Airgap is disabled")) {
+            "Second message should indicate plugin is disabled"
+        }
+        assertTrue(testLogger.messages.none { it.contains("NetworkBlockerContext initialized") }) {
+            "Should not attempt to initialize NetworkBlockerContext when disabled"
+        }
+    }
+
+    @Test
+    fun `launcherSessionOpened respects enabled equals true system property`() {
+        // Given: Plugin is explicitly enabled via system property
+        System.setProperty(ENABLED_PROPERTY, "true")
+        val testLogger = TestDebugLogger()
+        DebugLogger.setTestInstance(testLogger)
+
+        // When: Opening launcher session
+        val listener = AirgapLauncherSessionListener()
+        listener.launcherSessionOpened(mockSession)
+
+        // Then: Should proceed with initialization (not log disabled message)
+        assertTrue(testLogger.messages.none { it.contains("is disabled") }) {
+            "Should not log disabled message when explicitly enabled"
+        }
+        assertTrue(
+            testLogger.messages.any { it.contains("initialized successfully") } ||
+                testLogger.messages.any { it.contains("initialization failed") },
+        ) {
+            "Should attempt initialization when enabled"
         }
     }
 }
