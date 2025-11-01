@@ -703,6 +703,10 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     }
 
     // Get hasActiveConfiguration method
+    // NOTE: This method is optional - interceptors can work without it by assuming
+    // no active configuration if the method is unavailable (e.g., during class initialization).
+    // On some platforms (Linux), this method lookup may fail during class initialization,
+    // so we make it non-fatal and just log a warning.
     g_has_active_configuration_method = env->GetStaticMethodID(
         g_network_blocker_context_class,
         "hasActiveConfiguration",
@@ -710,18 +714,15 @@ JNIEXPORT void JNICALL Java_io_github_garryjeromson_junit_airgap_bytebuddy_Netwo
     );
 
     if (g_has_active_configuration_method == nullptr) {
-        fprintf(stderr, "[junit-airgap:native] ERROR: Failed to find hasActiveConfiguration method\n");
+        fprintf(stderr, "[junit-airgap:native] WARNING: Failed to find hasActiveConfiguration method (optional)\n");
         // Check if there's a pending JNI exception that explains the failure
         if (env->ExceptionCheck()) {
             fprintf(stderr, "[junit-airgap:native] JNI Exception occurred:\n");
             env->ExceptionDescribe();  // Prints the exception to stderr
             env->ExceptionClear();     // Clear the exception
         }
-        env->DeleteGlobalRef(g_network_blocker_context_class);
-        g_network_blocker_context_class = nullptr;
-        g_check_connection_method = nullptr;
-        g_is_explicitly_blocked_method = nullptr;
-        return;
+        fprintf(stderr, "[junit-airgap:native] Network blocking will still work, but may be less efficient\n");
+        // Continue anyway - interceptors can handle hasActiveConfiguration being null
     }
 
     DEBUG_LOG("NetworkBlockerContext registered - network blocking enabled");
