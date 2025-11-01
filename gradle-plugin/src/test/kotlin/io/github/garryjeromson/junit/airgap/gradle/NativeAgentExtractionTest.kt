@@ -4,6 +4,8 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
@@ -24,6 +26,21 @@ class NativeAgentExtractionTest {
 
     private lateinit var buildFile: File
     private lateinit var settingsFile: File
+
+    /**
+     * Get the native agent file for the current platform.
+     * Only used for platform-agnostic tests (caching, sharing, etc.) where we need to reference
+     * whichever agent file was extracted on the current platform.
+     */
+    private fun getCurrentPlatformAgentFile(): File {
+        val agentName = when {
+            System.getProperty("os.name").lowercase().contains("mac") -> "libjunit-airgap-agent.dylib"
+            System.getProperty("os.name").lowercase().contains("linux") -> "libjunit-airgap-agent.so"
+            System.getProperty("os.name").lowercase().contains("windows") -> "junit-airgap-agent.dll"
+            else -> error("Unsupported OS: ${System.getProperty("os.name")}")
+        }
+        return File(testProjectDir, "build/junit-airgap/native/$agentName")
+    }
 
     @BeforeEach
     fun setup() {
@@ -55,8 +72,9 @@ class NativeAgentExtractionTest {
         )
     }
 
+    @EnabledOnOs(OS.MAC)
     @Test
-    fun `agent is extracted on first test run`() {
+    fun `agent extracts dylib on macOS`() {
         buildFile.writeText(
             """
             plugins {
@@ -99,9 +117,113 @@ class NativeAgentExtractionTest {
             "Test task should have completed (was $taskOutcome)",
         )
 
-        // Verify agent was extracted
+        // Verify agent was extracted with correct file extension
         val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
-        assertTrue(agentFile.exists(), "Agent should be extracted to build directory")
+        assertTrue(agentFile.exists(), "Agent dylib should be extracted to build directory")
+        assertTrue(agentFile.length() > 0, "Extracted agent should have content")
+        assertTrue(agentFile.canExecute(), "Agent should be executable on macOS")
+    }
+
+    @EnabledOnOs(OS.LINUX)
+    @Test
+    fun `agent extracts so on Linux`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garry-jeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
+            }
+
+            tasks.test {
+                useJUnitPlatform()
+            }
+            """.trimIndent(),
+        )
+
+        // Run test task
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info")
+                .withPluginClasspath()
+                .forwardOutput()
+                .build()
+
+        // Task outcome could be SUCCESS or NO-SOURCE (if no tests discovered)
+        // We just care that the agent gets extracted
+        val taskOutcome = result.task(":test")?.outcome
+        assertTrue(
+            taskOutcome == TaskOutcome.SUCCESS ||
+                taskOutcome == TaskOutcome.NO_SOURCE ||
+                taskOutcome == TaskOutcome.FAILED,
+            "Test task should have completed (was $taskOutcome)",
+        )
+
+        // Verify agent was extracted with correct file extension
+        val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.so")
+        assertTrue(agentFile.exists(), "Agent so should be extracted to build directory")
+        assertTrue(agentFile.length() > 0, "Extracted agent should have content")
+        assertTrue(agentFile.canExecute(), "Agent should be executable on Linux")
+    }
+
+    @EnabledOnOs(OS.WINDOWS)
+    @Test
+    fun `agent extracts dll on Windows`() {
+        buildFile.writeText(
+            """
+            plugins {
+                kotlin("jvm") version "2.1.0"
+                id("io.github.garry-jeromson.junit-airgap")
+            }
+
+            repositories {
+                mavenLocal()
+                mavenCentral()
+            }
+
+            dependencies {
+                testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
+            }
+
+            tasks.test {
+                useJUnitPlatform()
+            }
+            """.trimIndent(),
+        )
+
+        // Run test task
+        val result =
+            GradleRunner
+                .create()
+                .withProjectDir(testProjectDir)
+                .withArguments("test", "--info")
+                .withPluginClasspath()
+                .forwardOutput()
+                .build()
+
+        // Task outcome could be SUCCESS or NO-SOURCE (if no tests discovered)
+        // We just care that the agent gets extracted
+        val taskOutcome = result.task(":test")?.outcome
+        assertTrue(
+            taskOutcome == TaskOutcome.SUCCESS ||
+                taskOutcome == TaskOutcome.NO_SOURCE ||
+                taskOutcome == TaskOutcome.FAILED,
+            "Test task should have completed (was $taskOutcome)",
+        )
+
+        // Verify agent was extracted with correct file extension
+        val agentFile = File(testProjectDir, "build/junit-airgap/native/junit-airgap-agent.dll")
+        assertTrue(agentFile.exists(), "Agent dll should be extracted to build directory")
         assertTrue(agentFile.length() > 0, "Extracted agent should have content")
     }
 
@@ -139,7 +261,7 @@ class NativeAgentExtractionTest {
                 .build()
 
         // Don't assert task outcome - focus on agent extraction
-        val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
+        val agentFile = getCurrentPlatformAgentFile()
         val firstTimestamp = agentFile.lastModified()
         val firstSize = agentFile.length()
 
@@ -201,7 +323,7 @@ class NativeAgentExtractionTest {
                 .withPluginClasspath()
                 .build()
 
-        val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
+        val agentFile = getCurrentPlatformAgentFile()
         val correctSize = agentFile.length()
 
         // Corrupt the cached agent (simulate stale cache from old plugin version)
@@ -234,52 +356,6 @@ class NativeAgentExtractionTest {
         // The important thing is that the agent was re-extracted to the correct size
     }
 
-    @Test
-    fun `agent is made executable on Unix systems`() {
-        buildFile.writeText(
-            """
-            plugins {
-                kotlin("jvm") version "2.1.0"
-                id("io.github.garry-jeromson.junit-airgap")
-            }
-
-            repositories {
-                mavenLocal()
-                mavenCentral()
-            }
-
-            dependencies {
-                testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
-            }
-
-            tasks.test {
-                useJUnitPlatform()
-            }
-            """.trimIndent(),
-        )
-
-        // Run test task
-        val result =
-            GradleRunner
-                .create()
-                .withProjectDir(testProjectDir)
-                .withArguments("test")
-                .withPluginClasspath()
-                .build()
-
-        assertEquals(TaskOutcome.SUCCESS, result.task(":test")?.outcome)
-
-        // Verify agent is executable on Unix-like systems
-        val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
-        val isWindows = System.getProperty("os.name").lowercase().contains("windows")
-
-        if (!isWindows) {
-            assertTrue(
-                agentFile.canExecute(),
-                "Agent should be executable on Unix-like systems (macOS, Linux)",
-            )
-        }
-    }
 
     @Test
     fun `multiple test tasks can share extracted agent`() {
@@ -339,7 +415,7 @@ class NativeAgentExtractionTest {
         assertTrue(result.task(":integrationTest") != null, "Integration test task should run")
 
         // Verify only one agent was extracted (shared between tasks)
-        val agentFile = File(testProjectDir, "build/junit-airgap/native/libjunit-airgap-agent.dylib")
+        val agentFile = getCurrentPlatformAgentFile()
         assertTrue(agentFile.exists(), "Agent should be extracted once and shared")
     }
 }
