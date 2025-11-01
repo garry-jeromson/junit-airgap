@@ -72,6 +72,10 @@ kotlin {
                 implementation(libs.junit4)
                 // JUnit Platform Launcher for LauncherSessionListener
                 implementation(libs.junit.platform.launcher)
+
+                // ByteBuddy for runtime Java agent (DNS interception fallback)
+                implementation(libs.byte.buddy)
+                implementation(libs.byte.buddy.agent)
             }
         }
 
@@ -251,20 +255,33 @@ tasks.withType<Test>().configureEach {
             },
         )
 
-        // Load JVMTI agent for network blocking
+        // Load ByteBuddy Java agent for DNS interception (Layer 1 - Java API level)
         // Capture file references at configuration time for configuration cache compatibility
-        val agentFile = project.file("../native/build/libjunit-airgap-agent.dylib")
-        val agentPath = agentFile.absolutePath
+        val bytebuddyAgentJar = layout.buildDirectory.file("libs/junit-airgap-bytebuddy-agent-${version}-agent.jar").get().asFile
+        val bytebuddyAgentPath = bytebuddyAgentJar.absolutePath
 
         doFirst {
-            if (!agentFile.exists()) {
-                logger.warn("JVMTI agent not found at: $agentPath")
+            if (!bytebuddyAgentJar.exists()) {
+                logger.warn("ByteBuddy agent JAR not found at: $bytebuddyAgentPath")
+                logger.warn("Run './gradlew :junit-airgap:createBytebuddyAgentJar' to build it.")
+            }
+        }
+
+        jvmArgs("-javaagent:$bytebuddyAgentPath")
+
+        // Load JVMTI native agent for network blocking (Layer 2 - Native level)
+        val nativeAgentFile = project.file("../native/build/libjunit-airgap-agent.dylib")
+        val nativeAgentPath = nativeAgentFile.absolutePath
+
+        doFirst {
+            if (!nativeAgentFile.exists()) {
+                logger.warn("JVMTI native agent not found at: $nativeAgentPath")
                 logger.warn("Run 'make build-native' to build the native agent.")
                 logger.warn("Android tests will fail without the agent.")
             }
         }
 
-        jvmArgs("-agentpath:$agentPath")
+        jvmArgs("-agentpath:$nativeAgentPath")
 
         // Pass junit.airgap system properties to test JVM
         // Capture system property at configuration time for configuration cache compatibility
@@ -273,10 +290,10 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-// Make Android unit tests depend on native build
+// Make Android unit tests depend on both native and ByteBuddy agent builds
 tasks.withType<Test>().configureEach {
     if (name.contains("UnitTest")) {
-        dependsOn("buildNativeAgent")
+        dependsOn("buildNativeAgent", "createBytebuddyAgentJar")
     }
 }
 
@@ -494,4 +511,77 @@ kover {
             }
         }
     }
+}
+
+// ================================================================================================
+// ByteBuddy Java Agent JAR
+// ================================================================================================
+
+/**
+ * Create ByteBuddy agent JAR for DNS interception.
+ *
+ * This JAR contains the ByteBuddy agent that intercepts InetAddress methods at the Java layer,
+ * providing a fallback when JVMTI native interception fails (e.g., when DNS classes are loaded
+ * before the JVMTI agent completes initialization).
+ */
+val createBytebuddyAgentJar by tasks.registering(Jar::class) {
+    group = "build"
+    description = "Create ByteBuddy agent JAR for DNS interception"
+
+    archiveBaseName.set("junit-airgap-bytebuddy-agent")
+    archiveClassifier.set("agent")
+
+    // Depend on compilation
+    dependsOn(tasks.named("compileKotlinJvm"))
+
+    // Include compiled Kotlin/JVM classes
+    from(layout.buildDirectory.dir("classes/kotlin/jvm/main"))
+
+    // Include ByteBuddy and dependencies
+    from(configurations.named("jvmRuntimeClasspath").get().map {
+        if (it.isDirectory) it else zipTree(it)
+    })
+
+    // Set manifest for Java agent
+    manifest {
+        attributes(
+            "Premain-Class" to "io.github.garryjeromson.junit.airgap.bytebuddy.InetAddressBytebuddyAgent",
+            "Can-Retransform-Classes" to "true",
+            "Can-Redefine-Classes" to "true",
+            "Agent-Class" to "io.github.garryjeromson.junit.airgap.bytebuddy.InetAddressBytebuddyAgent",
+        )
+    }
+
+    // Exclude duplicates and signature files
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    exclude("META-INF/versions/**") // Multi-release JARs can cause issues
+}
+
+/**
+ * Copy ByteBuddy agent JAR to resources directory.
+ *
+ * This makes the agent JAR available as a resource that can be extracted at runtime
+ * by the Gradle plugin.
+ */
+val copyBytebuddyAgentToResources by tasks.registering(Copy::class) {
+    group = "build"
+    description = "Copy ByteBuddy agent JAR to resources"
+
+    dependsOn(createBytebuddyAgentJar)
+
+    from(createBytebuddyAgentJar.map { it.outputs.files.singleFile })
+    into(layout.buildDirectory.dir("resources/jvmMain/bytebuddy-agent"))
+
+    rename { "junit-airgap-bytebuddy-agent.jar" }
+}
+
+// Wire up the tasks: compile -> create JAR -> copy to resources -> process resources
+tasks.named("jvmProcessResources") {
+    dependsOn(copyBytebuddyAgentToResources)
+}
+
+// Include agent JAR in final published artifacts
+tasks.named("jvmJar") {
+    dependsOn(copyBytebuddyAgentToResources)
 }
