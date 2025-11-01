@@ -147,6 +147,24 @@ object NetworkBlockerContext {
     }
 
     /**
+     * Check if there is an active configuration for the current thread.
+     * Called by the JVMTI agent to determine if it should perform string
+     * extraction operations (which require platform encoding to be initialized).
+     *
+     * If no configuration is active, the agent can skip all JNI string operations
+     * and immediately allow the connection.
+     *
+     * @return true if a configuration is set for the current thread, false otherwise
+     */
+    @JvmStatic
+    fun hasActiveConfiguration(): Boolean {
+        val config = getConfiguration()
+        val hasConfig = config != null
+        logger.debug { "NetworkBlockerContext.hasActiveConfiguration() = $hasConfig (thread=${Thread.currentThread().name})" }
+        return hasConfig
+    }
+
+    /**
      * Check if a connection to the given host:port should be allowed.
      *
      * This is the main entry point called by Advice classes.
