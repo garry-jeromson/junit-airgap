@@ -68,3 +68,35 @@ tasks.register("compareBenchmarks") {
         logger.lifecycle("Note: Result comparison is not implemented yet")
     }
 }
+
+// Root clean task - delegates to subprojects
+tasks.register("clean") {
+    description = "Delete build directories and clean Maven Local"
+    group = "build"
+
+    // Delegate to subproject clean tasks
+    dependsOn(":junit-airgap:clean", ":gradle-plugin:clean")
+
+    // Also clean Maven Local
+    finalizedBy("cleanMavenLocal")
+}
+
+// Task to clean Maven Local publications
+tasks.register("cleanMavenLocal") {
+    description = "Remove published artifacts from Maven Local repository"
+    group = "build"
+
+    doLast {
+        val mavenLocalPath = "${System.getProperty("user.home")}/.m2/repository"
+        val pluginDir = File("$mavenLocalPath/io/github/garry-jeromson/junit-airgap-gradle-plugin")
+        val libraryDir = File("$mavenLocalPath/io/github/garry-jeromson/junit-airgap")
+        val libraryJvmDir = File("$mavenLocalPath/io/github/garry-jeromson/junit-airgap-jvm")
+
+        listOf(pluginDir, libraryDir, libraryJvmDir).forEach { dir ->
+            if (dir.exists()) {
+                logger.lifecycle("Deleting: ${dir.absolutePath}")
+                dir.deleteRecursively()
+            }
+        }
+    }
+}
