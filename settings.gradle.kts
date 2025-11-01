@@ -1,4 +1,4 @@
-rootProject.name = "junit-airgap"
+rootProject.name = "junit-airgap-workspace"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
