@@ -36,7 +36,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential openjdk-${{ matrix.java }}-jdk-headless
+          sudo apt-get install -y cmake build-essential openjdk-${{ matrix.java }}-jdk
           cmake --version
           echo "JAVA_HOME=${JAVA_HOME}"
           ls -la "${JAVA_HOME}/include" || echo "No include directory found"
