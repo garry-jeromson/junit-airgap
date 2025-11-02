@@ -29,6 +29,28 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: Cache Gradle and Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+          key: ${{ runner.os }}-java${{ matrix.java }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-java${{ matrix.java }}-gradle-
+            ${{ runner.os }}-gradle-
+
+      - name: Cache native build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            native/build
+            **/build/junit-airgap/native
+          key: ${{ runner.os }}-native-${{ hashFiles('native/src/**', 'native/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-native-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
