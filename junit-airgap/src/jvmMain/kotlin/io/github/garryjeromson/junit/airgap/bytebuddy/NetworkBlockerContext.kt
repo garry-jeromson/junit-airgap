@@ -124,8 +124,9 @@ object NetworkBlockerContext {
     @JvmStatic
     fun getConfiguration(): NetworkConfiguration? {
         val config = configurationThreadLocal.get()
+        val threadName = Thread.currentThread().name
 
-        logger.debug { "NetworkBlockerContext.getConfiguration() on thread ${Thread.currentThread().name}" }
+        logger.debug { "NetworkBlockerContext.getConfiguration() on thread $threadName" }
         logger.debug { "  ThreadLocal config: $config" }
         logger.debug { "  Current generation: $currentGeneration" }
         logger.debug { "  Global config: $globalConfiguration" }
@@ -136,7 +137,15 @@ object NetworkBlockerContext {
             return config
         }
 
-        // Otherwise, use the global configuration (for worker threads)
+        // Don't use global configuration for Gradle worker threads
+        // This prevents the JVMTI agent from blocking Gradle's Maven artifact fetching
+        // See: docs/investigation/macos-ci-failures.md
+        if (isGradleWorkerThread(threadName)) {
+            logger.debug { "  Detected Gradle worker thread, not applying global configuration" }
+            return null
+        }
+
+        // Otherwise, use the global configuration (for HTTP client worker threads)
         val global = globalConfiguration
         if (global != null) {
             logger.debug { "  Using global configuration (thread-local was stale or missing)" }
@@ -144,6 +153,31 @@ object NetworkBlockerContext {
             logger.debug { "  No configuration available!" }
         }
         return global
+    }
+
+    /**
+     * Check if the current thread is a Gradle worker thread.
+     * Gradle worker threads handle dependency resolution, artifact fetching, etc.
+     * We don't want to block these threads as they're part of Gradle's infrastructure.
+     *
+     * Common Gradle thread names:
+     * - "Execution worker" - Gradle task execution workers
+     * - "Daemon worker" - Gradle daemon background workers
+     * - "Test worker" - Gradle test execution workers (but we WANT to block these!)
+     *
+     * @param threadName Name of the thread to check
+     * @return true if this is a Gradle worker thread (but NOT a test worker)
+     */
+    private fun isGradleWorkerThread(threadName: String): Boolean {
+        // Don't exclude test workers - we want to block network in tests!
+        if (threadName.startsWith("Test worker")) {
+            return false
+        }
+
+        // Exclude Gradle execution/daemon workers (infrastructure threads)
+        return threadName.startsWith("Execution worker") ||
+            threadName.startsWith("Daemon worker") ||
+            threadName.startsWith("daemon worker")
     }
 
     /**

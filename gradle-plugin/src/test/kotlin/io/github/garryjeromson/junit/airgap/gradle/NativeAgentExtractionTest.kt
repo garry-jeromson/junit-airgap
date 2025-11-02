@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * 1. The agent is extracted correctly on first test run
  * 2. The agent is cached and reused on subsequent runs
  * 3. The agent is re-extracted when the cached version is outdated (size mismatch)
- * 4. Dependencies are pre-resolved before the agent loads
  */
 class NativeAgentExtractionTest {
     @TempDir
@@ -366,63 +365,5 @@ class NativeAgentExtractionTest {
         // Verify only one agent was extracted (shared between tasks)
         val agentFile = getCurrentPlatformAgentFile()
         assertTrue(agentFile.exists(), "Agent should be extracted once and shared")
-    }
-
-    @Test
-    fun `test dependencies are pre-resolved before agent loads`() {
-        buildFile.writeText(
-            """
-            plugins {
-                kotlin("jvm") version "2.1.0"
-                id("io.github.garry-jeromson.junit-airgap")
-            }
-
-            repositories {
-                mavenLocal()
-                mavenCentral()
-            }
-
-            dependencies {
-                testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
-                // Add a specific dependency to check resolution
-                testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-            }
-
-            tasks.test {
-                useJUnitPlatform()
-            }
-            """.trimIndent(),
-        )
-
-        // Run test task with --debug to see dependency resolution logs
-        val result =
-            GradleRunner
-                .create()
-                .withProjectDir(testProjectDir)
-                .withArguments("test", "--debug")
-                .withPluginClasspath()
-                .forwardOutput()
-                .build()
-
-        // The test task should complete successfully (or fail with NO-SOURCE)
-        val taskOutcome = result.task(":test")?.outcome
-        assertTrue(
-            taskOutcome == TaskOutcome.SUCCESS ||
-                taskOutcome == TaskOutcome.NO_SOURCE ||
-                taskOutcome == TaskOutcome.FAILED,
-            "Test task should have completed (was $taskOutcome)",
-        )
-
-        // Verify the debug log contains our dependency resolution message
-        // This confirms that the doFirst("resolveTestDependencies") block executed
-        assertTrue(
-            result.output.contains("Pre-resolving test dependencies to avoid agent interference") ||
-                result.output.contains("Test dependencies resolved successfully"),
-            "Plugin should log dependency pre-resolution",
-        )
-
-        // Verify agent was still extracted correctly after dependency resolution
-        val agentFile = getCurrentPlatformAgentFile()
-        assertTrue(agentFile.exists(), "Agent should be extracted after dependency resolution")
     }
 }

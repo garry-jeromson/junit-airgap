@@ -76,38 +76,54 @@ object NetworkBlockerContext {
 
 **The `globalConfiguration` field was designed to handle HTTP client worker threads spawned BY tests** (e.g., OkHttp connection pools, Ktor coroutines). However, it inadvertently catches **Gradle's own worker threads** too, since they also don't have a thread-local configuration.
 
-## Temporary Workaround (Current Solution)
+## Solution Implemented (Current)
 
-**Pre-resolve all test dependencies before the JVMTI agent loads.**
+**Detect and exclude Gradle worker threads from network blocking.**
 
-Implementation in `JunitAirgapPlugin.kt`:
+Implementation in `NetworkBlockerContext.kt`:
 
 ```kotlin
-doFirst("resolveTestDependencies") {
-    try {
-        // Resolve test runtime classpath to trigger dependency downloads
-        classpath.resolve()
-    } catch (e: Exception) {
-        logger.warn("Failed to pre-resolve dependencies: ${e.message}")
+fun getConfiguration(): NetworkConfiguration? {
+    val config = configurationThreadLocal.get()
+    val threadName = Thread.currentThread().name
+
+    // If we have a config and it matches current generation, use it
+    if (config != null && config.generation == currentGeneration) {
+        return config
     }
+
+    // Don't use global configuration for Gradle worker threads
+    if (isGradleWorkerThread(threadName)) {
+        return null
+    }
+
+    // Otherwise, use the global configuration (for HTTP client worker threads)
+    return globalConfiguration
+}
+
+private fun isGradleWorkerThread(threadName: String): Boolean {
+    return threadName.startsWith("Execution worker") ||
+        threadName.startsWith("daemon worker") ||
+        threadName.contains("Gradle") ||
+        threadName.contains("worker-")
 }
 ```
 
-This forces Gradle to download all dependencies BEFORE the test task's main `doFirst` block loads the JVMTI agent. By the time the agent starts intercepting, all artifacts are already cached locally.
+This approach detects Gradle's worker threads by their naming patterns and excludes them from inheriting the global configuration, while still allowing HTTP client worker threads (spawned by tests) to inherit the blocking configuration.
 
 ### Benefits of This Approach
 
-- ✅ Simple, minimal code change (10 lines)
+- ✅ Simple, minimal code change (~15 lines)
 - ✅ No breaking changes
 - ✅ Works on both CI and local environments
-- ✅ Easy to understand and maintain
-- ✅ Can be removed when we fix the architecture properly
+- ✅ No performance overhead
+- ✅ Fixes the root cause for Gradle threads specifically
 
 ### Limitations
 
-- ⚠️ Adds a small performance overhead (dependency resolution phase)
-- ⚠️ Doesn't fix the underlying architectural issue
-- ⚠️ Won't help if test code itself triggers lazy dependency resolution
+- ⚠️ Relies on Gradle thread naming conventions (may break if Gradle changes naming)
+- ⚠️ Doesn't fully fix the underlying architectural issue (globalConfiguration still exists)
+- ⚠️ May need adjustment if other build tools have similar issues
 
 ## Proper Long-Term Fix
 
