@@ -74,11 +74,11 @@ tasks.register("clean") {
     description = "Delete build directories and clean Maven Local"
     group = "build"
 
-    // Delegate to subproject clean tasks
-    dependsOn(":junit-airgap:clean", ":gradle-plugin:clean")
+    // Clean Maven Local first (at the very start)
+    dependsOn("cleanMavenLocal")
 
-    // Also clean Maven Local
-    finalizedBy("cleanMavenLocal")
+    // Then delegate to subproject clean tasks
+    dependsOn(":junit-airgap:clean", ":gradle-plugin:clean")
 }
 
 // Task to clean Maven Local publications
