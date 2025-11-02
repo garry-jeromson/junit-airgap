@@ -32,12 +32,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Install CMake (Linux)
+      - name: Install CMake and build dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake
+          sudo apt-get install -y cmake build-essential openjdk-${{ matrix.java }}-jdk-headless
           cmake --version
+          echo "JAVA_HOME=${JAVA_HOME}"
+          ls -la "${JAVA_HOME}/include" || echo "No include directory found"
 
       - name: Verify CMake (macOS)
         if: runner.os == 'macOS'
