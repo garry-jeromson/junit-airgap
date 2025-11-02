@@ -275,7 +275,9 @@ object NetworkBlockerContext {
         // DEBUG: Print full stack trace to investigate CI failures
         logger.debug { "=== FULL STACK TRACE FOR ROBOLECTRIC DETECTION ===" }
         stackTrace.forEachIndexed { index, element ->
-            logger.debug { "  [$index] ${element.className}.${element.methodName}(${element.fileName}:${element.lineNumber})" }
+            val frame = "${element.className}.${element.methodName}"
+            val location = "(${element.fileName}:${element.lineNumber})"
+            logger.debug { "  [$index] $frame$location" }
         }
         logger.debug { "=== END STACK TRACE ===" }
 
