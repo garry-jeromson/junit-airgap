@@ -38,7 +38,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             ~/.m2/repository
-          key: ${{ runner.os }}-java${{ matrix.java }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          key: ${{ runner.os }}-java${{ matrix.java }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml', '**/src/**/*.kt') }}
           restore-keys: |
             ${{ runner.os }}-java${{ matrix.java }}-gradle-
             ${{ runner.os }}-gradle-
