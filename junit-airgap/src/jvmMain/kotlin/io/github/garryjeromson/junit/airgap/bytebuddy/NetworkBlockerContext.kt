@@ -271,6 +271,14 @@ object NetworkBlockerContext {
     @JvmStatic // Make accessible for testing
     internal fun isRobolectricArtifactDownload(): Boolean {
         val stackTrace = Thread.currentThread().stackTrace
+
+        // DEBUG: Print full stack trace to investigate CI failures
+        logger.debug { "=== FULL STACK TRACE FOR ROBOLECTRIC DETECTION ===" }
+        stackTrace.forEachIndexed { index, element ->
+            logger.debug { "  [$index] ${element.className}.${element.methodName}(${element.fileName}:${element.lineNumber})" }
+        }
+        logger.debug { "=== END STACK TRACE ===" }
+
         return stackTrace.any { element ->
             val className = element.className
             val matches =

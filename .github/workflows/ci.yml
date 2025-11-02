@@ -77,9 +77,13 @@ jobs:
 
       - name: Run unit tests
         run: make test
+        env:
+          ORG_GRADLE_PROJECT_junitAirgapDebug: "true"
 
       - name: Run plugin integration tests
         run: make test-plugin-integration
+        env:
+          ORG_GRADLE_PROJECT_junitAirgapDebug: "true"
 
       - name: Upload test results
         if: always()
