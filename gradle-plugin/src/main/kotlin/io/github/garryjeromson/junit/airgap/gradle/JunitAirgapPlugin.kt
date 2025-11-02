@@ -263,6 +263,22 @@ class JunitAirgapPlugin : Plugin<Project> {
                     .get()
                     .asFile
 
+            // Pre-resolve test dependencies before agent loads
+            // This prevents the JVMTI agent from blocking Gradle's Maven artifact fetching
+            // See: docs/investigation/macos-ci-failures.md
+            doFirst("resolveTestDependencies") {
+                logger.debug("[junit-airgap:plugin] Pre-resolving test dependencies to avoid agent interference")
+                try {
+                    // Resolve test runtime classpath to trigger dependency downloads
+                    // FileCollection.files forces resolution of all dependencies
+                    classpath.files
+                    logger.debug("[junit-airgap:plugin] Test dependencies resolved successfully")
+                } catch (e: Exception) {
+                    // Don't fail the build - dependencies might resolve during test execution
+                    logger.warn("[junit-airgap:plugin] Failed to pre-resolve dependencies: ${e.message}")
+                }
+            }
+
             // Extract native agent and set system properties at execution time (doFirst)
             // This ensures everything is resolved when the test JVM starts
             // Note: We use task's logger and captured build directory to avoid capturing project reference
