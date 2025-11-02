@@ -58,9 +58,7 @@ class MavenArtifactFetcherTest {
         }
 
         companion object {
-            fun checkFromStaticContext(): Boolean {
-                return NetworkBlockerContext.isRobolectricArtifactDownload()
-            }
+            fun checkFromStaticContext(): Boolean = NetworkBlockerContext.isRobolectricArtifactDownload()
         }
     }
 }

@@ -268,13 +268,14 @@ object NetworkBlockerContext {
      *
      * @return true if this is a Robolectric artifact download
      */
-    @JvmStatic  // Make accessible for testing
+    @JvmStatic // Make accessible for testing
     internal fun isRobolectricArtifactDownload(): Boolean {
         val stackTrace = Thread.currentThread().stackTrace
         return stackTrace.any { element ->
             val className = element.className
-            val matches = className.contains("org.robolectric.internal.dependency.MavenArtifactFetcher") ||
-                className.contains("org.robolectric.internal.dependency.MavenDependencyResolver")
+            val matches =
+                className.contains("org.robolectric.internal.dependency.MavenArtifactFetcher") ||
+                    className.contains("org.robolectric.internal.dependency.MavenDependencyResolver")
             if (matches) {
                 logger.debug { "Detected Robolectric class in stack: $className" }
             }

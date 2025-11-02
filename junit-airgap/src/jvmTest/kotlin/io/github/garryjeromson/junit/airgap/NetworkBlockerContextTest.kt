@@ -168,5 +168,4 @@ class NetworkBlockerContextTest {
         thread.start()
         thread.join()
     }
-
 }
