@@ -69,6 +69,9 @@ jobs:
         if: runner.os == 'macOS'
         run: cmake --version
 
+      - name: Bootstrap plugin to Maven Local
+        run: make bootstrap
+
       - name: Check code formatting with ktlint
         run: make lint
 
