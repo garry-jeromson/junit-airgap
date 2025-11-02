@@ -39,8 +39,7 @@ object NativeAgentExtractor {
             when {
                 osName.contains("mac") || osName.contains("darwin") -> "darwin"
                 osName.contains("linux") -> "linux"
-                osName.contains("windows") -> "windows"
-                else -> return null
+                else -> return null // Windows not supported
             }
 
         // Normalize architecture
@@ -56,7 +55,6 @@ object NativeAgentExtractor {
             when (os) {
                 "darwin" -> "libjunit-airgap-agent.dylib"
                 "linux" -> "libjunit-airgap-agent.so"
-                "windows" -> "junit-airgap-agent.dll"
                 else -> return null
             }
 
@@ -193,10 +191,8 @@ object NativeAgentExtractor {
                 }
             }
 
-            // Make executable on Unix-like systems
-            if (platform.os != "windows") {
-                extractedAgent.setExecutable(true, false)
-            }
+            // Make executable on Unix-like systems (macOS and Linux)
+            extractedAgent.setExecutable(true, false)
 
             if (debug) {
                 logger.debug("[junit-airgap:plugin] Extracted JVMTI agent to: ${extractedAgent.absolutePath}")

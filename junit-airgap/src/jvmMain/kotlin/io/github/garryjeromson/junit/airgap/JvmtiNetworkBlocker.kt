@@ -73,7 +73,6 @@ import io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext
  * ### Platform-specific library names:
  * - macOS: `libjunit-airgap-agent.dylib`
  * - Linux: `libjunit-airgap-agent.so`
- * - Windows: `junit-airgap-agent.dll`
  *
  * ### Why can't we load the agent at runtime?
  * JVMTI agents can ONLY be loaded at JVM startup (via -agentpath or -agentlib).
@@ -108,7 +107,7 @@ import io.github.garryjeromson.junit.airgap.bytebuddy.NetworkBlockerContext
  * - ✅ No JPMS restrictions (doesn't use internal APIs)
  * - ✅ Zero overhead (function pointer replacement)
  * - ✅ No dependencies (pure native code)
- * - ✅ Cross-platform (macOS, Linux, Windows via CMake)
+ * - ✅ Cross-platform (macOS, Linux via CMake)
  *
  * ## Limitations
  * - **Requires -agentpath**: Users must load agent at JVM startup
