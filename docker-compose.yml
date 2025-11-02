@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Linux x86-64 build and test environment
+  # Linux x86-64 build and test environment with Android SDK
   linux-x86-64:
     build:
       context: .
@@ -19,13 +19,16 @@ services:
       - maven-local-linux-x86:/root/.m2
     environment:
       - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - ANDROID_HOME=/opt/android-sdk
       - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
     working_dir: /workspace
     command: bash -c "
       chmod +x ./gradlew &&
       ./gradlew :gradle-plugin:publishToMavenLocal --no-daemon &&
       ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon &&
-      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon
+      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon &&
+      ./gradlew :plugin-integration-tests:android-robolectric:testDebugUnitTest --no-daemon
       "
 
   # Linux ARM64 build and test environment
