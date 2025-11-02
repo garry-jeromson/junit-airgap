@@ -71,14 +71,14 @@ tasks.register("compareBenchmarks") {
 
 // Root clean task - delegates to subprojects
 tasks.register("clean") {
-    description = "Delete build directories and clean Maven Local"
+    description = "Delete build directories (Maven Local artifacts are preserved)"
     group = "build"
 
-    // Clean Maven Local first (at the very start)
-    dependsOn("cleanMavenLocal")
-
-    // Then delegate to subproject clean tasks
+    // Delegate to subproject clean tasks
     dependsOn(":junit-airgap:clean", ":gradle-plugin:clean")
+
+    // NOTE: Maven Local is NOT cleaned automatically to preserve artifacts needed
+    // by integration tests. Run 'cleanMavenLocal' explicitly if needed.
 }
 
 // Task to clean Maven Local publications
