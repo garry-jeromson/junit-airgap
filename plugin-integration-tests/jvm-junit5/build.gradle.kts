@@ -40,4 +40,10 @@ dependencies {
 // Configure JUnit Platform for test tasks
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    // Disable Netty native transports (epoll on Linux, kqueue on macOS) to ensure
+    // network blocking works correctly. Netty's native transports bypass the standard
+    // Java NIO APIs that the JVMTI agent intercepts, making network blocking ineffective.
+    // This forces Reactor Netty and Spring WebClient to use the standard NIO transport.
+    systemProperty("io.netty.transport.noNative", "true")
 }

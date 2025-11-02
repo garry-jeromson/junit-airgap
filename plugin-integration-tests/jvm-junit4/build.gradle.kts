@@ -40,3 +40,12 @@ dependencies {
 
 // NOTE: NOT using useJUnitPlatform() - this runs pure JUnit 4 tests
 // This configuration tests the bytecode enhancement path for JUnit 4 @Rule injection
+
+// Configure test tasks
+tasks.withType<Test> {
+    // Disable Netty native transports (epoll on Linux, kqueue on macOS) to ensure
+    // network blocking works correctly. Netty's native transports bypass the standard
+    // Java NIO APIs that the JVMTI agent intercepts, making network blocking ineffective.
+    // This forces Reactor Netty and Spring WebClient to use the standard NIO transport.
+    systemProperty("io.netty.transport.noNative", "true")
+}
