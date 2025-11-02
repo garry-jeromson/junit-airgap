@@ -227,6 +227,14 @@ object NetworkBlockerContext {
             return
         }
 
+        // Check if this is Robolectric's MavenArtifactFetcher downloading android-all JARs
+        // Robolectric lazily downloads Android framework JARs at test runtime from Maven Central
+        // These downloads are infrastructure, not test code, so we should allow them
+        if (isRobolectricArtifactDownload()) {
+            logger.debug { "  Detected Robolectric artifact download, allowing connection to $host:$port" }
+            return
+        }
+
         // Check if allowed
         val allowed = configuration.isAllowed(host)
         logger.debug { "  isAllowed($host) = $allowed" }
@@ -251,6 +259,26 @@ object NetworkBlockerContext {
                     "Attempted to connect to $host:$port via $caller",
                 requestDetails = details,
             )
+        }
+    }
+
+    /**
+     * Check if the current call stack indicates a Robolectric artifact download.
+     * Robolectric's MavenArtifactFetcher downloads android-all JARs at test runtime.
+     *
+     * @return true if this is a Robolectric artifact download
+     */
+    @JvmStatic  // Make accessible for testing
+    internal fun isRobolectricArtifactDownload(): Boolean {
+        val stackTrace = Thread.currentThread().stackTrace
+        return stackTrace.any { element ->
+            val className = element.className
+            val matches = className.contains("org.robolectric.internal.dependency.MavenArtifactFetcher") ||
+                className.contains("org.robolectric.internal.dependency.MavenDependencyResolver")
+            if (matches) {
+                logger.debug { "Detected Robolectric class in stack: $className" }
+            }
+            matches
         }
     }
 

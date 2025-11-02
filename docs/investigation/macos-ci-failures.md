@@ -78,52 +78,66 @@ object NetworkBlockerContext {
 
 ## Solution Implemented (Current)
 
-**Detect and exclude Gradle worker threads from network blocking.**
+**Detect Robolectric's MavenArtifactFetcher in call stack and allow Maven Central downloads.**
+
+The real root cause was NOT Gradle worker threads - it was **Robolectric's runtime artifact downloading**. Robolectric lazily downloads pre-instrumented Android framework JARs (`android-all`) at test runtime from Maven Central using `org.robolectric.internal.dependency.MavenArtifactFetcher`.
+
+This happens on the "Test worker" thread when tests start, which is why thread name detection didn't help.
 
 Implementation in `NetworkBlockerContext.kt`:
 
 ```kotlin
-fun getConfiguration(): NetworkConfiguration? {
-    val config = configurationThreadLocal.get()
-    val threadName = Thread.currentThread().name
+@JvmStatic
+fun checkConnection(host: String, port: Int, caller: String = "unknown") {
+    val configuration = getConfiguration()
 
-    // If we have a config and it matches current generation, use it
-    if (config != null && config.generation == currentGeneration) {
-        return config
+    // No configuration = no blocking
+    if (configuration == null) {
+        return
     }
 
-    // Don't use global configuration for Gradle worker threads
-    if (isGradleWorkerThread(threadName)) {
-        return null
+    // Check if this is Robolectric's MavenArtifactFetcher downloading android-all JARs
+    // Robolectric lazily downloads Android framework JARs at test runtime from Maven Central
+    // These downloads are infrastructure, not test code, so we should allow them
+    if (isRobolectricArtifactDownload()) {
+        logger.debug { "Detected Robolectric artifact download, allowing connection to $host:$port" }
+        return
     }
 
-    // Otherwise, use the global configuration (for HTTP client worker threads)
-    return globalConfiguration
+    // Check if allowed
+    val allowed = configuration.isAllowed(host)
+    if (!allowed) {
+        throw NetworkRequestAttemptedException(...)
+    }
 }
 
-private fun isGradleWorkerThread(threadName: String): Boolean {
-    return threadName.startsWith("Execution worker") ||
-        threadName.startsWith("daemon worker") ||
-        threadName.contains("Gradle") ||
-        threadName.contains("worker-")
+@JvmStatic
+internal fun isRobolectricArtifactDownload(): Boolean {
+    val stackTrace = Thread.currentThread().stackTrace
+    return stackTrace.any { element ->
+        element.className.contains("org.robolectric.internal.dependency.MavenArtifactFetcher") ||
+            element.className.contains("org.robolectric.internal.dependency.MavenDependencyResolver")
+    }
 }
 ```
 
-This approach detects Gradle's worker threads by their naming patterns and excludes them from inheriting the global configuration, while still allowing HTTP client worker threads (spawned by tests) to inherit the blocking configuration.
+This approach detects Robolectric's artifact downloading by inspecting the call stack for Robolectric's internal dependency classes, and automatically allows those connections.
 
 ### Benefits of This Approach
 
-- ✅ Simple, minimal code change (~15 lines)
+- ✅ Simple, minimal code change (~20 lines)
 - ✅ No breaking changes
 - ✅ Works on both CI and local environments
-- ✅ No performance overhead
-- ✅ Fixes the root cause for Gradle threads specifically
+- ✅ Minimal performance overhead (stack trace inspection only when configuration is active)
+- ✅ Automatic - users don't need to configure allowed hosts for Robolectric
+- ✅ Detects the actual infrastructure code (Robolectric) rather than relying on thread names
+- ✅ Works for both ByteBuddy and JVMTI agent interception
 
 ### Limitations
 
-- ⚠️ Relies on Gradle thread naming conventions (may break if Gradle changes naming)
-- ⚠️ Doesn't fully fix the underlying architectural issue (globalConfiguration still exists)
-- ⚠️ May need adjustment if other build tools have similar issues
+- ⚠️ Relies on Robolectric's internal class names (may break if Robolectric refactors)
+- ⚠️ Stack trace inspection has small performance cost
+- ⚠️ May need similar detection for other testing frameworks with runtime artifact downloading
 
 ## Proper Long-Term Fix
 
