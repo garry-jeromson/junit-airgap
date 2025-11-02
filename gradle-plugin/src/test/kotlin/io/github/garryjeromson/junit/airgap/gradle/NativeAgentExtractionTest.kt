@@ -33,12 +33,13 @@ class NativeAgentExtractionTest {
      * whichever agent file was extracted on the current platform.
      */
     private fun getCurrentPlatformAgentFile(): File {
-        val agentName = when {
-            System.getProperty("os.name").lowercase().contains("mac") -> "libjunit-airgap-agent.dylib"
-            System.getProperty("os.name").lowercase().contains("linux") -> "libjunit-airgap-agent.so"
-            System.getProperty("os.name").lowercase().contains("windows") -> "junit-airgap-agent.dll"
-            else -> error("Unsupported OS: ${System.getProperty("os.name")}")
-        }
+        val agentName =
+            when {
+                System.getProperty("os.name").lowercase().contains("mac") -> "libjunit-airgap-agent.dylib"
+                System.getProperty("os.name").lowercase().contains("linux") -> "libjunit-airgap-agent.so"
+                System.getProperty("os.name").lowercase().contains("windows") -> "junit-airgap-agent.dll"
+                else -> error("Unsupported OS: ${System.getProperty("os.name")}")
+            }
         return File(testProjectDir, "build/junit-airgap/native/$agentName")
     }
 
@@ -355,7 +356,6 @@ class NativeAgentExtractionTest {
         // Note: Debug log messages about "size mismatch" are not visible at --info level
         // The important thing is that the agent was re-extracted to the correct size
     }
-
 
     @Test
     fun `multiple test tasks can share extracted agent`() {
