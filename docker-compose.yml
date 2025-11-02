@@ -28,6 +28,33 @@ services:
       ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon
       "
 
+  # Linux ARM64 build and test environment
+  linux-arm64:
+    build:
+      context: .
+      dockerfile: docker/linux-arm64/Dockerfile
+    platform: linux/arm64
+    volumes:
+      # Mount entire source tree (read-write for simplicity)
+      # Changes made in container will be visible on host
+      - ./:/workspace
+      # Mount CMake build directory to avoid conflicts with host platform and x86-64
+      - cmake-build-linux-arm64:/workspace/native/build
+      # Mount Gradle cache for faster builds (persistent across container runs)
+      - gradle-cache-linux-arm64:/root/.gradle
+      # Mount Maven Local for integration tests (persistent across container runs)
+      - maven-local-linux-arm64:/root/.m2
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+      - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
+    working_dir: /workspace
+    command: bash -c "
+      chmod +x ./gradlew &&
+      ./gradlew :gradle-plugin:publishToMavenLocal --no-daemon &&
+      ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon &&
+      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon
+      "
+
 volumes:
   # CMake build directory for Linux x86-64 (isolates Linux build from host platform)
   cmake-build-linux-x86:
@@ -35,3 +62,9 @@ volumes:
   gradle-cache-linux-x86:
   # Maven Local for Linux x86-64 (separate from host to avoid native lib conflicts)
   maven-local-linux-x86:
+  # CMake build directory for Linux ARM64 (isolates ARM64 build from x86-64 and host)
+  cmake-build-linux-arm64:
+  # Gradle cache for Linux ARM64 (separate from host and x86-64 to avoid conflicts)
+  gradle-cache-linux-arm64:
+  # Maven Local for Linux ARM64 (separate from host and x86-64 to avoid native lib conflicts)
+  maven-local-linux-arm64:

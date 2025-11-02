@@ -17,11 +17,17 @@ This guide explains how to use Docker to test Linux builds locally before pushin
 
 ### 1. Build the Docker Image (One-Time Setup)
 
+**Linux x86-64:**
 ```bash
 make docker-build-linux
 ```
 
-This builds the Linux x86-64 Docker image with:
+**Linux ARM64:**
+```bash
+make docker-build-linux-arm64
+```
+
+This builds the Linux Docker image with:
 - Ubuntu 24.04
 - Java 21 (OpenJDK)
 - CMake and C++ build tools
@@ -29,10 +35,18 @@ This builds the Linux x86-64 Docker image with:
 
 **First build takes ~5-10 minutes** to download base images and dependencies.
 
+**Note:** Building ARM64 on non-ARM hosts uses QEMU emulation, which is slower but functional.
+
 ### 2. Run Tests in Docker
 
+**Linux x86-64:**
 ```bash
 make docker-test-linux
+```
+
+**Linux ARM64:**
+```bash
+make docker-test-linux-arm64
 ```
 
 This runs the complete test suite inside the Linux container:
@@ -50,7 +64,10 @@ This runs the complete test suite inside the Linux container:
 # Build Linux x86-64 image
 make docker-build-linux
 
-# Build all platform images (future: will include ARM64, Windows)
+# Build Linux ARM64 image
+make docker-build-linux-arm64
+
+# Build all platform images
 make docker-build-all
 ```
 
@@ -60,15 +77,21 @@ make docker-build-all
 # Run tests on Linux x86-64
 make docker-test-linux
 
-# Run tests on all platforms (future: multiple platforms)
+# Run tests on Linux ARM64
+make docker-test-linux-arm64
+
+# Run tests on all platforms
 make docker-test-all
 ```
 
 ### Interactive Debugging
 
 ```bash
-# Open shell in Linux container for debugging
+# Open shell in Linux x86-64 container
 make docker-shell-linux
+
+# Open shell in Linux ARM64 container
+make docker-shell-linux-arm64
 
 # Inside the container, you can:
 ./gradlew test                    # Run tests
@@ -349,12 +372,30 @@ open junit-airgap/build/reports/tests/jvmTest/index.html
 - Use **Docker** for rapid iteration and debugging
 - Use **CI** for comprehensive testing (multiple platforms, Java versions)
 
+## QEMU Emulation for ARM64
+
+When running Linux ARM64 on a non-ARM host (e.g., x86-64 macOS or Linux), Docker automatically uses QEMU to emulate the ARM64 architecture. This allows you to test ARM64 builds locally without needing ARM hardware.
+
+**Key points:**
+- **Slower performance** - QEMU emulation is significantly slower than native execution
+- **First build** - May take 15-30 minutes (vs 5-10 minutes for native)
+- **Test runs** - May take 2-5 minutes (vs 30 seconds for native)
+- **Fully functional** - All tests should pass, just slower
+
+**Example output:**
+```
+WARNING: The requested image's platform (linux/arm64) does not match the detected host platform (linux/amd64)
+and no specific platform was requested
+```
+
+This warning is expected and can be safely ignored.
+
 ## Future Enhancements
 
 Planned additions to Docker setup:
 
-- **Linux ARM64** - Test on ARM64 via QEMU emulation
 - **Helper scripts** - Automated result extraction and reporting
+- **Performance optimizations** - Improve QEMU emulation speed
 
 ## See Also
 

@@ -1,4 +1,4 @@
-.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish publish-local jar sources-jar all verify setup-native build-native test-native clean-native docker-build-linux docker-build-all docker-test-linux docker-test-all docker-shell-linux docker-clean docker-clean-all gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
+.PHONY: help build clean test test-java21 test-java25 benchmark format lint check fix install publish publish-local jar sources-jar all verify setup-native build-native test-native clean-native docker-build-linux docker-build-linux-arm64 docker-build-all docker-test-linux docker-test-linux-arm64 docker-test-all docker-shell-linux docker-shell-linux-arm64 docker-clean docker-clean-all gpg-generate gpg-list gpg-export-private gpg-export-public gpg-publish gpg-key-id
 
 # Default Java version for the project
 JAVA_VERSION ?= 21
@@ -45,13 +45,16 @@ help:
 	@echo "  clean-native            Clean native build artifacts"
 	@echo ""
 	@echo "Docker Multi-Platform Commands:"
-	@echo "  docker-build-linux      Build Linux x86-64 Docker image"
-	@echo "  docker-build-all        Build all Docker images"
-	@echo "  docker-test-linux       Run tests on Linux x86-64 in Docker"
-	@echo "  docker-test-all         Run tests on all platforms in Docker"
-	@echo "  docker-shell-linux      Open interactive shell in Linux container"
-	@echo "  docker-clean            Remove Docker containers and volumes"
-	@echo "  docker-clean-all        Remove all Docker artifacts (containers, volumes, images)"
+	@echo "  docker-build-linux          Build Linux x86-64 Docker image"
+	@echo "  docker-build-linux-arm64    Build Linux ARM64 Docker image"
+	@echo "  docker-build-all            Build all Docker images"
+	@echo "  docker-test-linux           Run tests on Linux x86-64 in Docker"
+	@echo "  docker-test-linux-arm64     Run tests on Linux ARM64 in Docker"
+	@echo "  docker-test-all             Run tests on all platforms in Docker"
+	@echo "  docker-shell-linux          Open interactive shell in Linux x86-64 container"
+	@echo "  docker-shell-linux-arm64    Open interactive shell in Linux ARM64 container"
+	@echo "  docker-clean                Remove Docker containers and volumes"
+	@echo "  docker-clean-all            Remove all Docker artifacts (containers, volumes, images)"
 	@echo ""
 	@echo "Performance Benchmark Commands:"
 	@echo "  benchmark      Run all performance benchmarks"
@@ -564,6 +567,15 @@ docker-build-linux:
 	@echo ""
 	@echo "✅ Linux x86-64 Docker image built successfully"
 
+## docker-build-linux-arm64: Build Linux ARM64 Docker image
+docker-build-linux-arm64:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Building Linux ARM64 Docker image..."
+	@echo "════════════════════════════════════════════════════════════════"
+	docker compose build linux-arm64
+	@echo ""
+	@echo "✅ Linux ARM64 Docker image built successfully"
+
 ## docker-build-all: Build all Docker images
 docker-build-all:
 	@echo "════════════════════════════════════════════════════════════════"
@@ -583,12 +595,24 @@ docker-test-linux:
 	@echo ""
 	@echo "✅ Linux x86-64 tests completed"
 
+## docker-test-linux-arm64: Run tests on Linux ARM64 in Docker
+docker-test-linux-arm64:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on Linux ARM64 in Docker"
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	docker compose run --rm linux-arm64
+	@echo ""
+	@echo "✅ Linux ARM64 tests completed"
+
 ## docker-test-all: Run tests on all platforms in Docker
 docker-test-all:
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo "  Running tests on ALL platforms in Docker"
 	@echo "════════════════════════════════════════════════════════════════"
 	@$(MAKE) docker-test-linux
+	@echo ""
+	@$(MAKE) docker-test-linux-arm64
 	@echo ""
 	@echo "✅ All platform tests completed!"
 
@@ -598,6 +622,13 @@ docker-shell-linux:
 	@echo "Use 'exit' to leave the container"
 	@echo ""
 	docker compose run --rm linux-x86-64 bash
+
+## docker-shell-linux-arm64: Open interactive shell in Linux ARM64 container
+docker-shell-linux-arm64:
+	@echo "Opening shell in Linux ARM64 container..."
+	@echo "Use 'exit' to leave the container"
+	@echo ""
+	docker compose run --rm linux-arm64 bash
 
 ## docker-clean: Remove Docker containers and volumes
 docker-clean:
