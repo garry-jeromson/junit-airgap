@@ -9,11 +9,12 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and Test (Java ${{ matrix.java }})
-    runs-on: ubuntu-latest
+    name: Build and Test (${{ matrix.os }}, Java ${{ matrix.java }})
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os: [ ubuntu-latest, macos-latest ]
         java: [ 21, 25 ]
       fail-fast: false
 
@@ -31,11 +32,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Install CMake
+      - name: Install CMake (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake
           cmake --version
+
+      - name: Verify CMake (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --version
 
       - name: Check code formatting with ktlint
         run: make lint
