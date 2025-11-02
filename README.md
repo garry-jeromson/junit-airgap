@@ -146,12 +146,12 @@ Uses a **JVMTI agent** (JVM Tool Interface) to intercept network calls at the na
 ### 🚧 Coming Soon
 
 - Linux ARM64
-- Windows x86-64
-- macOS Intel (x86-64)
 
 ### ❌ Not Supported
 
 - **iOS/Kotlin Native**: Platform limitations prevent comprehensive network interception. See `IOS_SUPPORT_INVESTIGATION.md` for technical details.
+- **Windows**: Not planned for support.
+- **macOS Intel (x86-64)**: Not planned for support.
 
 ### 📖 Detailed Compatibility
 
@@ -396,7 +396,7 @@ java.lang.UnsatisfiedLinkError: no junit-airgap-agent in java.library.path
 
 **Current support**: macOS ARM64, Linux x86-64
 
-**Coming soon**: Linux ARM64, Windows x86-64, macOS Intel (x86-64)
+**Coming soon**: Linux ARM64
 
 See [Platform Compatibility](docs/compatibility-matrix.md) for details.
 

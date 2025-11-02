@@ -104,12 +104,10 @@ The agent uses only:
 | Platform | OS | Architecture | Status |
 |----------|----|--------------| -------|
 | darwin-aarch64 | macOS | ARM64 (M1/M2/M3) | ✅ Built |
-| darwin-x86-64 | macOS | Intel | ❌ TODO |
-| linux-x86-64 | Linux | AMD64 | ❌ TODO |
+| linux-x86-64 | Linux | AMD64 | ✅ Built |
 | linux-aarch64 | Linux | ARM64 | ❌ TODO |
-| windows-x86-64 | Windows | AMD64 | ❌ TODO |
 
-**Note**: Each platform needs ONE binary that works across all Java versions.
+**Note**: Each platform needs ONE binary that works across all Java versions. Windows and Intel Mac are not supported.
 
 ### Why One Binary Per Platform?
 
@@ -119,9 +117,8 @@ Different platforms need different binaries because:
 - ❌ **NOT Java version**: JVMTI API is version-independent
 
 **Example**:
-- `darwin-aarch64` agent works for Java 17-30+ on macOS ARM
+- `darwin-aarch64` agent works for Java 21-30+ on macOS ARM
 - Does NOT work on Linux (different OS)
-- Does NOT work on macOS Intel (different arch)
 
 ## Testing Strategy
 
@@ -139,12 +136,12 @@ JAVA_HOME=/path/to/java-25 ./gradlew test  # Java 25
 strategy:
   matrix:
     java-version: [21, 22, 23, 24, 25]
-    os: [ubuntu-latest, macos-latest, windows-latest]
+    os: [ubuntu-latest, macos-latest]
 ```
 
 This validates:
 - ✅ Single agent works across Java versions
-- ✅ Agent works on different platforms
+- ✅ Agent works on supported platforms (macOS ARM, Linux x86-64)
 - ✅ No unexpected incompatibilities
 
 ## Build Process
@@ -232,15 +229,11 @@ gradle-plugin.jar
 └── native/
     ├── darwin-aarch64/
     │   └── libjunit-airgap-agent.dylib  (works for all Java 21+ on macOS ARM)
-    ├── darwin-x86-64/
-    │   └── libjunit-airgap-agent.dylib  (TODO: works for all Java 21+ on macOS Intel)
-    ├── linux-x86-64/
-    │   └── libjunit-airgap-agent.so     (TODO: works for all Java 21+ on Linux AMD64)
-    └── windows-x86-64/
-        └── junit-airgap-agent.dll       (TODO: works for all Java 21+ on Windows)
+    └── linux-x86-64/
+        └── libjunit-airgap-agent.so     (works for all Java 21+ on Linux x86-64)
 ```
 
-**One JAR** contains agents for all platforms, each agent works for all Java versions.
+**One JAR** contains agents for all supported platforms, each agent works for all Java versions.
 
 ### Runtime Extraction
 
@@ -294,10 +287,6 @@ Currently we build on the development machine (macOS ARM). For other platforms:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-  build-windows:
-    runs-on: windows-latest
-  build-macos-intel:
-    runs-on: macos-13  # Intel runner
 ```
 
 **Option B: Docker Cross-Compilation**
@@ -308,7 +297,7 @@ docker run --platform linux/amd64 -v $(pwd):/work ubuntu:22.04
 
 **Option C: Check In Pre-Built**
 ```bash
-# Build on each platform once
+# Build on each supported platform once
 # Commit agents to git
 git add gradle-plugin/src/main/resources/native/
 ```
@@ -332,7 +321,5 @@ git add gradle-plugin/src/main/resources/native/
 - Works on: All Java 21+
 
 **TODO**:
-- Build for darwin-x86-64 (macOS Intel)
-- Build for linux-x86-64 (Linux AMD64)
-- Build for windows-x86-64 (Windows)
+- Build for linux-aarch64 (Linux ARM64)
 - Add CI matrix testing across Java versions

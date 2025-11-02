@@ -342,7 +342,7 @@ open junit-airgap/build/reports/tests/jvmTest/index.html
 | **Iteration** | Instant reruns | Requires git push |
 | **Debugging** | Interactive shell | Logs only |
 | **Cost** | Free (local CPU) | Free (GitHub quota) |
-| **Platform Coverage** | Linux only (macOS host) | Linux + Windows + macOS |
+| **Platform Coverage** | Linux only (macOS host) | Linux + macOS |
 | **Java Versions** | Single version | Matrix (21, 25) |
 
 **Recommended approach:**
@@ -354,9 +354,7 @@ open junit-airgap/build/reports/tests/jvmTest/index.html
 Planned additions to Docker setup:
 
 - **Linux ARM64** - Test on ARM64 via QEMU emulation
-- **Windows** - Native Windows containers (Windows host only) or Wine cross-compilation
 - **Helper scripts** - Automated result extraction and reporting
-- **Multi-platform testing** - Run all platforms in parallel
 
 ## See Also
 
