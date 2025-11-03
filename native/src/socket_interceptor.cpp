@@ -87,24 +87,25 @@ jint JNICALL wrapped_Net_connect0(
     // JNI string operations and immediately allow the connection. This avoids platform
     // encoding issues in edge cases where VM_INIT is complete but platform encoding
     // might not be fully ready for all string operations.
-    //
-    // NOTE: hasActiveConfiguration method may be nullptr on some platforms (Linux) due to
-    // class initialization timing. If it's not available, we skip this optimization and
-    // always proceed with full interception logic (less efficient but still correct).
     jmethodID hasActiveConfigMethod = GetHasActiveConfigurationMethod();
-    if (hasActiveConfigMethod != nullptr) {
-        jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
-        if (!hasConfig) {
-            DEBUG_LOG("No active configuration - allowing socket connection without interception");
-            if (original_Net_connect0 != nullptr) {
-                return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
-            }
-            return -2; // Error if original function not available
+    if (hasActiveConfigMethod == nullptr) {
+        // Method not registered yet - assume no configuration and allow
+        DEBUG_LOG("hasActiveConfiguration method not registered - allowing socket connection without interception");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
         }
-        DEBUG_LOG("Active configuration detected - proceeding with interception");
-    } else {
-        DEBUG_LOG("hasActiveConfiguration method not available - proceeding with interception (less efficient)");
+        return -2; // Error if original function not available
     }
+
+    jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
+    if (!hasConfig) {
+        DEBUG_LOG("No active configuration - allowing socket connection without interception");
+        if (original_Net_connect0 != nullptr) {
+            return original_Net_connect0(env, cls, preferIPv6, fd, remote, remotePort);
+        }
+        return -2; // Error if original function not available
+    }
+    DEBUG_LOG("Active configuration detected - proceeding with interception");
 
     // Extract both hostname and IP address from InetAddress
     // We need to check BOTH because:

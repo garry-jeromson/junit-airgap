@@ -105,42 +105,43 @@ static jobjectArray wrapped_lookupAllHostAddr(
     // JNI string operations and immediately allow the DNS lookup. This avoids platform
     // encoding issues in edge cases where VM_INIT is complete but platform encoding
     // might not be fully ready for all string operations.
-    //
-    // NOTE: hasActiveConfiguration method may be nullptr on some platforms (Linux) due to
-    // class initialization timing. If it's not available, we skip this optimization and
-    // always proceed with full interception logic (less efficient but still correct).
     jmethodID hasActiveConfigMethod = GetHasActiveConfigurationMethod();
-    if (hasActiveConfigMethod != nullptr) {
-        jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
-        if (!hasConfig) {
-            DEBUG_LOG("No active configuration - allowing DNS without interception");
+    if (hasActiveConfigMethod == nullptr) {
+        // Method not registered yet - assume no configuration and allow
+        DEBUG_LOG("hasActiveConfiguration method not registered - allowing DNS without interception");
+        if (original != nullptr) {
+            return original(env, obj, hostname);
+        }
+        return nullptr;
+    }
 
-            // IMPORTANT: Ensure platform encoding is ready for the current thread before calling original function.
-            // The original Java DNS function requires platform encoding, which is initialized per-thread.
-            // In Android Studio's test runner, the "Test worker" thread may not have platform encoding ready
-            // immediately, even though VM_INIT completed and NetworkBlockerContext is registered.
-            // By proactively ensuring it's ready, we avoid "platform encoding not initialized" errors.
-            if (!EnsurePlatformEncodingReady(env)) {
-                DEBUG_LOG("Failed to ensure platform encoding ready - cannot call original DNS function");
-                // Throw exception to indicate the issue
-                jclass exClass = env->FindClass("java/lang/InternalError");
-                if (exClass != nullptr) {
-                    env->ThrowNew(exClass, "Platform encoding not ready for DNS resolution");
-                }
-                return nullptr;
-            }
+    jboolean hasConfig = env->CallStaticBooleanMethod(contextClass, hasActiveConfigMethod);
+    if (!hasConfig) {
+        DEBUG_LOG("No active configuration - allowing DNS without interception");
 
-            // Platform encoding is ready - safe to call original function
-            if (original != nullptr) {
-                DEBUG_LOG("Platform encoding ready - calling original DNS function");
-                return original(env, obj, hostname);
+        // IMPORTANT: Ensure platform encoding is ready for the current thread before calling original function.
+        // The original Java DNS function requires platform encoding, which is initialized per-thread.
+        // In Android Studio's test runner, the "Test worker" thread may not have platform encoding ready
+        // immediately, even though VM_INIT completed and NetworkBlockerContext is registered.
+        // By proactively ensuring it's ready, we avoid "platform encoding not initialized" errors.
+        if (!EnsurePlatformEncodingReady(env)) {
+            DEBUG_LOG("Failed to ensure platform encoding ready - cannot call original DNS function");
+            // Throw exception to indicate the issue
+            jclass exClass = env->FindClass("java/lang/InternalError");
+            if (exClass != nullptr) {
+                env->ThrowNew(exClass, "Platform encoding not ready for DNS resolution");
             }
             return nullptr;
         }
-        DEBUG_LOG("Active configuration detected - proceeding with interception");
-    } else {
-        DEBUG_LOG("hasActiveConfiguration method not available - proceeding with interception (less efficient)");
+
+        // Platform encoding is ready - safe to call original function
+        if (original != nullptr) {
+            DEBUG_LOG("Platform encoding ready - calling original DNS function");
+            return original(env, obj, hostname);
+        }
+        return nullptr;
     }
+    DEBUG_LOG("Active configuration detected - proceeding with interception");
 
     // STEP 1: Extract hostname and check if connection is allowed
     // This will throw NetworkRequestAttemptedException if blocked
