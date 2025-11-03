@@ -29,7 +29,7 @@ services:
       ./gradlew test --no-daemon
       "
 
-  # Linux ARM64 build and test environment
+  # Linux ARM64 build and test environment with Android SDK
   linux-arm64:
     build:
       context: .
@@ -47,6 +47,8 @@ services:
       - maven-local-linux-arm64:/root/.m2
     environment:
       - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-arm64
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - ANDROID_HOME=/opt/android-sdk
       - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.caching=true
     working_dir: /workspace
     command: bash -c "
