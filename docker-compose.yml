@@ -26,9 +26,7 @@ services:
     command: bash -c "
       chmod +x ./gradlew &&
       ./gradlew :gradle-plugin:publishToMavenLocal --no-daemon &&
-      ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon &&
-      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon &&
-      ./gradlew :plugin-integration-tests:android-robolectric:testDebugUnitTest --no-daemon
+      ./gradlew test --no-daemon
       "
 
   # Linux ARM64 build and test environment
@@ -54,8 +52,7 @@ services:
     command: bash -c "
       chmod +x ./gradlew &&
       ./gradlew :gradle-plugin:publishToMavenLocal --no-daemon &&
-      ./gradlew :junit-airgap:jvmTest :gradle-plugin:test --no-daemon &&
-      ./gradlew :plugin-integration-tests:jvm-junit4:test :plugin-integration-tests:jvm-junit5:test --no-daemon
+      ./gradlew test --no-daemon
       "
 
 volumes:

@@ -361,6 +361,12 @@ tasks.register<Test>("integrationTest") {
     val debugProperty = System.getProperty("junit.airgap.debug") ?: "false"
     systemProperty("junit.airgap.debug", debugProperty)
 
+    // Disable Netty native transports (epoll on Linux, kqueue on macOS) to ensure
+    // network blocking works correctly. Netty's native transports bypass the standard
+    // Java NIO APIs that the JVMTI agent intercepts, making network blocking ineffective.
+    // This forces Reactor Netty and Spring WebClient to use the standard NIO transport.
+    systemProperty("io.netty.transport.noNative", "true")
+
     testLogging {
         events("failed")
         showStandardStreams = false

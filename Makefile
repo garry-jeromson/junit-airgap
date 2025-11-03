@@ -32,11 +32,19 @@ help:
 	@echo "  assemble           Assemble all outputs without running tests"
 	@echo ""
 	@echo "Test Commands:"
-	@echo "  bootstrap      Bootstrap plugin to Maven Local (auto-runs on first test)"
-	@echo "  test           Run all tests (default Java 21)"
-	@echo "  test-java21    Run all tests with Java 21"
-	@echo "  test-java25    Run all tests with Java 25"
-	@echo "  verify         Run all tests and checks"
+	@echo "  bootstrap              Bootstrap plugin to Maven Local (auto-runs on first test)"
+	@echo "  test                   Run all tests on current platform"
+	@echo "  verify                 Run all tests and checks"
+	@echo ""
+	@echo "Platform-Specific Test Commands:"
+	@echo "  test-macos             Run all tests on macOS (native)"
+	@echo "  test-linux-x86-64      Run all tests on Linux x86-64 (Docker)"
+	@echo "  test-linux-arm64       Run all tests on Linux ARM64 (Docker)"
+	@echo "  test-all               Run tests on ALL platforms (macOS + Linux x86-64 + ARM64)"
+	@echo ""
+	@echo "Java Version Test Commands:"
+	@echo "  test-java21            Run all tests with Java 21"
+	@echo "  test-java25            Run all tests with Java 25"
 	@echo ""
 	@echo "Native Agent Commands (JVMTI Implementation):"
 	@echo "  setup-native            Install native build dependencies (CMake)"
@@ -114,7 +122,7 @@ bootstrap:
 	@echo "✅ Plugin bootstrap complete"
 	@echo ""
 
-## test: Run all tests (Core library + Gradle plugin + Integration tests + Plugin integration tests)
+## test: Run all tests on current platform (Core library + Gradle plugin + Integration tests)
 test:
 	@# Check if plugin exists in Maven Local (only check gradle-plugin marker)
 	@if [ ! -d "$$HOME/.m2/repository/io/github/garry-jeromson/junit-airgap-gradle-plugin" ]; then \
@@ -126,8 +134,51 @@ test:
 		echo "✅ Plugin published successfully"; \
 		echo ""; \
 	fi
-	@echo "Running all tests..."
+	@echo "Running all tests on current platform..."
 	JAVA_HOME=$(JAVA_HOME) $(GRADLEW) test
+
+## test-macos: Run all tests on macOS (current platform)
+test-macos:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on macOS (native)"
+	@echo "════════════════════════════════════════════════════════════════"
+	@$(MAKE) test
+	@echo "✅ macOS tests completed"
+
+## test-linux-x86-64: Run all tests on Linux x86-64 via Docker
+test-linux-x86-64:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on Linux x86-64 (Docker)"
+	@echo "════════════════════════════════════════════════════════════════"
+	@$(MAKE) docker-test-linux
+	@echo "✅ Linux x86-64 tests completed"
+
+## test-linux-arm64: Run all tests on Linux ARM64 via Docker
+test-linux-arm64:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on Linux ARM64 (Docker)"
+	@echo "════════════════════════════════════════════════════════════════"
+	@$(MAKE) docker-test-linux-arm64
+	@echo "✅ Linux ARM64 tests completed"
+
+## test-all: Run tests on all supported platforms (macOS + Linux x86-64 + Linux ARM64)
+test-all:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Running tests on ALL platforms"
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "→ Platform 1/3: macOS (native)"
+	@$(MAKE) test-macos
+	@echo ""
+	@echo "→ Platform 2/3: Linux x86-64 (Docker)"
+	@$(MAKE) test-linux-x86-64
+	@echo ""
+	@echo "→ Platform 3/3: Linux ARM64 (Docker)"
+	@$(MAKE) test-linux-arm64
+	@echo ""
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  ✅ All platform tests completed successfully!"
+	@echo "════════════════════════════════════════════════════════════════"
 
 ## test-java21: Run all tests with Java 21
 test-java21:

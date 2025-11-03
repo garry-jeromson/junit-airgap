@@ -5,19 +5,22 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     # C++ toolchain for JVMTI agent
     build-essential \
     cmake \
     g++ \
-    # Java 21 (OpenJDK) - required for Kotlin and JVMTI
+    # Java 21 (OpenJDK) - required for Kotlin and JVMTI (full JDK for headers)
     openjdk-21-jdk \
     # Utilities
     curl \
     git \
     unzip \
     wget \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Set Java environment
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
