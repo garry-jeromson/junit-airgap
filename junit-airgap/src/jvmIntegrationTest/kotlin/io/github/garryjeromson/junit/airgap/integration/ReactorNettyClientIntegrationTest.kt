@@ -8,8 +8,6 @@ import io.github.garryjeromson.junit.airgap.integration.fixtures.MockHttpServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.DisabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import reactor.core.publisher.Mono
 import reactor.netty.ByteBufFlux
@@ -44,7 +42,7 @@ class ReactorNettyClientIntegrationTest {
         /**
          * Assert that network is blocked for Reactor Netty.
          * Reactor Netty can fail at different stages:
-         * 1. DNS resolution (if DNS socket is blocked) - DnsResolveContext exceptions
+         * 1. DNS resolution (if DNS socket is blocked) - DnsResolveContext, UnknownHostException
          * 2. Socket connection (if socket is blocked) - ClosedChannelException, NetworkRequestAttemptedException
          * All of these indicate successful network blocking.
          */
@@ -71,7 +69,8 @@ class ReactorNettyClientIntegrationTest {
                         }
                         // DNS resolution failures indicate DNS socket was blocked
                         causeName.contains("DnsResolve") ||
-                            causeName.contains("DnsNameResolver") -> {
+                            causeName.contains("DnsNameResolver") ||
+                            causeName.contains("UnknownHostException") -> {
                             foundNetworkException = true
                             break
                         }
@@ -293,7 +292,6 @@ class ReactorNettyClientIntegrationTest {
 
     @Test
     @BlockNetworkRequests
-    @DisabledOnOs(OS.LINUX, disabledReason = "Reactor Netty baseURL configuration bypasses interception on Linux - investigating")
     fun `blocks Reactor Netty with custom base URL configuration`() {
         assertReactorNettyBlocked("Reactor Netty with base URL should be blocked") {
             val client =
